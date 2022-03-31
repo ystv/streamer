@@ -1,2 +1,2 @@
-# streamer
-A better streaming solution
+# Streamer
+A better streaming solution because Rhys is lazy in making creator work...
