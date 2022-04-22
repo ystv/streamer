@@ -5,7 +5,7 @@ These are named for the different aspects of this program and how it can be dist
 ## Prerequisites
 At least one server that can store files and one server that can accept RTMP streams, i.e. nginx rtmp module (theoretically one server could do all of this although for performance, it is recommended that you have different servers for everything)
 
-A user that can ssh to the forwarder and the recorder and execute the start and stop for each, and the user needs to be able to save files in the recording directory 
+A user that can ssh to the forwarder and the recorder and execute the start and stop for each, and the user needs to be able to save files in the recording directory
 ## How to build
 You need to build a total of 5 files in the correct locations, these include the main.go file in the server folder, the forwarder start and stop in the forwarder folder and the recorder start and stop in the recorder folder
 ### Building
@@ -21,3 +21,10 @@ This must be done in the directory of the files
 `go build -o streamer main.go`
 
 This must be done in the directory of the file
+
+In addition, a `streams.db` file will need to be created or use the given file. it's a SQLite schema and can be created with this statement:
+
+`CREATE TABLE "streams" (
+"stream"	INTEGER NOT NULL UNIQUE,
+PRIMARY KEY("stream")
+)`

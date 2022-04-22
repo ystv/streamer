@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src='public/jquery.min.js'></script>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="public/stylesheet.css">
+    <link rel="icon" type="image/x-icon" href="public/ystv.ico" sizes="48x48">
+    <link rel="apple-touch-icon" href="public/ystv.ico" sizes="48x48">
+    <title>Streamer - Facebook help</title>
+</head>
+<body>
+<h1 class="title">Streamer - Facebook help</h1><br>
+<p class="subtitle">This page is to help you get the stream key from Facebook</p>
+<div class="theme-switch-wrapper">
+    <label class="theme-switch" for="checkbox">
+        <input type="checkbox" id="checkbox"/>
+        <div class="slider round"></div>
+    </label>
+    <p style="margin-bottom: 10px;">Dark Mode</p>
+</div>
+<div class="card">
+    <div class="card-content">
+        <p class="title">Accessing Creator Studio</p><br>
+        <p>The first thing once you get to the Facebook homepage is to navigate to the YSTV page<br>
+            If you have access to the YSTV backend controls then you will see a side panel similar to this one on the left-hand side of the page</p><br>
+        <img src="public/facebook_1.png" alt="Facebook 1"><br>
+        <p>Scroll down until you see "Creator Studio" and click it</p><br>
+        <img src="public/facebook_2.png" alt="Facebook 2"><br>
+        <p>Once you are on Creator Studio then you will see the main page with the top bar and on the right-hand side of it then you will see a button labeled "Go live"</p><br>
+        <img src="public/facebook_3.png" alt="Facebook 3"><br>
+        <p>After pressing "Go live" then you will be presented with the two options in the middle of the screen, you can either go live now or create a live event<br>
+            Depending on when your livestream is then you can select either</p><br>
+        <img src="public/facebook_4.png" alt="Facebook 4"><br>
+        <p>Whichever you choose then you will need to go to the settings and under the streams tab then you will need to deselect "End live video if stream stops" in the event of network outage then you will be able to restart the stream</p><br>
+        <img src="public/facebook_5.png" alt="Facebook 5"><br>
+        <p>Under "Stream setup" then you will see a black window which is what will be coming into Facebook, for now it is okay to be black, under it will be two options, and you want to select "Streaming software"</p><br>
+        <img src="public/facebook_6.png" alt="Facebook 6"><br>
+        <p>In the window "Streaming software setup" you will need to select the "Advanced Settings" and copy the stream server at the bottom and the stream key at the top into the stream server and stream key fields of Streamer</p><br>
+        <img src="public/facebook_7.png" alt="Facebook 7"><br>
+        <button type="button" class="button"
+                onclick="window.open('', '_self', ''); window.close();">Return
+        </button>
+    </div>
+</div>
+<script>
+    const toggleSwitch = document.querySelector('.theme-switch input[type="checkbox"]');
+
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        toggleSwitch.checked = true;
+        document.getElementById("result").style.color = "lightgrey";
+        document.getElementById("footer").style.color = "lightgrey";
+    }
+
+    function switchTheme(e) {
+        if (e.target.checked) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            localStorage.setItem('theme', 'dark');
+            document.getElementById("result").style.color = "lightgrey";
+            document.getElementById("footer").style.color = "lightgrey";
+        } else {
+            document.documentElement.setAttribute('data-theme', 'light');
+            localStorage.setItem('theme', 'light');
+            document.getElementById("result").style.color = "dimgrey";
+            document.getElementById("footer").style.color = "dimgrey";
+        }
+    }
+
+    toggleSwitch.addEventListener('change', switchTheme, false);
+</script>
+</body>
+</html>
