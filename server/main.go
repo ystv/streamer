@@ -176,7 +176,6 @@ func (web *Web) start(w http.ResponseWriter, r *http.Request) {
 	errors := false
 	var errorMessage string
 	if r.Method == "POST" {
-		fmt.Println(r.Body)
 		err := r.ParseForm()
 		if err != nil {
 			fmt.Println(err)
@@ -317,7 +316,6 @@ func (web *Web) start(w http.ResponseWriter, r *http.Request) {
 						username := os.Getenv("USERNAME")
 						password := os.Getenv("PASSWORD")
 						transmissionLight := os.Getenv("TRANSMISSION_LIGHT")
-						fmt.Println(r.FormValue("record"))
 						if r.FormValue("record") == "on" {
 							client, session, err := connectToHost(username, password, recorder)
 							if err != nil {
@@ -352,7 +350,6 @@ func (web *Web) start(w http.ResponseWriter, r *http.Request) {
 								errors = true
 								errorMessage = err.Error()
 							} else {
-								fmt.Println(forwarderStart)
 								_, err = session1.CombinedOutput(forwarderStart)
 								if err != nil {
 									fmt.Println("Error executing on Forwarder")
@@ -546,8 +543,6 @@ func (web *Web) stop(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 		}
-
-		fmt.Println("CLOSING STOP")
 		err = db.Close()
 		if err != nil {
 			fmt.Println(err.Error())
@@ -558,10 +553,6 @@ func (web *Web) stop(w http.ResponseWriter, r *http.Request) {
 			if err != nil && !strings.Contains(err.Error(), "unexpected EOF") {
 				fmt.Println(err.Error())
 			}
-
-			/*if response.StatusCode != 204 {
-			        fmt.Println("Transmission light error")
-			}*/
 		}
 	}
 }
@@ -651,15 +642,11 @@ func existingStreamCheck() bool {
 
 		var stream string
 
-		fmt.Println(rows)
-
 		for rows.Next() {
 			err = rows.Scan(&stream)
 			if err != nil {
 				fmt.Println(err)
 			}
-			fmt.Println(len(stream), " - ", stream)
-			fmt.Println("CLOSING FOR")
 			err = rows.Close()
 			if err != nil {
 				fmt.Println(err.Error())
@@ -670,7 +657,6 @@ func existingStreamCheck() bool {
 			}
 			return true
 		}
-		fmt.Println("CLOSING AFTER FOR")
 		err = rows.Close()
 		if err != nil {
 			fmt.Println(err.Error())
@@ -681,7 +667,6 @@ func existingStreamCheck() bool {
 		}
 		return false
 	}
-	fmt.Println("CLOSING ELSE")
 	err = db.Close()
 	if err != nil {
 		fmt.Println(err)
