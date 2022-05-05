@@ -368,16 +368,12 @@ func (web *Web) start(w http.ResponseWriter, r *http.Request) {
 									} else {
 										fmt.Println("Forwarder success")
 
-										_, err := http.Get(transmissionLight + "transmission_on")
+										_, err := http.Get(transmissionLight + "transmission_on") // Output is ignored as it returns a 204 status and there's a weird bug with no content
 										if err != nil && !strings.Contains(err.Error(), "unexpected EOF") {
 											fmt.Println(err)
 											errors = true
 											errorMessage = err.Error()
 										}
-										/*fmt.Println(response.StatusCode)
-										  if response.StatusCode != 204 {
-										          fmt.Println("Transmission light error")
-										  }*/
 
 										fmt.Println("STARTED!")
 
@@ -558,7 +554,7 @@ func (web *Web) stop(w http.ResponseWriter, r *http.Request) {
 		}
 		fmt.Println(existingStreamCheck())
 		if !existingStreamCheck() {
-			_, err := http.Get(transmissionLight + "rehearsal_transmission_off")
+			_, err := http.Get(transmissionLight + "rehearsal_transmission_off") // Output is ignored as it returns a 204 status and there's a weird bug with no content
 			if err != nil && !strings.Contains(err.Error(), "unexpected EOF") {
 				fmt.Println(err.Error())
 			}
