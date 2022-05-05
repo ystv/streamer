@@ -33,6 +33,7 @@ const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 var seededRand = rand.New(
 	rand.NewSource(time.Now().UnixNano()))
 
+// The main initial function that is called and is the root for the website
 func main() {
 	web := Web{mux: mux.NewRouter()}
 	web.mux.HandleFunc("/", web.home)
@@ -42,15 +43,17 @@ func main() {
 	web.mux.HandleFunc("/stop", web.stop)
 	web.mux.HandleFunc("/youtubehelp", web.youtubeHelp)
 	web.mux.HandleFunc("/facebookhelp", web.facebookHelp)
-	web.mux.HandleFunc("/public/{id:[a-zA-Z0-9_.-]+}", web.public)
+	web.mux.HandleFunc("/public/{id:[a-zA-Z0-9_.-]+}", web.public) // This handles all the public pages that the webpage can request, e.g. css, images and jquery
 
 	fmt.Println("Server listening...")
 	err := http.ListenAndServe(":8080", web.mux)
 	if err != nil {
+		fmt.Println(err)
 		return
 	}
 }
 
+// This is a basic html writer that provides the main page for Streamer
 func (web *Web) home(w http.ResponseWriter, _ *http.Request) {
 	tmpl := template.Must(template.ParseFiles("html/main.html"))
 	err := tmpl.Execute(w, nil)
@@ -59,6 +62,7 @@ func (web *Web) home(w http.ResponseWriter, _ *http.Request) {
 	}
 }
 
+// This collects the data from the rtmp stat page of nginx and produces a list of active streaming endpoints from given endpoints
 func (web *Web) streams(w http.ResponseWriter, r *http.Request) {
 	err := godotenv.Load()
 	if err != nil {
@@ -83,7 +87,7 @@ func (web *Web) streams(w http.ResponseWriter, r *http.Request) {
 
 	streamPageContent := buf.String()
 
-	re := regexp.MustCompile("<application>(.|\n)*?</application>")
+	re := regexp.MustCompile("<application>(.|\n)*?</application>") // The beginning of the separation of the get request
 	applications := re.FindAllString(streamPageContent, -1)
 
 	var m map[string][]string
@@ -112,7 +116,7 @@ func (web *Web) streams(w http.ResponseWriter, r *http.Request) {
 		var internalEndpoint, prodEndpoint, liveEndpoint, streamEndpoint bool
 		var n map[string][]string
 		n = make(map[string][]string)
-		if r.FormValue("internal_endpoint") == "on" {
+		if r.FormValue("internal_endpoint") == "on" { // There are four different endpoints that can be streamed to, internal, prod, live and stream. The checkboxes can select which one they want
 			internalEndpoint = true
 			n["internal"] = m["internal"]
 		}
@@ -167,10 +171,12 @@ func (web *Web) streams(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// This section is the core of the program, where it takes the values set by the user in the webpage and processes the data and sends it to the recorder and the forwarder
 func (web *Web) start(w http.ResponseWriter, r *http.Request) {
 	errors := false
 	var errorMessage string
 	if r.Method == "POST" {
+		fmt.Println(r.Body)
 		err := r.ParseForm()
 		if err != nil {
 			fmt.Println(err)
@@ -191,7 +197,7 @@ func (web *Web) start(w http.ResponseWriter, r *http.Request) {
 					errorMessage = "Website key check has failed"
 				}
 			} else {
-				forwarderStart = "./forwarder_start.go \"" + r.FormValue("stream_selector") + "\" no "
+				forwarderStart = "./forwarder_start \"" + r.FormValue("stream_selector") + "\" no "
 			}
 			if websiteValid {
 				largest := 0
@@ -308,85 +314,102 @@ func (web *Web) start(w http.ResponseWriter, r *http.Request) {
 					} else {
 						forwarder := os.Getenv("FORWARDER")
 						recorder := os.Getenv("RECORDER")
-						user := os.Getenv("USER")
+						username := os.Getenv("USERNAME")
 						password := os.Getenv("PASSWORD")
-
-						client, session, err := connectToHost(user, password, recorder)
-						if err != nil {
-							fmt.Println("Error connecting to Recorder")
-							fmt.Println(err)
-							errors = true
-							errorMessage = err.Error()
-						} else {
-							_, err = session.CombinedOutput(recorderStart)
+						transmissionLight := os.Getenv("TRANSMISSION_LIGHT")
+						fmt.Println(r.FormValue("record"))
+						if r.FormValue("record") == "on" {
+							client, session, err := connectToHost(username, password, recorder)
 							if err != nil {
-								fmt.Println("Error executing on Recorder")
+								fmt.Println("Error connecting to Recorder")
 								fmt.Println(err)
 								errors = true
 								errorMessage = err.Error()
 							} else {
-								err := client.Close()
+								_, err = session.CombinedOutput(recorderStart)
 								if err != nil {
+									fmt.Println("Error executing on Recorder")
 									fmt.Println(err)
 									errors = true
 									errorMessage = err.Error()
 								} else {
-									fmt.Println("Recorder success")
-
-									client1, session1, err := connectToHost(user, password, forwarder)
+									err := client.Close()
 									if err != nil {
-										fmt.Println("Error connecting to Forwarder")
 										fmt.Println(err)
 										errors = true
 										errorMessage = err.Error()
 									} else {
-										_, err = session1.CombinedOutput(forwarderStart)
-										if err != nil {
-											fmt.Println("Error executing on Forwarder")
+										fmt.Println("Recorder success")
+									}
+								}
+							}
+						}
+						if !errors {
+							client1, session1, err := connectToHost(username, password, forwarder)
+							if err != nil {
+								fmt.Println("Error connecting to Forwarder")
+								fmt.Println(err)
+								errors = true
+								errorMessage = err.Error()
+							} else {
+								fmt.Println(forwarderStart)
+								_, err = session1.CombinedOutput(forwarderStart)
+								if err != nil {
+									fmt.Println("Error executing on Forwarder")
+									fmt.Println(err)
+									errors = true
+									errorMessage = err.Error()
+								} else {
+									err = client1.Close()
+									if err != nil {
+										fmt.Println(err)
+										errors = true
+										errorMessage = err.Error()
+									} else {
+										fmt.Println("Forwarder success")
+
+										_, err := http.Get(transmissionLight + "transmission_on")
+										if err != nil && !strings.Contains(err.Error(), "unexpected EOF") {
 											fmt.Println(err)
 											errors = true
 											errorMessage = err.Error()
-										} else {
-											err = client1.Close()
-											if err != nil {
-												fmt.Println(err)
-												errors = true
-												errorMessage = err.Error()
-											} else {
-												fmt.Println("Forwarder success")
+										}
+										/*fmt.Println(response.StatusCode)
+										  if response.StatusCode != 204 {
+										          fmt.Println("Transmission light error")
+										  }*/
 
-												fmt.Println("STARTED!")
+										fmt.Println("STARTED!")
 
-												_, err := w.Write(b)
-												if err != nil {
-													fmt.Println(err)
-													errors = true
-													errorMessage = err.Error()
-												}
-											}
+										_, err = w.Write(b)
+										if err != nil {
+											fmt.Println(err)
+											errors = true
+											errorMessage = err.Error()
 										}
 									}
 								}
 							}
 						}
 					}
-				} else {
-					fmt.Println("Failed to insert into database")
-					errors = true
-					errorMessage = "Failed to insert into database"
 				}
+			} else {
+				fmt.Println("Failed to authenticate website stream")
+				errors = true
+				errorMessage = "Failed to authenticate website stream"
 			}
 		}
-		if errors {
-			fmt.Println("An error has occurred...\n" + errorMessage)
-			_, err := w.Write([]byte("An error has occurred...\n" + errorMessage))
-			if err != nil {
-				return
-			}
+	}
+	if errors {
+		fmt.Println("An error has occurred...\n" + errorMessage)
+		_, err := w.Write([]byte("An error has occurred...\n" + errorMessage))
+		if err != nil {
+			return
 		}
 	}
 }
 
+// If the user decides to return at a later date then they can, by inputting the unique code that they were given then they can go to the resume page and enter the code
 func (web *Web) resume(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		tmpl := template.Must(template.ParseFiles("html/resume.html"))
@@ -453,6 +476,7 @@ func (web *Web) resume(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// When the stream is finished then you can stop the stream by pressing the stop button and that would kill all the ffmpeg commands
 func (web *Web) stop(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		err := godotenv.Load()
@@ -461,9 +485,10 @@ func (web *Web) stop(w http.ResponseWriter, r *http.Request) {
 		}
 		forwarder := os.Getenv("FORWARDER")
 		recorder := os.Getenv("RECORDER")
-		user := os.Getenv("USER")
+		username := os.Getenv("USERNAME")
 		password := os.Getenv("PASSWORD")
-		client2, session2, err := connectToHost(user, password, recorder)
+		transmissionLight := os.Getenv("TRANSMISSION_LIGHT")
+		client2, session2, err := connectToHost(username, password, recorder)
 		if err != nil {
 			fmt.Println("Error connecting to Forwarder")
 			panic(err)
@@ -480,7 +505,7 @@ func (web *Web) stop(w http.ResponseWriter, r *http.Request) {
 
 		fmt.Println("Recorder success")
 
-		client3, session3, err := connectToHost(user, password, forwarder)
+		client3, session3, err := connectToHost(username, password, forwarder)
 		if err != nil {
 			fmt.Println("Error connecting to Forwarder")
 			panic(err)
@@ -526,13 +551,26 @@ func (web *Web) stop(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
+		fmt.Println("CLOSING STOP")
 		err = db.Close()
 		if err != nil {
-			return
+			fmt.Println(err.Error())
+		}
+		fmt.Println(existingStreamCheck())
+		if !existingStreamCheck() {
+			_, err := http.Get(transmissionLight + "rehearsal_transmission_off")
+			if err != nil && !strings.Contains(err.Error(), "unexpected EOF") {
+				fmt.Println(err.Error())
+			}
+
+			/*if response.StatusCode != 204 {
+			        fmt.Println("Transmission light error")
+			}*/
 		}
 	}
 }
 
+// This is the handler for the YouTube help page
 func (web *Web) youtubeHelp(w http.ResponseWriter, _ *http.Request) {
 	tmpl := template.Must(template.ParseFiles("html/youtubeHelp.html"))
 	err := tmpl.Execute(w, nil)
@@ -541,6 +579,7 @@ func (web *Web) youtubeHelp(w http.ResponseWriter, _ *http.Request) {
 	}
 }
 
+// This is the handler for the Facebook help page
 func (web *Web) facebookHelp(w http.ResponseWriter, _ *http.Request) {
 	tmpl := template.Must(template.ParseFiles("html/facebookHelp.html"))
 	err := tmpl.Execute(w, nil)
@@ -549,11 +588,13 @@ func (web *Web) facebookHelp(w http.ResponseWriter, _ *http.Request) {
 	}
 }
 
+// This is the handler for any public documents, for example, the style sheet or images
 func (web *Web) public(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	http.ServeFile(w, r, "public/"+vars["id"])
 }
 
+// This checks if the website stream key is valid using software called COBRA
 func websiteCheck(endpoint string) bool {
 	err := godotenv.Load()
 	if err != nil {
@@ -596,6 +637,63 @@ func websiteCheck(endpoint string) bool {
 	}
 }
 
+// This checks if there are any existing streams still registered in the database
+func existingStreamCheck() bool {
+	db, err := sql.Open("sqlite3", "db/streams.db")
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		rows, err := db.Query("SELECT * FROM streams")
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		err = db.Close()
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		var stream string
+
+		fmt.Println(rows)
+
+		for rows.Next() {
+			err = rows.Scan(&stream)
+			if err != nil {
+				fmt.Println(err)
+			}
+			fmt.Println(len(stream), " - ", stream)
+			fmt.Println("CLOSING FOR")
+			err = rows.Close()
+			if err != nil {
+				fmt.Println(err.Error())
+			}
+			err = db.Close()
+			if err != nil {
+				fmt.Println(err)
+			}
+			return true
+		}
+		fmt.Println("CLOSING AFTER FOR")
+		err = rows.Close()
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+		err = db.Close()
+		if err != nil {
+			fmt.Println(err)
+		}
+		return false
+	}
+	fmt.Println("CLOSING ELSE")
+	err = db.Close()
+	if err != nil {
+		fmt.Println(err)
+	}
+	return false
+}
+
+// This is a general function to ssh to a remote server, any code execution is handled outside this function
 func connectToHost(user, password, host string) (*ssh.Client, *ssh.Session, error) {
 	sshConfig := &ssh.ClientConfig{
 		User: user,
