@@ -105,6 +105,8 @@
                         if it doesn't already exist<br>
                         The extension (.mkv) will be added to the end of the file if it doesn't already contain it</p>
                     <br>
+                    <label for="record">Record stream </label>
+                    <input name="record" id="record" type="checkbox" checked><br>
                     <label for="save_path">MKV save location </label><br>
                     <input type="text" name="save_path" id="save_path" placeholder="ERN/ERN.mkv" class="input"
                            required/><br><br>
@@ -209,6 +211,18 @@
         } else {
             document.getElementById('website_stream_endpoint').style.visibility = "hidden";
             document.getElementById('website_stream_endpoint').removeAttribute('required');
+        }
+    };
+
+    document.getElementById('record').onchange = function () {
+        document.getElementById('save_path').disabled = !this.checked;
+        document.getElementById('save_path').hidden = !this.checked;
+        if (this.checked) {
+            document.getElementById('save_path').style.visibility = "visible";
+            document.getElementById('save_path').setAttribute('required', 'required');
+        } else {
+            document.getElementById('save_path').style.visibility = "hidden";
+            document.getElementById('save_path').removeAttribute('required');
         }
     };
 
@@ -318,58 +332,58 @@
         $('#start').click(function () {
             $('#start').disabled = true;
             $('#error').html("")
-            if ($('#save_path').val().length > 0) {
+            let valid;
+            if ($('#save_path').val().length > 0 && document.getElementById('record').checked) {
+                console.log("YES!!!")
                 if ($('#save_path').val().includes(".mkv")) {
-                    let valid;
+                    console.log("CONTINUED!")
                     if (document.getElementById('website_stream').checked) {
+                        console.log("WORKING!")
                         if ($('#website_stream_endpoint').val().length > 0 && $('#website_stream_endpoint').val().includes("?pwd=")) {
-                            if (!$('#website_stream_endpoint').val().includes("/") && !$('#website_stream_endpoint').val().includes("\\/")) {
-                                if ($('#stream_server_0').val().length > 0 && $('#stream_key_0').val().length > 0) {
-                                    if (validURL($('#stream_server_0').val())) {
-                                        valid = true;
-                                        let j = 1;
-                                        let loop = true;
-                                        valid = true;
-                                        while (loop) {
-                                            if ($('#stream_server_' + j).length > 0) {
-                                                if ($('#stream_server_' + j).val().length > 0 && $('#stream_key_' + j).val().length > 0) {
-                                                    if (!validURL($('#stream_server_' + j).val())) {
-                                                        console.log("STREAM SERVER");
-                                                        $('#error').html("The stream server must contain \"rtmp://\" or \"rtmps://\" and needs to be a valid url")
-                                                        valid = false;
-                                                    }
-                                                } else {
-                                                    console.log("ADDITIONAL");
-                                                    $('#error').html("The stream server and stream key cannot be empty")
+                            console.log("WORKED!")
+                            if ($('#stream_server_0').val().length > 0 && $('#stream_key_0').val().length > 0) {
+                                console.log("ALMOST!")
+                                if (validURL($('#stream_server_0').val())) {
+                                    console.log("DONE!")
+                                    valid = true;
+                                    let j = 1;
+                                    let loop = true;
+                                    valid = true;
+                                    while (loop) {
+                                        if ($('#stream_server_' + j).length > 0) {
+                                            if ($('#stream_server_' + j).val().length > 0 && $('#stream_key_' + j).val().length > 0) {
+                                                if (!validURL($('#stream_server_' + j).val())) {
+                                                    console.log("STREAM SERVER");
+                                                    $('#error').html("The stream server must contain \"rtmp://\" or \"rtmps://\" and needs to be a valid url")
                                                     valid = false;
                                                 }
-                                                console.log(i + " - " + j)
-                                                if (j < i) {
-                                                    j++
-                                                } else {
-                                                    loop = false
-                                                }
                                             } else {
-                                                if (j < i) {
-                                                    j++
-                                                } else {
-                                                    loop = false
-                                                }
+                                                console.log("ADDITIONAL");
+                                                $('#error').html("The stream server and stream key cannot be empty")
+                                                valid = false;
+                                            }
+                                            console.log(i + " - " + j)
+                                            if (j < i) {
+                                                j++
+                                            } else {
+                                                loop = false
+                                            }
+                                        } else {
+                                            if (j < i) {
+                                                j++
+                                            } else {
+                                                loop = false
                                             }
                                         }
-                                    } else {
-                                        console.log("STREAM SERVER");
-                                        $('#error').html("The stream server must contain \"rtmp://\" or \"rtmps://\" and needs to be a valid url")
-                                        valid = false;
                                     }
                                 } else {
-                                    console.log("ADDITIONAL");
-                                    $('#error').html("The stream server and stream key cannot be empty")
+                                    console.log("STREAM SERVER");
+                                    $('#error').html("The stream server must contain \"rtmp://\" or \"rtmps://\" and needs to be a valid url")
                                     valid = false;
                                 }
                             } else {
-                                console.log("SLASH");
-                                $('#error').html("The website stream must not include \"/\"");
+                                console.log("ADDITIONAL");
+                                $('#error').html("The stream server and stream key cannot be empty")
                                 valid = false;
                             }
                         } else {
@@ -412,6 +426,58 @@
                                 }
                             } else {
                                 console.log("STREAM SERVER");
+                                $('#error').html("The stream server must contain \"rtmp://\" or \"rtmps://\" and needs to be a valid url");
+                                valid = false;
+                            }
+                        } else {
+                            console.log("ADDITIONAL");
+                            $('#error').html("The stream server and stream key cannot be empty");
+                            valid = false;
+                        }
+                    }
+                } else {
+                    console.log("SAVE FILE");
+                    $('#error').html("The save path must end in \".mkv\"");
+                }
+            } else if (!document.getElementById('record').checked) {
+                console.log("NO!!!")
+                if (document.getElementById('website_stream').checked) {
+                    if ($('#website_stream_endpoint').val().length > 0 && $('#website_stream_endpoint').val().includes("?pwd=")) {
+                        if ($('#stream_server_0').val().length > 0 && $('#stream_key_0').val().length > 0) {
+                            if (validURL($('#stream_server_0').val())) {
+                                valid = true;
+                                let j = 1;
+                                let loop = true;
+                                valid = true;
+                                while (loop) {
+                                    if ($('#stream_server_' + j).length > 0) {
+                                        if ($('#stream_server_' + j).val().length > 0 && $('#stream_key_' + j).val().length > 0) {
+                                            if (!validURL($('#stream_server_' + j).val())) {
+                                                console.log("STREAM SERVER");
+                                                $('#error').html("The stream server must contain \"rtmp://\" or \"rtmps://\" and needs to be a valid url")
+                                                valid = false;
+                                            }
+                                        } else {
+                                            console.log("ADDITIONAL");
+                                            $('#error').html("The stream server and stream key cannot be empty")
+                                            valid = false;
+                                        }
+                                        console.log(i + " - " + j)
+                                        if (j < i) {
+                                            j++
+                                        } else {
+                                            loop = false
+                                        }
+                                    } else {
+                                        if (j < i) {
+                                            j++
+                                        } else {
+                                            loop = false
+                                        }
+                                    }
+                                }
+                            } else {
+                                console.log("STREAM SERVER");
                                 $('#error').html("The stream server must contain \"rtmp://\" or \"rtmps://\" and needs to be a valid url")
                                 valid = false;
                             }
@@ -420,36 +486,81 @@
                             $('#error').html("The stream server and stream key cannot be empty")
                             valid = false;
                         }
-                    }
-                    if (valid) {
-                        $.ajax({
-                            url: 'start',
-                            type: 'post',
-                            dataType: 'text',
-                            contentType: 'application/x-www-form-urlencoded',
-                            data: $('#stream_outs').serialize(),
-                            success: function (data) {
-                                if (data.includes("An error has occurred...\n")) {
-                                    $('#error').html(data)
-                                } else {
-                                    $('#unique').html(data);
-                                    console.log(data);
-                                    document.getElementById('start_window').hidden = true;
-                                    document.getElementById('start_window').style.visibility = "hidden";
-                                    document.getElementById('started_window').hidden = false;
-                                    document.getElementById('started_window').style.visibility = "visible";
-                                    unique = data;
-                                }
-                            },
-                        })
+                    } else {
+                        console.log("PWD");
+                        $('#error').html("The website stream must contain \"?pwd=\"")
+                        valid = false;
                     }
                 } else {
-                    console.log("SAVE FILE");
-                    $('#error').html("The save path must end in \".mkv\"")
+                    if ($('#stream_server_0').val().length > 0 && $('#stream_key_0').val().length > 0) {
+                        if (validURL($('#stream_server_0').val())) {
+                            let j = 1;
+                            let loop = true;
+                            valid = true;
+                            while (loop) {
+                                if ($('#stream_server_' + j).length > 0) {
+                                    if ($('#stream_server_' + j).val().length > 0 && $('#stream_key_' + j).val().length > 0) {
+                                        if (!validURL($('#stream_server_' + j).val())) {
+                                            console.log("STREAM SERVER");
+                                            $('#error').html("The stream server must contain \"rtmp://\" or \"rtmps://\" and needs to be a valid url")
+                                            valid = false;
+                                        }
+                                    } else {
+                                        console.log("ADDITIONAL");
+                                        $('#error').html("The stream server and stream key cannot be empty")
+                                        valid = false
+                                    }
+                                    console.log(i + " - " + j)
+                                    if (j < i) {
+                                        j++
+                                    } else {
+                                        loop = false
+                                    }
+                                } else {
+                                    if (j < i) {
+                                        j++
+                                    } else {
+                                        loop = false
+                                    }
+                                }
+                            }
+                        } else {
+                            console.log("STREAM SERVER");
+                            $('#error').html("The stream server must contain \"rtmp://\" or \"rtmps://\" and needs to be a valid url");
+                            valid = false;
+                        }
+                    } else {
+                        console.log("ADDITIONAL");
+                        $('#error').html("The stream server and stream key cannot be empty");
+                        valid = false;
+                    }
                 }
             } else {
                 console.log("SAVE PATH");
-                $('#error').html("The save path cannot be empty")
+                $('#error').html("The save path cannot be empty");
+                valid = false;
+            }
+            if (valid) {
+                $.ajax({
+                    url: 'start',
+                    type: 'post',
+                    dataType: 'text',
+                    contentType: 'application/x-www-form-urlencoded',
+                    data: $('#stream_outs').serialize(),
+                    success: function (data) {
+                        if (data.includes("An error has occurred...\n")) {
+                            $('#error').html(data)
+                        } else {
+                            $('#unique').html(data);
+                            console.log(data);
+                            document.getElementById('start_window').hidden = true;
+                            document.getElementById('start_window').style.visibility = "hidden";
+                            document.getElementById('started_window').hidden = false;
+                            document.getElementById('started_window').style.visibility = "visible";
+                            unique = data;
+                        }
+                    },
+                })
             }
             $('#start').disabled = false;
         });
