@@ -85,7 +85,10 @@ func main() {
 			w1 := s.AddWindow("RECORDING")
 
 			w1p0 := w1.Pane(0)
-			w1p0.Exec("ffmpeg -i \"" + streamServer + streamIn + "\" -c copy -f mp4 \"" + pendingEdits + path + "\"")
+
+			path = strings.ReplaceAll(path, ".mkv", "")
+			w1p0.Exec("./recorder_script.sh " + streamServer + streamIn + " " + pendingEdits + path + " " + unique + " | bash")
+			//w1p0.Exec("ffmpeg -i \"" + streamServer + streamIn + "\" -c copy \"" + pendingEdits + path + "\" > " + unique + ".txt 2>&1")
 
 			fmt.Println("echo RECORDER STARTED!")
 		} else {

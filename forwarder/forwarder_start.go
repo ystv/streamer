@@ -6,6 +6,7 @@ import (
 	"github.com/wricardo/gomux"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -45,15 +46,19 @@ func main() {
 		streamServer := os.Getenv("STREAM_SERVER")
 		if websiteOut != "no" {
 			panes = append(panes, w1.Pane(0))
-			panes[0].Exec("ffmpeg -i \"" + streamServer + streamIn + "\" -c copy -f flv \"" + streamServer + "live/" + websiteOut + "\"")
+			panes[0].Exec("./forwarder_script.sh " + streamServer + streamIn + " " + streamServer + "live/" + websiteOut + " " + unique + " " + strconv.Itoa(0) + " | bash")
+			//panes[0].Exec("./forwarder_script.sh " + streamServer + streamIn + " " + "rtmp://stream.ystv.co.uk/live/" + websiteOut + " " + unique + " " + strconv.Itoa(0) + " | bash")
+			//panes[0].Exec("ffmpeg -i \"" + streamServer + streamIn + "\" -c copy -f flv \"" + streamServer + "live/" + websiteOut + "\"")
 		} else {
 			panes = append(panes, w1.Pane(0))
 			panes[0].Exec("echo No website stream")
 		}
-
+		j := 1
 		for i := 0; i < len(serversKeys); i = i + 2 {
 			panes = append(panes, w1.Pane(0).Split())
-			panes[(i/2)+1].Exec("ffmpeg -i \"" + streamServer + streamIn + "\" -c copy -f flv \"" + serversKeys[i] + serversKeys[i+1] + "\"")
+			panes[(i/2)+1].Exec("./forwarder_script.sh " + streamServer + streamIn + " " + serversKeys[i] + serversKeys[i+1] + " " + unique + " " + strconv.Itoa(j) + " | bash")
+			//panes[(i/2)+1].Exec("ffmpeg -i \"" + streamServer + streamIn + "\" -c copy -f flv \"" + serversKeys[i] + serversKeys[i+1] + "\"")
+			j++
 		}
 
 		fmt.Println("echo FORWARDER STARTED!")
