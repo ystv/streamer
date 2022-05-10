@@ -41,6 +41,7 @@ func main() {
 	web.mux.HandleFunc("/start", web.start)
 	web.mux.HandleFunc("/resume", web.resume)
 	web.mux.HandleFunc("/stop", web.stop)
+	web.mux.HandleFunc("/list", web.list)
 	web.mux.HandleFunc("/youtubehelp", web.youtubeHelp)
 	web.mux.HandleFunc("/facebookhelp", web.facebookHelp)
 	web.mux.HandleFunc("/public/{id:[a-zA-Z0-9_.-]+}", web.public) // This handles all the public pages that the webpage can request, e.g. css, images and jquery
@@ -182,9 +183,13 @@ func (web *Web) start(w http.ResponseWriter, r *http.Request) {
 			errorMessage = err.Error()
 			errors = true
 		} else {
+			recording := false
+			websiteStream := false
+			streams := 0
 			websiteValid := true
 			var forwarderStart string
 			if r.FormValue("website_stream") == "on" {
+				websiteStream = true
 				if websiteCheck(r.FormValue("website_stream_endpoint")) {
 					fmt.Println("Success")
 					websiteValid = true
@@ -266,7 +271,7 @@ func (web *Web) start(w http.ResponseWriter, r *http.Request) {
 					}
 				}
 
-				stmt, err := db.Prepare("INSERT INTO streams(stream) values(?)")
+				stmt, err := db.Prepare("INSERT INTO streams(stream, recording, website, streams) values(?, false, false, 0)")
 				if err != nil {
 					fmt.Println(err)
 					errors = true
@@ -300,6 +305,7 @@ func (web *Web) start(w http.ResponseWriter, r *http.Request) {
 							server += "/"
 						}
 						forwarderStart += "\"" + server + "\" \"" + r.FormValue("stream_key_"+strconv.Itoa(index)) + "\" "
+						streams++
 					}
 					forwarderStart += "| bash"
 
@@ -317,6 +323,7 @@ func (web *Web) start(w http.ResponseWriter, r *http.Request) {
 						password := os.Getenv("PASSWORD")
 						transmissionLight := os.Getenv("TRANSMISSION_LIGHT")
 						if r.FormValue("record") == "on" {
+							recording = true
 							client, session, err := connectToHost(username, password, recorder)
 							if err != nil {
 								fmt.Println("Error connecting to Recorder")
@@ -374,11 +381,46 @@ func (web *Web) start(w http.ResponseWriter, r *http.Request) {
 
 										fmt.Println("STARTED!")
 
-										_, err = w.Write(b)
+										db, err = sql.Open("sqlite3", "db/streams.db")
 										if err != nil {
 											fmt.Println(err)
 											errors = true
 											errorMessage = err.Error()
+										} else {
+											stmt, err := db.Prepare("UPDATE streams SET recording = ?, website = ?, streams = ? WHERE stream = ?")
+											if err != nil {
+												fmt.Println(err)
+												errors = true
+												errorMessage = err.Error()
+											}
+
+											res, err := stmt.Exec(recording, websiteStream, streams, string(b))
+											if err != nil {
+												fmt.Println(err)
+												errors = true
+												errorMessage = err.Error()
+											}
+
+											id, err = res.LastInsertId()
+											if err != nil {
+												fmt.Println(err)
+												errors = true
+												errorMessage = err.Error()
+											}
+
+											err = db.Close()
+											if err != nil {
+												fmt.Println(err)
+												errors = true
+												errorMessage = err.Error()
+											} else {
+												_, err = w.Write(b)
+												if err != nil {
+													fmt.Println(err)
+													errors = true
+													errorMessage = err.Error()
+												}
+											}
 										}
 									}
 								}
@@ -552,6 +594,68 @@ func (web *Web) stop(w http.ResponseWriter, r *http.Request) {
 			_, err := http.Get(transmissionLight + "rehearsal_transmission_off") // Output is ignored as it returns a 204 status and there's a weird bug with no content
 			if err != nil && !strings.Contains(err.Error(), "unexpected EOF") {
 				fmt.Println(err.Error())
+			}
+		}
+	}
+}
+
+// This lists all current streams that are registered in the database
+func (web *Web) list(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "GET" {
+		tmpl := template.Must(template.ParseFiles("html/list.html"))
+		err := tmpl.Execute(w, nil)
+		if err != nil {
+			fmt.Println(err)
+		}
+	} else if r.Method == "POST" {
+		db, err := sql.Open("sqlite3", "db/streams.db")
+		if err != nil {
+			fmt.Println(err)
+		} else {
+
+		}
+
+		rows, err := db.Query("SELECT * FROM streams")
+		if err != nil {
+			fmt.Println(err)
+		}
+		var stream string
+
+		var streams []string
+
+		data := false
+
+		for rows.Next() {
+			err = rows.Scan(&stream)
+			if err != nil {
+				fmt.Println(err)
+			}
+			data = true
+			streams = append(streams, stream)
+		}
+
+		err = rows.Close()
+		if err != nil {
+			return
+		}
+
+		err = db.Close()
+		if err != nil {
+			return
+		}
+
+		if !data {
+			fmt.Println("No current streams")
+			_, err = w.Write([]byte("No current streams"))
+			if err != nil {
+				fmt.Println(err)
+			}
+		} else {
+			fmt.Println(streams)
+			stringByte := strings.Join(streams, "\x20")
+			_, err = w.Write([]byte(stringByte))
+			if err != nil {
+				fmt.Println(err)
 			}
 		}
 	}
