@@ -1,5 +1,5 @@
 # Streamer
-A better streaming solution because Rhys is lazy in making creator work...
+A better streaming solution
 
 The code here is split into three different folders: forwarder, recorder and server
 These are named for the different aspects of this program and how it can be distributed between multiple servers
