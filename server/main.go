@@ -1,8 +1,9 @@
 package main
 
 import (
-	"bytes"
 	"database/sql"
+	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
@@ -16,10 +17,10 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"regexp"
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"text/template"
 	"time"
 )
@@ -28,18 +29,69 @@ type Web struct {
 	mux *mux.Router
 }
 
+type RTMP struct {
+	XMLName xml.Name `xml:"rtmp"`
+	Server  Server   `xml:"server"`
+}
+
+type Server struct {
+	XMLName      xml.Name      `xml:"server"`
+	Applications []Application `xml:"application"`
+}
+
+type Application struct {
+	XMLName xml.Name `xml:"application"`
+	Name    string   `xml:"name"`
+	Live    Live     `xml:"live"`
+}
+
+type Live struct {
+	XMLName xml.Name `xml:"live"`
+	Streams []Stream `xml:"stream"`
+}
+
+type Stream struct {
+	XMLName xml.Name `xml:"stream"`
+	Name    string   `xml:"name"`
+}
+
 const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+var verbose bool
 
 var seededRand = rand.New(
 	rand.NewSource(time.Now().UnixNano()))
 
 // The main initial function that is called and is the root for the website
 func main() {
+	if strings.Contains(os.Args[0], "/var/folders") || strings.Contains(os.Args[0], "/tmp/go") || strings.Contains(os.Args[0], "./streamer") {
+		if len(os.Args) > 2 {
+			fmt.Println(string(rune(len(os.Args))))
+			fmt.Println(os.Args)
+			log.Fatalf("Arguments error")
+		}
+		for i := 0; i < len(os.Args)-1; i++ {
+			os.Args[i] = os.Args[i+1]
+		}
+	} else {
+		if len(os.Args) > 1 {
+			fmt.Println(string(rune(len(os.Args))))
+			fmt.Println(os.Args)
+			log.Fatalf("Arguments error")
+		}
+	}
+	if os.Args[0] == "-v" {
+		verbose = true
+	} else {
+		verbose = false
+	}
 	web := Web{mux: mux.NewRouter()}
 	web.mux.HandleFunc("/", web.home)
+	web.mux.HandleFunc("/endpoints", web.endpoints)
 	web.mux.HandleFunc("/streams", web.streams)
 	web.mux.HandleFunc("/start", web.start)
 	web.mux.HandleFunc("/resume", web.resume)
+	web.mux.HandleFunc("/status", web.status)
 	web.mux.HandleFunc("/stop", web.stop)
 	web.mux.HandleFunc("/list", web.list)
 	web.mux.HandleFunc("/youtubehelp", web.youtubeHelp)
@@ -56,6 +108,9 @@ func main() {
 
 // This is a basic html writer that provides the main page for Streamer
 func (web *Web) home(w http.ResponseWriter, _ *http.Request) {
+	if verbose {
+		fmt.Println("Home called")
+	}
 	tmpl := template.Must(template.ParseFiles("html/main.html"))
 	err := tmpl.Execute(w, nil)
 	if err != nil {
@@ -63,110 +118,121 @@ func (web *Web) home(w http.ResponseWriter, _ *http.Request) {
 	}
 }
 
-// This collects the data from the rtmp stat page of nginx and produces a list of active streaming endpoints from given endpoints
-func (web *Web) streams(w http.ResponseWriter, r *http.Request) {
-	err := godotenv.Load()
-	if err != nil {
-		fmt.Printf("error loading .env file: %s", err)
+func (web *Web) endpoints(w http.ResponseWriter, r *http.Request) {
+	if verbose {
+		fmt.Println("Endpoints called")
 	}
-	response, err := http.Get(os.Getenv("STREAM_CHECKER"))
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer func(Body io.ReadCloser) {
-		err = Body.Close()
-		if err != nil {
-
-		}
-	}(response.Body)
-
-	buf := new(strings.Builder)
-	_, err = io.Copy(buf, response.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	streamPageContent := buf.String()
-
-	re := regexp.MustCompile("<application>(.|\n)*?</application>") // The beginning of the separation of the get request
-	applications := re.FindAllString(streamPageContent, -1)
-
-	var m map[string][]string
-
-	m = make(map[string][]string)
-
-	if applications == nil {
-		fmt.Println("No matches.")
-	} else {
-		for _, application := range applications {
-			re1 := regexp.MustCompile("<stream>(.|\n)*?</stream>")
-			lives := re1.FindAllString(application, -1)
-			re2 := regexp.MustCompile("<name>(.|\n)*?</name>")
-			names := re2.FindAllString(application, 1)
-			_ = names
-			names[0] = names[0][6 : len(names[0])-7]
-			m[names[0]] = lives
-		}
-	}
-
 	if r.Method == "POST" {
-		err = r.ParseForm()
+		if verbose {
+			fmt.Println("Endpoints POST")
+		}
+		err := godotenv.Load()
+		if err != nil {
+			fmt.Printf("error loading .env file: %s", err)
+		}
+
+		response, err := http.Get(os.Getenv("STREAM_CHECKER"))
 		if err != nil {
 			fmt.Println(err)
 		}
-		var internalEndpoint, prodEndpoint, liveEndpoint, streamEndpoint bool
-		var n map[string][]string
-		n = make(map[string][]string)
-		if r.FormValue("internal_endpoint") == "on" { // There are four different endpoints that can be streamed to, internal, prod, live and stream. The checkboxes can select which one they want
-			internalEndpoint = true
-			n["internal"] = m["internal"]
-		}
-		if r.FormValue("prod_endpoint") == "on" {
-			prodEndpoint = true
-			n["prod"] = m["prod"]
-		}
-		if r.FormValue("live_endpoint") == "on" {
-			liveEndpoint = true
-			n["live"] = m["live"]
-		}
-		if r.FormValue("stream_endpoint") == "on" {
-			streamEndpoint = true
-			n["stream"] = m["stream"]
-		}
-		var endpoints []string
-		i := 0
-		for key, values := range n {
-			for _, value := range values {
-				re := regexp.MustCompile("<name>(.|\n)*?</name>")
-				names := re.FindAllString(value, 1)
-				names[0] = names[0][6 : len(names[0])-7]
-				endpoints = append(endpoints, key+"/"+names[0])
-				i++
-			}
-		}
-		fmt.Println("Endpoints:", "Internal:", internalEndpoint, "Prod:", prodEndpoint, "Live:", liveEndpoint, "Stream:", streamEndpoint)
-		b := new(bytes.Buffer)
-		for key, value := range n {
-			_, err := fmt.Fprintf(b, "%s=%s\n", key, value)
+		defer func(Body io.ReadCloser) {
+			err := Body.Close()
 			if err != nil {
-				return
+				fmt.Println(err)
+			}
+		}(response.Body)
+
+		buf := new(strings.Builder)
+		_, err = io.Copy(buf, response.Body)
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		streamPageContent := buf.String()
+
+		var rtmp RTMP
+
+		err = xml.Unmarshal([]byte(streamPageContent), &rtmp)
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		var endpoints []string
+
+		for i := 0; i < len(rtmp.Server.Applications); i++ {
+			endpoints = append(endpoints, "endpoint~"+rtmp.Server.Applications[i].Name)
+		}
+
+		stringByte := strings.Join(endpoints, "\x20")
+		_, err = w.Write([]byte(stringByte))
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+}
+
+// This collects the data from the rtmp stat page of nginx and produces a list of active streaming endpoints from given endpoints
+func (web *Web) streams(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "POST" {
+		err := r.ParseForm()
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		err = godotenv.Load()
+		if err != nil {
+			fmt.Printf("error loading .env file: %s", err)
+		}
+
+		response, err := http.Get(os.Getenv("STREAM_CHECKER"))
+		if err != nil {
+			fmt.Println(err)
+		}
+		defer func(Body io.ReadCloser) {
+			err := Body.Close()
+			if err != nil {
+				fmt.Println(err)
+			}
+		}(response.Body)
+
+		buf := new(strings.Builder)
+		_, err = io.Copy(buf, response.Body)
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		streamPageContent := buf.String()
+
+		var rtmp RTMP
+
+		err = xml.Unmarshal([]byte(streamPageContent), &rtmp)
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		var endpoints []string
+
+		for key := range r.Form {
+			endpoint := strings.Split(key, "~")
+			for i := 0; i < len(rtmp.Server.Applications); i++ {
+				if rtmp.Server.Applications[i].Name == endpoint[1] {
+					for j := 0; j < len(rtmp.Server.Applications[i].Live.Streams); j++ {
+						endpoints = append(endpoints, endpoint[1]+"/"+rtmp.Server.Applications[i].Live.Streams[j].Name)
+					}
+				}
 			}
 		}
+
 		if len(endpoints) != 0 {
-			fmt.Println("Data")
-			space := regexp.MustCompile(`\s+`)
-			s := space.ReplaceAllString(b.String(), " ")
-			_ = s
 			stringByte := strings.Join(endpoints, "\x20")
 			_, err := w.Write([]byte(stringByte))
 			if err != nil {
-				return
+				fmt.Println(err)
 			}
 		} else {
-			fmt.Println("No data")
 			_, err := w.Write([]byte("No active streams with the current selection"))
 			if err != nil {
-				return
+				fmt.Println(err)
 			}
 		}
 	}
@@ -191,12 +257,10 @@ func (web *Web) start(w http.ResponseWriter, r *http.Request) {
 			if r.FormValue("website_stream") == "on" {
 				websiteStream = true
 				if websiteCheck(r.FormValue("website_stream_endpoint")) {
-					fmt.Println("Success")
 					websiteValid = true
 					forwarderStart = "./forwarder_start " + r.FormValue("stream_selector") + " " + r.FormValue("website_stream_endpoint") + " "
 				} else {
 					websiteValid = false
-					fmt.Println("Failed")
 					errors = true
 					errorMessage = "Website key check has failed"
 				}
@@ -233,7 +297,7 @@ func (web *Web) start(w http.ResponseWriter, r *http.Request) {
 						b[i] = charset[seededRand.Intn(len(charset))]
 					}
 
-					rows, err := db.Query("SELECT * FROM streams")
+					rows, err := db.Query("SELECT stream FROM streams")
 					if err != nil {
 						fmt.Println(err)
 						errors = true
@@ -322,106 +386,104 @@ func (web *Web) start(w http.ResponseWriter, r *http.Request) {
 						username := os.Getenv("USERNAME")
 						password := os.Getenv("PASSWORD")
 						transmissionLight := os.Getenv("TRANSMISSION_LIGHT")
-						if r.FormValue("record") == "on" {
-							recording = true
-							client, session, err := connectToHost(username, password, recorder)
-							if err != nil {
-								fmt.Println("Error connecting to Recorder")
-								fmt.Println(err)
-								errors = true
-								errorMessage = err.Error()
-							} else {
-								_, err = session.CombinedOutput(recorderStart)
+						var wg sync.WaitGroup
+						wg.Add(2)
+						go func() {
+							defer wg.Done()
+							if r.FormValue("record") == "on" {
+								recording = true
+								client, session, err := connectToHost(username, password, recorder)
 								if err != nil {
-									fmt.Println("Error executing on Recorder")
+									fmt.Println("Error connecting to Recorder for start")
 									fmt.Println(err)
 									errors = true
 									errorMessage = err.Error()
 								} else {
-									err := client.Close()
+									_, err = session.CombinedOutput(recorderStart)
 									if err != nil {
+										fmt.Println("Error executing on Recorder for start")
 										fmt.Println(err)
 										errors = true
 										errorMessage = err.Error()
 									} else {
-										fmt.Println("Recorder success")
-									}
-								}
-							}
-						}
-						if !errors {
-							client1, session1, err := connectToHost(username, password, forwarder)
-							if err != nil {
-								fmt.Println("Error connecting to Forwarder")
-								fmt.Println(err)
-								errors = true
-								errorMessage = err.Error()
-							} else {
-								_, err = session1.CombinedOutput(forwarderStart)
-								if err != nil {
-									fmt.Println("Error executing on Forwarder")
-									fmt.Println(err)
-									errors = true
-									errorMessage = err.Error()
-								} else {
-									err = client1.Close()
-									if err != nil {
-										fmt.Println(err)
-										errors = true
-										errorMessage = err.Error()
-									} else {
-										fmt.Println("Forwarder success")
-
-										_, err := http.Get(transmissionLight + "transmission_on") // Output is ignored as it returns a 204 status and there's a weird bug with no content
-										if err != nil && !strings.Contains(err.Error(), "unexpected EOF") {
-											fmt.Println(err)
-											errors = true
-											errorMessage = err.Error()
-										}
-
-										fmt.Println("STARTED!")
-
-										db, err = sql.Open("sqlite3", "db/streams.db")
+										err := client.Close()
 										if err != nil {
 											fmt.Println(err)
 											errors = true
 											errorMessage = err.Error()
-										} else {
-											stmt, err := db.Prepare("UPDATE streams SET recording = ?, website = ?, streams = ? WHERE stream = ?")
-											if err != nil {
-												fmt.Println(err)
-												errors = true
-												errorMessage = err.Error()
-											}
-
-											res, err := stmt.Exec(recording, websiteStream, streams, string(b))
-											if err != nil {
-												fmt.Println(err)
-												errors = true
-												errorMessage = err.Error()
-											}
-
-											id, err = res.LastInsertId()
-											if err != nil {
-												fmt.Println(err)
-												errors = true
-												errorMessage = err.Error()
-											}
-
-											err = db.Close()
-											if err != nil {
-												fmt.Println(err)
-												errors = true
-												errorMessage = err.Error()
-											} else {
-												_, err = w.Write(b)
-												if err != nil {
-													fmt.Println(err)
-													errors = true
-													errorMessage = err.Error()
-												}
-											}
 										}
+									}
+								}
+							}
+						}()
+						go func() {
+							defer wg.Done()
+							client, session, err := connectToHost(username, password, forwarder)
+							if err != nil {
+								fmt.Println("Error connecting to Forwarder for start")
+								fmt.Println(err)
+								errors = true
+								errorMessage = err.Error()
+							} else {
+								_, err = session.CombinedOutput(forwarderStart)
+								if err != nil {
+									fmt.Println("Error executing on Forwarder for start")
+									fmt.Println(err)
+									errors = true
+									errorMessage = err.Error()
+								} else {
+									err = client.Close()
+									if err != nil {
+										fmt.Println(err)
+										errors = true
+										errorMessage = err.Error()
+									}
+								}
+							}
+						}()
+						wg.Wait()
+
+						if errors == false {
+							_, _ = http.Get(transmissionLight + "transmission_on")
+
+							db, err = sql.Open("sqlite3", "db/streams.db")
+							if err != nil {
+								fmt.Println(err)
+								errors = true
+								errorMessage = err.Error()
+							} else {
+								stmt, err := db.Prepare("UPDATE streams SET recording = ?, website = ?, streams = ? WHERE stream = ?")
+								if err != nil {
+									fmt.Println(err)
+									errors = true
+									errorMessage = err.Error()
+								}
+
+								res, err := stmt.Exec(recording, websiteStream, streams, string(b))
+								if err != nil {
+									fmt.Println(err)
+									errors = true
+									errorMessage = err.Error()
+								}
+
+								id, err = res.LastInsertId()
+								if err != nil {
+									fmt.Println(err)
+									errors = true
+									errorMessage = err.Error()
+								}
+
+								err = db.Close()
+								if err != nil {
+									fmt.Println(err)
+									errors = true
+									errorMessage = err.Error()
+								} else {
+									_, err = w.Write(b)
+									if err != nil {
+										fmt.Println(err)
+										errors = true
+										errorMessage = err.Error()
 									}
 								}
 							}
@@ -439,7 +501,7 @@ func (web *Web) start(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("An error has occurred...\n" + errorMessage)
 		_, err := w.Write([]byte("An error has occurred...\n" + errorMessage))
 		if err != nil {
-			return
+			fmt.Println(err)
 		}
 	}
 }
@@ -460,18 +522,20 @@ func (web *Web) resume(w http.ResponseWriter, r *http.Request) {
 
 		}
 
-		rows, err := db.Query("SELECT * FROM streams")
+		rows, err := db.Query("SELECT * FROM streams WHERE stream = ?", r.FormValue("unique"))
 		if err != nil {
 			fmt.Println(err)
 		}
 		var stream string
+		var recording, website bool
+		var streams int
 
 		data := false
 
 		accepted := false
 
 		for rows.Next() {
-			err = rows.Scan(&stream)
+			err = rows.Scan(&stream, &recording, &website, &streams)
 			if err != nil {
 				fmt.Println(err)
 			}
@@ -487,25 +551,162 @@ func (web *Web) resume(w http.ResponseWriter, r *http.Request) {
 
 		err = rows.Close()
 		if err != nil {
-			return
+			fmt.Println(err)
 		}
 
 		err = db.Close()
 		if err != nil {
-			return
+			fmt.Println(err)
 		}
 
 		if accepted {
 			fmt.Println("ACCEPTED!")
-			_, err := w.Write([]byte("ACCEPTED!"))
+			_, err := w.Write([]byte("ACCEPTED!~" + strconv.FormatBool(recording) + "~" + strconv.FormatBool(website) + "~" + strconv.Itoa(streams)))
 			if err != nil {
-				return
+				fmt.Println(err)
 			}
 		} else {
 			fmt.Println("REJECTED!")
 			_, err := w.Write([]byte("REJECTED!"))
 			if err != nil {
-				return
+				fmt.Println(err)
+			}
+		}
+	}
+}
+
+//
+func (web *Web) status(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "POST" {
+		db, err := sql.Open("sqlite3", "db/streams.db")
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			rows, err := db.Query("SELECT recording, website, streams FROM streams WHERE stream = ?", r.FormValue("unique"))
+			if err != nil {
+				fmt.Println(err)
+			}
+
+			var recording, website bool
+			var streams int
+
+			data := false
+
+			for rows.Next() {
+				err = rows.Scan(&recording, &website, &streams)
+				if err != nil {
+					fmt.Println(err)
+				}
+				data = true
+			}
+
+			err = rows.Close()
+			if err != nil {
+				fmt.Println(err)
+			}
+
+			err = db.Close()
+			if err != nil {
+				fmt.Println(err)
+			}
+
+			err = godotenv.Load()
+			if err != nil {
+				fmt.Printf("error loading .env file: %s", err)
+			}
+			forwarder := os.Getenv("FORWARDER")
+			recorder := os.Getenv("RECORDER")
+			username := os.Getenv("USERNAME")
+			password := os.Getenv("PASSWORD")
+			m := make(map[string]string)
+			var wg sync.WaitGroup
+			if data {
+				if recording {
+					wg.Add(2)
+					go func() {
+						defer wg.Done()
+						client, session, err := connectToHost(username, password, recorder)
+						if err != nil {
+							fmt.Println("Error connecting to Recorder for status")
+							fmt.Println(err)
+						}
+						dataOut, err := session.CombinedOutput("./recorder_status.sh " + r.FormValue("unique"))
+						if err != nil {
+							fmt.Println("Error executing on Recorder for status")
+							fmt.Println(err)
+						}
+						err = client.Close()
+						if err != nil {
+							fmt.Println(err)
+						}
+
+						dataOut1 := string(dataOut)[:len(dataOut)-2]
+
+						if len(dataOut1) > 0 {
+							if strings.Contains(dataOut1, "frame=") {
+								first := strings.Index(dataOut1, "frame=") - 1
+								last := strings.LastIndex(dataOut1, "\r")
+								dataOut1 = dataOut1[:last]
+								last = strings.LastIndex(dataOut1, "\r") + 1
+								m["recording"] = dataOut1[:first] + "\n" + dataOut1[last:]
+							} else {
+								m["recording"] = dataOut1
+							}
+						}
+
+						fmt.Println("Recorder status success")
+					}()
+				} else {
+					wg.Add(1)
+				}
+				go func() {
+					defer wg.Done()
+					client, session, err := connectToHost(username, password, forwarder)
+					if err != nil {
+						fmt.Println("Error connecting to Forwarder for status")
+						fmt.Println(err)
+					}
+					dataOut, err := session.CombinedOutput("./forwarder_status " + strconv.FormatBool(website) + " " + strconv.Itoa(streams) + " " + r.FormValue("unique"))
+					if err != nil {
+						fmt.Println("Error executing on Forwarder for status")
+						fmt.Println(err)
+					}
+					err = client.Close()
+					if err != nil {
+						fmt.Println(err)
+					}
+
+					dataOut1 := string(dataOut)[4 : len(dataOut)-2]
+
+					dataOut2 := strings.Split(dataOut1, "\u0000")
+
+					for _, dataOut3 := range dataOut2 {
+						if len(dataOut3) > 0 {
+							if strings.Contains(dataOut3, "frame=") {
+								dataOut4 := strings.Split(dataOut3, "~:~")
+								first := strings.Index(dataOut4[1], "frame=") - 1
+								last := strings.LastIndex(dataOut4[1], "\r")
+								dataOut4[1] = dataOut4[1][:last]
+								last = strings.LastIndex(dataOut4[1], "\r") + 1
+								m[strings.Trim(dataOut4[0], " ")] = dataOut4[1][:first] + "\n" + dataOut4[1][last:]
+							} else {
+								dataOut4 := strings.Split(dataOut3, "~:~")
+								m[strings.Trim(dataOut4[0], " ")] = dataOut4[1]
+							}
+						}
+					}
+
+					fmt.Println("Forwarder status success")
+				}()
+				wg.Wait()
+				jsonStr, err := json.Marshal(m)
+				output := strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(string(jsonStr[1:len(jsonStr)-1]), "\\n", "<br>"), "\"", ""), " , ", "<br><br><br>"), " ,", "<br><br><br>"), "<br>,", "<br><br>")
+				_, err = w.Write([]byte(output))
+				if err != nil {
+					fmt.Println(err.Error())
+				}
+			} else {
+				fmt.Println("ERROR DATA STATUS")
 			}
 		}
 	}
@@ -514,87 +715,130 @@ func (web *Web) resume(w http.ResponseWriter, r *http.Request) {
 // When the stream is finished then you can stop the stream by pressing the stop button and that would kill all the ffmpeg commands
 func (web *Web) stop(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
-		err := godotenv.Load()
-		if err != nil {
-			fmt.Printf("error loading .env file: %s", err)
-		}
-		forwarder := os.Getenv("FORWARDER")
-		recorder := os.Getenv("RECORDER")
-		username := os.Getenv("USERNAME")
-		password := os.Getenv("PASSWORD")
-		transmissionLight := os.Getenv("TRANSMISSION_LIGHT")
-		client2, session2, err := connectToHost(username, password, recorder)
-		if err != nil {
-			fmt.Println("Error connecting to Forwarder")
-			panic(err)
-		}
-		_, err = session2.CombinedOutput("./recorder_stop " + r.FormValue("unique") + " | bash")
-		if err != nil {
-			fmt.Println("Error executing on Recorder")
-			panic(err)
-		}
-		err = client2.Close()
-		if err != nil {
-			return
-		}
-
-		fmt.Println("Recorder success")
-
-		client3, session3, err := connectToHost(username, password, forwarder)
-		if err != nil {
-			fmt.Println("Error connecting to Forwarder")
-			panic(err)
-		}
-		_, err = session3.CombinedOutput("./forwarder_stop " + r.FormValue("unique") + " | bash")
-		if err != nil {
-			fmt.Println("Error executing on Forwarder")
-			panic(err)
-		}
-		err = client3.Close()
-		if err != nil {
-			return
-		}
-
-		fmt.Println("Forwarder success")
-
-		fmt.Println("STOPPED!")
-
 		db, err := sql.Open("sqlite3", "db/streams.db")
 		if err != nil {
 			fmt.Println(err)
 		} else {
-			stmt, err := db.Prepare("delete from streams where stream=?")
+
+		}
+
+		rows, err := db.Query("SELECT recording FROM streams WHERE stream = ?", r.FormValue("unique"))
+		if err != nil {
+			fmt.Println(err)
+		}
+		var recording bool
+
+		data := false
+
+		for rows.Next() {
+			err = rows.Scan(&recording)
 			if err != nil {
 				fmt.Println(err)
 			}
-
-			res, err := stmt.Exec(r.FormValue("unique"))
-			if err != nil {
-				fmt.Println(err)
-			}
-
-			affect, err := res.RowsAffected()
-			if err != nil {
-				fmt.Println(err)
-			}
-
-			if affect != 0 {
-				_, err = w.Write([]byte("STOPPED!"))
-				if err != nil {
-					return
-				}
-			}
+			data = true
+		}
+		err = rows.Close()
+		if err != nil {
+			fmt.Println(err)
 		}
 		err = db.Close()
 		if err != nil {
-			fmt.Println(err.Error())
+			fmt.Println(err)
 		}
-		fmt.Println(existingStreamCheck())
-		if !existingStreamCheck() {
-			_, err := http.Get(transmissionLight + "rehearsal_transmission_off") // Output is ignored as it returns a 204 status and there's a weird bug with no content
-			if err != nil && !strings.Contains(err.Error(), "unexpected EOF") {
+		if data {
+			err = godotenv.Load()
+			if err != nil {
+				fmt.Printf("error loading .env file: %s", err)
+			}
+			forwarder := os.Getenv("FORWARDER")
+			recorder := os.Getenv("RECORDER")
+			username := os.Getenv("USERNAME")
+			password := os.Getenv("PASSWORD")
+			transmissionLight := os.Getenv("TRANSMISSION_LIGHT")
+			var wg sync.WaitGroup
+			if recording {
+				wg.Add(2)
+				go func() {
+					defer wg.Done()
+					client, session, err := connectToHost(username, password, recorder)
+					if err != nil {
+						fmt.Println("Error connecting to Recorder for stop")
+						fmt.Println(err)
+					}
+					_, err = session.CombinedOutput("./recorder_stop " + r.FormValue("unique") + " | bash")
+					if err != nil {
+						fmt.Println("Error executing on Recorder for stop")
+						fmt.Println(err)
+					}
+					err = client.Close()
+					if err != nil {
+						fmt.Println(err)
+					}
+				}()
+			} else {
+				wg.Add(1)
+			}
+			go func() {
+				defer wg.Done()
+				client, session, err := connectToHost(username, password, forwarder)
+				if err != nil {
+					fmt.Println("Error connecting to Forwarder for stop")
+					fmt.Println(err)
+				}
+				_, err = session.CombinedOutput("./forwarder_stop " + r.FormValue("unique") + " | bash")
+				if err != nil {
+					fmt.Println("Error executing on Forwarder for stop")
+					fmt.Println(err)
+				}
+				err = client.Close()
+				if err != nil {
+					fmt.Println(err)
+				}
+
+				fmt.Println("Forwarder stop success")
+			}()
+			wg.Wait()
+			fmt.Println("STOPPED!")
+
+			db, err = sql.Open("sqlite3", "db/streams.db")
+			if err != nil {
+				fmt.Println(err)
+			} else {
+				stmt, err := db.Prepare("DELETE FROM streams WHERE stream = ?")
+				if err != nil {
+					fmt.Println(err, "DELETE")
+				}
+
+				res, err := stmt.Exec(r.FormValue("unique"))
+				if err != nil {
+					fmt.Println(err)
+				}
+
+				affect, err := res.RowsAffected()
+				if err != nil {
+					fmt.Println(err)
+				}
+
+				if affect != 0 {
+					_, err = w.Write([]byte("STOPPED!"))
+					if err != nil {
+						fmt.Println(err)
+					}
+				}
+			}
+			err = db.Close()
+			if err != nil {
 				fmt.Println(err.Error())
 			}
+			fmt.Println(existingStreamCheck())
+			if !existingStreamCheck() {
+				_, err := http.Get(transmissionLight + "rehearsal_transmission_off") // Output is ignored as it returns a 204 status and there's a weird bug with no content
+				if err != nil && !strings.Contains(err.Error(), "unexpected EOF") {
+					fmt.Println(err.Error())
+				}
+			}
+		} else {
+
 		}
 	}
 }
@@ -615,7 +859,7 @@ func (web *Web) list(w http.ResponseWriter, r *http.Request) {
 
 		}
 
-		rows, err := db.Query("SELECT * FROM streams")
+		rows, err := db.Query("SELECT stream FROM streams")
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -636,22 +880,20 @@ func (web *Web) list(w http.ResponseWriter, r *http.Request) {
 
 		err = rows.Close()
 		if err != nil {
-			return
+			fmt.Println(err)
 		}
 
 		err = db.Close()
 		if err != nil {
-			return
+			fmt.Println(err)
 		}
 
 		if !data {
-			fmt.Println("No current streams")
 			_, err = w.Write([]byte("No current streams"))
 			if err != nil {
 				fmt.Println(err)
 			}
 		} else {
-			fmt.Println(streams)
 			stringByte := strings.Join(streams, "\x20")
 			_, err = w.Write([]byte(stringByte))
 			if err != nil {
@@ -703,14 +945,14 @@ func websiteCheck(endpoint string) bool {
 	client := &http.Client{}
 	r, err := http.NewRequest("POST", keyChecker, strings.NewReader(data.Encode()))
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 	}
 	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
 
 	res, err := client.Do(r)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 	}
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
@@ -719,7 +961,7 @@ func websiteCheck(endpoint string) bool {
 	}(res.Body)
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 	}
 	if string(body) == "Accepted" {
 		return true
@@ -734,7 +976,7 @@ func existingStreamCheck() bool {
 	if err != nil {
 		fmt.Println(err)
 	} else {
-		rows, err := db.Query("SELECT * FROM streams")
+		rows, err := db.Query("SELECT stream FROM streams")
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -753,7 +995,7 @@ func existingStreamCheck() bool {
 			}
 			err = rows.Close()
 			if err != nil {
-				fmt.Println(err.Error())
+				fmt.Println(err)
 			}
 			err = db.Close()
 			if err != nil {
@@ -763,7 +1005,7 @@ func existingStreamCheck() bool {
 		}
 		err = rows.Close()
 		if err != nil {
-			fmt.Println(err.Error())
+			fmt.Println(err)
 		}
 		err = db.Close()
 		if err != nil {
