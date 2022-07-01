@@ -26,11 +26,13 @@ func main() {
 	}
 	unique := os.Args[0]
 	gomux.KillSession("STREAM RECORDING - "+unique, os.Stdout)
-	cmd := exec.Command("rm " + unique + "*.txt")
-	err := cmd.Run()
+	file := "logs/" + unique + ".txt"
+	cmd := exec.Command("/bin/rm", file)
+	stdout, err := cmd.Output()
 	if err != nil {
-		log.Fatal("echo " + err.Error())
+		fmt.Println(err.Error())
 	} else {
+		fmt.Println(string(stdout))
 		fmt.Println("echo RECORDER STOPPED!")
 	}
 }

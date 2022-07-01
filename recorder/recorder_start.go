@@ -87,8 +87,7 @@ func main() {
 			w1p0 := w1.Pane(0)
 
 			path = strings.ReplaceAll(path, ".mkv", "")
-			w1p0.Exec("./recorder_script.sh " + streamServer + streamIn + " " + pendingEdits + path + " " + unique + " | bash")
-			//w1p0.Exec("ffmpeg -i \"" + streamServer + streamIn + "\" -c copy \"" + pendingEdits + path + "\" > " + unique + ".txt 2>&1")
+			w1p0.Exec("./recorder_start.sh " + streamServer + streamIn + " \"" + pendingEdits + path + "\" " + unique + " | bash")
 
 			fmt.Println("echo RECORDER STARTED!")
 		} else {

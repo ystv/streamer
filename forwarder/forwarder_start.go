@@ -35,7 +35,7 @@ func main() {
 
 	s := gomux.NewSession(sessionName, os.Stdout)
 
-	w1 := s.AddWindow("FORWARDING")
+	w1 := s.AddWindow("FORWARDING - 0")
 
 	var panes []*gomux.Pane
 
@@ -46,18 +46,22 @@ func main() {
 		streamServer := os.Getenv("STREAM_SERVER")
 		if websiteOut != "no" {
 			panes = append(panes, w1.Pane(0))
-			panes[0].Exec("./forwarder_script.sh " + streamServer + streamIn + " " + streamServer + "live/" + websiteOut + " " + unique + " " + strconv.Itoa(0) + " | bash")
-			//panes[0].Exec("./forwarder_script.sh " + streamServer + streamIn + " " + "rtmp://stream.ystv.co.uk/live/" + websiteOut + " " + unique + " " + strconv.Itoa(0) + " | bash")
-			//panes[0].Exec("ffmpeg -i \"" + streamServer + streamIn + "\" -c copy -f flv \"" + streamServer + "live/" + websiteOut + "\"")
+			panes[0].Exec("./forwarder_start.sh " + streamServer + streamIn + " " + streamServer + "live/" + websiteOut + " " + unique + " " + strconv.Itoa(0) + " | bash")
 		} else {
 			panes = append(panes, w1.Pane(0))
 			panes[0].Exec("echo No website stream")
 		}
 		j := 1
+		k := 0
 		for i := 0; i < len(serversKeys); i = i + 2 {
+			if (i%8) == 0 && i != 0 {
+				k++
+				w1 = s.AddWindow("FORWARDING - " + strconv.Itoa(k))
+				panes = append(panes, w1.Pane(0))
+			}
 			panes = append(panes, w1.Pane(0).Split())
-			panes[(i/2)+1].Exec("./forwarder_script.sh " + streamServer + streamIn + " " + serversKeys[i] + serversKeys[i+1] + " " + unique + " " + strconv.Itoa(j) + " | bash")
-			//panes[(i/2)+1].Exec("ffmpeg -i \"" + streamServer + streamIn + "\" -c copy -f flv \"" + serversKeys[i] + serversKeys[i+1] + "\"")
+			fmt.Println("echo", (i/2)+1)
+			panes[(i/2)+1].Exec("./forwarder_start.sh " + streamServer + streamIn + " " + serversKeys[i] + serversKeys[i+1] + " " + unique + " " + strconv.Itoa(j) + " | bash")
 			j++
 		}
 

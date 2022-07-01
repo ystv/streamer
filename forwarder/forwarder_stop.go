@@ -5,7 +5,7 @@ import (
 	"github.com/wricardo/gomux"
 	"log"
 	"os"
-	"os/exec"
+	"path/filepath"
 	"strings"
 )
 
@@ -26,11 +26,14 @@ func main() {
 	}
 	unique := os.Args[0]
 	gomux.KillSession("STREAM FORWARDER - "+unique, os.Stdout)
-	cmd := exec.Command("rm " + unique + "*.txt")
-	err := cmd.Run()
+	files, err := filepath.Glob("logs/" + unique + "_*")
 	if err != nil {
-		log.Fatal("echo " + err.Error())
-	} else {
-		fmt.Println("echo FORWARDER STOPPED!")
+		panic(err)
 	}
+	for _, f := range files {
+		if err := os.Remove(f); err != nil {
+			panic(err)
+		}
+	}
+	fmt.Println("echo FORWARDER STOPPED!")
 }
