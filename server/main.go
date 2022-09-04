@@ -82,8 +82,7 @@ const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
 var verbose bool
 
-var seededRand = rand.New(
-	rand.NewSource(time.Now().UnixNano()))
+var seededRand = rand.New(rand.NewSource(time.Now().UnixNano()))
 
 // main function is the start and the root for the website
 func main() {
@@ -396,7 +395,7 @@ func (web *Web) endpoints(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// This collects the data from the rtmp stat page of nginx and produces a list of active streaming endpoints from given endpoints
+// streams collects the data from the rtmp stat page of nginx and produces a list of active streaming endpoints from given endpoints
 func (web *Web) streams(w http.ResponseWriter, r *http.Request) {
 	/*if !authenticate(w, r) {
 		err := godotenv.Load()
@@ -477,7 +476,7 @@ func (web *Web) streams(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// This section is the core of the program, where it takes the values set by the user in the webpage and processes the data and sends it to the recorder and the forwarder
+// start is the core of the program, where it takes the values set by the user in the webpage and processes the data and sends it to the recorder and the forwarder
 func (web *Web) start(w http.ResponseWriter, r *http.Request) {
 	/*if !authenticate(w, r) {
 		err := godotenv.Load()
@@ -1289,7 +1288,7 @@ func (web *Web) list(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// save
+// save allows for the functionality of saving a stream's details for later in order to make things easier for massive operations where you have multiple streams at once
 func (web *Web) save(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		if verbose {
@@ -1315,7 +1314,7 @@ func (web *Web) save(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// recall
+// recall can pull back up stream details from the save function and allows you to start a stored stream
 func (web *Web) recall(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		if verbose {
@@ -1341,7 +1340,7 @@ func (web *Web) recall(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// This is the handler for the YouTube help page
+// youtubeHelp is the handler for the YouTube help page
 func (web *Web) youtubeHelp(w http.ResponseWriter, _ *http.Request) {
 	/*if !authenticate(w, r) {
 		err := godotenv.Load()
@@ -1374,7 +1373,7 @@ func (web *Web) youtubeHelp(w http.ResponseWriter, _ *http.Request) {
 	}
 }
 
-// This is the handler for the Facebook help page
+// facebookHelp is the handler for the Facebook help page
 func (web *Web) facebookHelp(w http.ResponseWriter, _ *http.Request) {
 	/*if !authenticate(w, r) {
 		err := godotenv.Load()
@@ -1407,7 +1406,7 @@ func (web *Web) facebookHelp(w http.ResponseWriter, _ *http.Request) {
 	}
 }
 
-// This is the handler for any public documents, for example, the style sheet or images
+// public is the handler for any public documents, for example, the style sheet or images
 func (web *Web) public(w http.ResponseWriter, r *http.Request) {
 	if verbose {
 		fmt.Println("Public called")
@@ -1416,7 +1415,7 @@ func (web *Web) public(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "public/"+vars["id"])
 }
 
-// This checks if the website stream key is valid using software called COBRA
+// websiteCheck checks if the website stream key is valid using software called COBRA
 func websiteCheck(endpoint string) bool {
 	if verbose {
 		fmt.Println("Website Check called")
@@ -1462,7 +1461,7 @@ func websiteCheck(endpoint string) bool {
 	}
 }
 
-// This checks if there are any existing streams still registered in the database
+// existingStreamCheck checks if there are any existing streams still registered in the database
 func existingStreamCheck() bool {
 	if verbose {
 		fmt.Println("Existing Stream Check called")
@@ -1515,7 +1514,7 @@ func existingStreamCheck() bool {
 	return false
 }
 
-// This is a general function to ssh to a remote server, any code execution is handled outside this function
+// connectToHostPassword is a general function to ssh to a remote server, any code execution is handled outside this function
 func connectToHostPassword(host, username, password string) (*ssh.Client, *ssh.Session, error) {
 	if verbose {
 		fmt.Println("Connect To Host Password called")
