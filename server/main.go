@@ -4,9 +4,6 @@ import (
 	//"crypto/x509"
 	"database/sql"
 	"encoding/json"
-	"github.com/dgrijalva/jwt-go"
-	"github.com/gorilla/sessions"
-	"github.com/icza/session"
 	"github.com/ystv/streamer/server/templates"
 
 	//"encoding/pem"
@@ -64,21 +61,21 @@ type (
 		Name    string   `xml:"name"`
 	}
 
-	Claims struct {
+	/*Claims struct {
 		Id    int          `json:"id"`
 		Perms []Permission `json:"perms"`
 		Exp   int64        `json:"exp"`
 		jwt.StandardClaims
-	}
+	}*/
 
-	Permission struct {
+	/*Permission struct {
 		Permission string `json:"perms"`
 		jwt.StandardClaims
-	}
+	}*/
 
-	Views struct {
+	/*Views struct {
 		cookie *sessions.CookieStore
-	}
+	}*/
 )
 
 const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
@@ -143,7 +140,8 @@ func main() {
 }
 
 //
-func authenticate(w http.ResponseWriter, r *http.Request) bool {
+/*func authenticate(w http.ResponseWriter, r *http.Request) bool {
+	_ = w
 	response, err := http.Get("https://auth.dev.ystv.co.uk/api/set_token")
 	if err != nil {
 		fmt.Println(err)
@@ -184,6 +182,7 @@ func authenticate(w http.ResponseWriter, r *http.Request) bool {
 
 //
 func (web *Web) authenticate1(w http.ResponseWriter, r *http.Request) {
+	_ = w
 	reqToken := r.Header.Get("Authorization")
 	//splitToken := strings.Split(reqToken, "Bearer ")
 	//reqToken = splitToken[1]
@@ -293,7 +292,7 @@ func (web *Web) authenticate1(w http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Println("Unauthorised")
 	return
-}
+}*/
 
 // home is the basic html writer that provides the main page for Streamer
 func (web *Web) home(w http.ResponseWriter, r *http.Request) {
