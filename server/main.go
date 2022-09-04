@@ -129,9 +129,9 @@ func main() {
 		fmt.Printf("error loading .env file: %s", err)
 	}
 
-	err = http.ListenAndServe(":"+os.Getenv("SERVER_PORT"), web.mux)
+	fmt.Println("Server listening on port", os.Getenv("SERVER_PORT"), "...")
 
-	fmt.Println("Server listening on port ", os.Getenv("SERVER_PORT"), "...")
+	err = http.ListenAndServe(":"+os.Getenv("SERVER_PORT"), web.mux)
 
 	if err != nil {
 		fmt.Println(err)
