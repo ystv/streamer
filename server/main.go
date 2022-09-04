@@ -318,13 +318,13 @@ func (web *Web) home(w http.ResponseWriter, r *http.Request) {
 	}*/
 	web.t = templates.NewMain()
 
-	params := templates.DashboardParams{
+	params := templates.PageParams{
 		Base: templates.BaseParams{
 			SystemTime: time.Now(),
 		},
 	}
 
-	err := web.t.Dashboard(w, params)
+	err := web.t.Page(w, params)
 	if err != nil {
 		err = fmt.Errorf("failed to render dashboard: %w", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -800,13 +800,13 @@ func (web *Web) resume(w http.ResponseWriter, r *http.Request) {
 		}
 		web.t = templates.NewResume()
 
-		params := templates.DashboardParams{
+		params := templates.PageParams{
 			Base: templates.BaseParams{
 				SystemTime: time.Now(),
 			},
 		}
 
-		err := web.t.Dashboard(w, params)
+		err := web.t.Page(w, params)
 		if err != nil {
 			err = fmt.Errorf("failed to render dashboard: %w", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -1223,13 +1223,13 @@ func (web *Web) list(w http.ResponseWriter, r *http.Request) {
 		}
 		web.t = templates.NewList()
 
-		params := templates.DashboardParams{
+		params := templates.PageParams{
 			Base: templates.BaseParams{
 				SystemTime: time.Now(),
 			},
 		}
 
-		err := web.t.Dashboard(w, params)
+		err := web.t.Page(w, params)
 		if err != nil {
 			err = fmt.Errorf("failed to render dashboard: %w", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -1297,13 +1297,13 @@ func (web *Web) save(w http.ResponseWriter, r *http.Request) {
 		}
 		web.t = templates.NewSave()
 
-		params := templates.DashboardParams{
+		params := templates.PageParams{
 			Base: templates.BaseParams{
 				SystemTime: time.Now(),
 			},
 		}
 
-		err := web.t.Dashboard(w, params)
+		err := web.t.Page(w, params)
 		if err != nil {
 			err = fmt.Errorf("failed to render dashboard: %w", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -1323,13 +1323,13 @@ func (web *Web) recall(w http.ResponseWriter, r *http.Request) {
 		}
 		web.t = templates.NewRecall()
 
-		params := templates.DashboardParams{
+		params := templates.PageParams{
 			Base: templates.BaseParams{
 				SystemTime: time.Now(),
 			},
 		}
 
-		err := web.t.Dashboard(w, params)
+		err := web.t.Page(w, params)
 		if err != nil {
 			err = fmt.Errorf("failed to render dashboard: %w", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -1361,13 +1361,13 @@ func (web *Web) youtubeHelp(w http.ResponseWriter, _ *http.Request) {
 
 	web.t = templates.NewYouTubeHelp()
 
-	params := templates.DashboardParams{
+	params := templates.PageParams{
 		Base: templates.BaseParams{
 			SystemTime: time.Now(),
 		},
 	}
 
-	err := web.t.Dashboard(w, params)
+	err := web.t.Page(w, params)
 	if err != nil {
 		err = fmt.Errorf("failed to render dashboard: %w", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -1394,13 +1394,13 @@ func (web *Web) facebookHelp(w http.ResponseWriter, _ *http.Request) {
 
 	web.t = templates.NewFacebookHelp()
 
-	params := templates.DashboardParams{
+	params := templates.PageParams{
 		Base: templates.BaseParams{
 			SystemTime: time.Now(),
 		},
 	}
 
-	err := web.t.Dashboard(w, params)
+	err := web.t.Page(w, params)
 	if err != nil {
 		err = fmt.Errorf("failed to render dashboard: %w", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)

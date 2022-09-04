@@ -17,7 +17,7 @@ type (
 	BaseParams struct {
 		SystemTime time.Time
 	}
-	DashboardParams struct {
+	PageParams struct {
 		Base BaseParams
 	}
 )
@@ -77,6 +77,6 @@ func NewYouTubeHelp() *Templater {
 	}
 }
 
-func (t *Templater) Dashboard(w io.Writer, p DashboardParams) error {
+func (t *Templater) Page(w io.Writer, p PageParams) error {
 	return t.dashboard.Execute(w, p)
 }
