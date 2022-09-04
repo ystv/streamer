@@ -1,16 +1,8 @@
 {{define "content"}}
-<h1 class="title">Streamer - Facebook help</h1><br>
-<p class="subtitle">This page is to help you get the stream key from Facebook</p>
-<div class="theme-switch-wrapper">
-    <label class="theme-switch" for="checkbox">
-        <input type="checkbox" id="checkbox"/>
-        <div class="slider round"></div>
-    </label>
-    <p style="margin-bottom: 10px;">Dark Mode</p>
-</div>
 <div class="card">
     <div class="card-content">
-        <p class="title">Accessing Creator Studio</p><br>
+        <p class="title">Facebook help</p><br>
+        <p class="subtitle">Accessing Creator Studio</p><br>
         <p>The first thing once you get to the Facebook homepage is to navigate to the YSTV page<br>
             If you have access to the YSTV backend controls then you will see a side panel similar to this one on the left-hand side of the page</p><br>
         <img src="public/facebook_1.png" alt="Facebook 1"><br>
@@ -32,30 +24,4 @@
         </button>
     </div>
 </div>
-<script>
-    const toggleSwitch = document.querySelector('.theme-switch input[type="checkbox"]');
-
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        document.documentElement.setAttribute('data-theme', 'dark');
-        toggleSwitch.checked = true;
-        document.getElementById("result").style.color = "lightgrey";
-        document.getElementById("footer").style.color = "lightgrey";
-    }
-
-    function switchTheme(e) {
-        if (e.target.checked) {
-            document.documentElement.setAttribute('data-theme', 'dark');
-            localStorage.setItem('theme', 'dark');
-            document.getElementById("result").style.color = "lightgrey";
-            document.getElementById("footer").style.color = "lightgrey";
-        } else {
-            document.documentElement.setAttribute('data-theme', 'light');
-            localStorage.setItem('theme', 'light');
-            document.getElementById("result").style.color = "dimgrey";
-            document.getElementById("footer").style.color = "dimgrey";
-        }
-    }
-
-    toggleSwitch.addEventListener('change', switchTheme, false);
-</script>
 {{end}}

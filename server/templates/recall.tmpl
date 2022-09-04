@@ -1,16 +1,7 @@
 {{define "content"}}
-<h1 class="title">Streamer</h1><br>
-<div class="subtitle"><p>Welcome to Streamer<br></p></div>
-<div class="theme-switch-wrapper">
-  <label class="theme-switch" for="checkbox">
-    <input type="checkbox" id="checkbox"/>
-    <div class="slider round"></div>
-  </label>
-  <p style="margin-bottom: 10px;">Dark Mode</p>
-</div>
 <div class="card" id="enter">
   <div class="card-content">
-    <p class="title">Resume a stream</p><br>
+    <p class="title">Recall a stream</p><br>
     <form id="resume">
       <label for="unique">Enter the code you were given before in the box below</label><br>
       <input class="input" name="unique" id="unique" placeholder="ab12cd34ef"><br>
@@ -45,25 +36,6 @@
   </div>
 </div>
 <script>
-  const toggleSwitch = document.querySelector('.theme-switch input[type="checkbox"]');
-
-  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-    document.documentElement.setAttribute('data-theme', 'dark');
-    toggleSwitch.checked = true;
-  }
-
-  function switchTheme(e) {
-    if (e.target.checked) {
-      document.documentElement.setAttribute('data-theme', 'dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.setAttribute('data-theme', 'light');
-      localStorage.setItem('theme', 'light');
-    }
-  }
-
-  toggleSwitch.addEventListener('change', switchTheme, false);
-
   document.getElementById('stop_checkbox').onchange = function () {
     document.getElementById('stop_button').disabled = !this.checked;
     document.getElementById('stop_button').hidden = !this.checked;

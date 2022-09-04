@@ -13,7 +13,42 @@
 
 
 <body>
+    <h1 class="title">Streamer</h1><br>
+    <div class="subtitle"><p>Welcome to Streamer<br></p></div>
+    <div class="theme-switch-wrapper">
+      <label class="theme-switch" for="checkbox">
+        <input type="checkbox" id="checkbox"/>
+        <div class="slider round"></div>
+      </label>
+      <p style="margin-bottom: 10px;">Dark Mode</p>
+    </div>
     {{block "content" .}}{{end}}
     <footer id="footer">Streamer - created by Liam Burnand 2022</footer>
+    <script>
+        const toggleSwitch = document.querySelector('.theme-switch input[type="checkbox"]');
+
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            toggleSwitch.checked = true;
+            //document.getElementById("result").style.color = "lightgrey";
+            document.getElementById("footer").style.color = "lightgrey";
+        }
+
+        function switchTheme(e) {
+            if (e.target.checked) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+                //document.getElementById("result").style.color = "lightgrey";
+                document.getElementById("footer").style.color = "lightgrey";
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+                localStorage.setItem('theme', 'light');
+                //document.getElementById("result").style.color = "dimgrey";
+                document.getElementById("footer").style.color = "dimgrey";
+            }
+        }
+
+        toggleSwitch.addEventListener('change', switchTheme, false);
+    </script>
 </body>
 </html>
