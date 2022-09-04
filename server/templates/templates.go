@@ -35,9 +35,45 @@ func parse(file string) *template.Template {
 		template.New("base.tmpl").Funcs(funcs).ParseFS(tpls, "base.tmpl", file))
 }
 
-func New() *Templater {
+func NewMain() *Templater {
 	return &Templater{
-		dashboard: parse("dashboard.tmpl"),
+		dashboard: parse("main.tmpl"),
+	}
+}
+
+func NewList() *Templater {
+	return &Templater{
+		dashboard: parse("list.tmpl"),
+	}
+}
+
+func NewRecall() *Templater {
+	return &Templater{
+		dashboard: parse("recall.tmpl"),
+	}
+}
+
+func NewResume() *Templater {
+	return &Templater{
+		dashboard: parse("resume.tmpl"),
+	}
+}
+
+func NewSave() *Templater {
+	return &Templater{
+		dashboard: parse("save.tmpl"),
+	}
+}
+
+func NewFacebookHelp() *Templater {
+	return &Templater{
+		dashboard: parse("facebookHelp.tmpl"),
+	}
+}
+
+func NewYouTubeHelp() *Templater {
+	return &Templater{
+		dashboard: parse("youtubeHelp.tmpl"),
 	}
 }
 

@@ -1,9 +1,17 @@
 package main
 
 import (
+	//"crypto/x509"
 	"database/sql"
 	"encoding/json"
+	"github.com/dgrijalva/jwt-go"
+	"github.com/gorilla/sessions"
+	"github.com/icza/session"
+	"github.com/ystv/streamer/server/templates"
+
+	//"encoding/pem"
 	"encoding/xml"
+	//"errors"
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
@@ -21,39 +29,57 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"text/template"
 	"time"
 )
 
-type Web struct {
-	mux *mux.Router
-}
+type (
+	Web struct {
+		mux *mux.Router
+		t   *templates.Templater
+	}
 
-type RTMP struct {
-	XMLName xml.Name `xml:"rtmp"`
-	Server  Server   `xml:"server"`
-}
+	RTMP struct {
+		XMLName xml.Name `xml:"rtmp"`
+		Server  Server   `xml:"server"`
+	}
 
-type Server struct {
-	XMLName      xml.Name      `xml:"server"`
-	Applications []Application `xml:"application"`
-}
+	Server struct {
+		XMLName      xml.Name      `xml:"server"`
+		Applications []Application `xml:"application"`
+	}
 
-type Application struct {
-	XMLName xml.Name `xml:"application"`
-	Name    string   `xml:"name"`
-	Live    Live     `xml:"live"`
-}
+	Application struct {
+		XMLName xml.Name `xml:"application"`
+		Name    string   `xml:"name"`
+		Live    Live     `xml:"live"`
+	}
 
-type Live struct {
-	XMLName xml.Name `xml:"live"`
-	Streams []Stream `xml:"stream"`
-}
+	Live struct {
+		XMLName xml.Name `xml:"live"`
+		Streams []Stream `xml:"stream"`
+	}
 
-type Stream struct {
-	XMLName xml.Name `xml:"stream"`
-	Name    string   `xml:"name"`
-}
+	Stream struct {
+		XMLName xml.Name `xml:"stream"`
+		Name    string   `xml:"name"`
+	}
+
+	Claims struct {
+		Id    int          `json:"id"`
+		Perms []Permission `json:"perms"`
+		Exp   int64        `json:"exp"`
+		jwt.StandardClaims
+	}
+
+	Permission struct {
+		Permission string `json:"perms"`
+		jwt.StandardClaims
+	}
+
+	Views struct {
+		cookie *sessions.CookieStore
+	}
+)
 
 const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
@@ -62,7 +88,7 @@ var verbose bool
 var seededRand = rand.New(
 	rand.NewSource(time.Now().UnixNano()))
 
-// The main initial function that is called and is the root for the website
+// main function is the start and the root for the website
 func main() {
 	if strings.Contains(os.Args[0], "/var/folders") || strings.Contains(os.Args[0], "/tmp/go") || strings.Contains(os.Args[0], "./streamer") {
 		if len(os.Args) > 2 {
@@ -87,6 +113,7 @@ func main() {
 	}
 	web := Web{mux: mux.NewRouter()}
 	web.mux.HandleFunc("/", web.home)
+	//web.mux.HandleFunc("/authenticate1", web.authenticate1)
 	web.mux.HandleFunc("/endpoints", web.endpoints)
 	web.mux.HandleFunc("/streams", web.streams)
 	web.mux.HandleFunc("/start", web.start)
@@ -94,31 +121,230 @@ func main() {
 	web.mux.HandleFunc("/status", web.status)
 	web.mux.HandleFunc("/stop", web.stop)
 	web.mux.HandleFunc("/list", web.list)
+	web.mux.HandleFunc("/save", web.save)
+	web.mux.HandleFunc("/recall", web.recall)
 	web.mux.HandleFunc("/youtubehelp", web.youtubeHelp)
 	web.mux.HandleFunc("/facebookhelp", web.facebookHelp)
 	web.mux.HandleFunc("/public/{id:[a-zA-Z0-9_.-]+}", web.public) // This handles all the public pages that the webpage can request, e.g. css, images and jquery
 
-	fmt.Println("Server listening...")
-	err := http.ListenAndServe(":8080", web.mux)
+	err := godotenv.Load()
+	if err != nil {
+		fmt.Printf("error loading .env file: %s", err)
+	}
+
+	err = http.ListenAndServe(":"+os.Getenv("SERVER_PORT"), web.mux)
+
+	fmt.Println("Server listening on port ", os.Getenv("SERVER_PORT"), "...")
+
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 }
 
-// This is a basic html writer that provides the main page for Streamer
-func (web *Web) home(w http.ResponseWriter, _ *http.Request) {
-	if verbose {
-		fmt.Println("Home called")
-	}
-	tmpl := template.Must(template.ParseFiles("html/main.html"))
-	err := tmpl.Execute(w, nil)
+//
+func authenticate(w http.ResponseWriter, r *http.Request) bool {
+	response, err := http.Get("https://auth.dev.ystv.co.uk/api/set_token")
 	if err != nil {
 		fmt.Println(err)
 	}
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			fmt.Println(err)
+		}
+	}(response.Body)
+	buf := new(strings.Builder)
+	_, err = io.Copy(buf, response.Body)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(buf.String())
+	reqToken := r.Header.Get("Authorization")
+	//splitToken := strings.Split(reqToken, "Bearer ")
+	//reqToken = splitToken[1]
+	fmt.Println("Token - ", reqToken)
+	err = godotenv.Load()
+	if err != nil {
+		fmt.Printf("error loading .env file: %s", err)
+	}
+
+	sess := session.Get(r)
+	if sess == nil {
+		fmt.Println("None")
+	} else {
+		fmt.Println(sess)
+	}
+
+	jwtAuthentication := os.Getenv("JWT_AUTHENTICATION")
+
+	http.Redirect(w, r, jwtAuthentication+"authenticate1", http.StatusTemporaryRedirect)
+	return false
 }
 
+//
+func (web *Web) authenticate1(w http.ResponseWriter, r *http.Request) {
+	reqToken := r.Header.Get("Authorization")
+	//splitToken := strings.Split(reqToken, "Bearer ")
+	//reqToken = splitToken[1]
+	fmt.Println("Token - ", reqToken)
+	err := godotenv.Load()
+	if err != nil {
+		fmt.Printf("error loading .env file: %s", err)
+	}
+	jwtKey := os.Getenv("JWT_KEY")
+
+	//fmt.Println(r.Cookies())
+
+	fmt.Println(r)
+
+	view := Views{}
+
+	view.cookie = sessions.NewCookieStore(
+		[]byte("444bd23239f14b804af0ae40375c8feec80b699684f4d1a6d86f59658edb3706caaa306fd3361e6353bf54c0df66adb7c1e395cac79a72ee0339dc1892fd478e"),
+		[]byte("444bd23239f14b804af0ae40375c8feec80b699684f4d1a6d86f59658edb3706"),
+	)
+
+	sess, err := view.cookie.Get(r, "session")
+
+	fmt.Println(sess)
+
+	_ = sess
+
+	//store := sessions.NewCookieStore([]byte(os.Getenv("SESSION_KEY")))
+
+	//session, err := store.Get(r, "session-name")
+
+	//fmt.Println(err)
+
+	//fmt.Println(session.ID)
+
+	//fmt.Println(session)
+
+	//fmt.Println(session.Values["token"])
+
+	response, err := http.Get("https://auth.dev.ystv.co.uk/api/set_token")
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			fmt.Println(err)
+		}
+	}(response.Body)
+
+	buf := new(strings.Builder)
+	_, err = io.Copy(buf, response.Body)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	tokenPage := buf.String()
+
+	_ = tokenPage
+
+	//fmt.Println(tokenPage)
+
+	fmt.Println(r.Cookie("session"))
+
+	c, err := r.Cookie("token")
+	if err != nil {
+		if err == http.ErrNoCookie {
+			fmt.Println(err)
+
+		}
+		fmt.Println(err)
+		return
+	}
+
+	claims := &Claims{}
+
+	// Parse the JWT string and store the result in `claims`.
+	// Note that we are passing the key in this method as well. This method will return an error
+	// if the token is invalid (if it has expired according to the expiry time we set on sign in),
+	// or if the signature does not match
+	tkn, err := jwt.ParseWithClaims(c.Value, claims, func(token *jwt.Token) (interface{}, error) {
+		return jwtKey, nil
+	})
+	fmt.Println(tkn)
+	if err != nil {
+		if err == jwt.ErrSignatureInvalid {
+			fmt.Println("Unauthorised")
+			fmt.Println(err)
+			return
+		}
+		fmt.Println(err)
+		return
+	}
+	if !tkn.Valid {
+		fmt.Println("Unauthorised")
+		return
+	}
+	if time.Now().Unix() > claims.Exp {
+		fmt.Println("Expired")
+		return
+	}
+	for _, perm := range claims.Perms {
+		if perm.Permission == "Streamer" {
+			fmt.Println("~~~Success~~~")
+			return
+		}
+	}
+	fmt.Println("Unauthorised")
+	return
+}
+
+// home is the basic html writer that provides the main page for Streamer
+func (web *Web) home(w http.ResponseWriter, r *http.Request) {
+	_ = r
+	/*if !authenticate(w, r) {
+		err := godotenv.Load()
+		if err != nil {
+			fmt.Printf("error loading .env file: %s", err)
+		}
+
+		jwtAuthentication := os.Getenv("JWT_AUTHENTICATION")
+
+		http.Redirect(w, r, jwtAuthentication+"authenticate1", http.StatusTemporaryRedirect)
+		return
+	}*/
+	if verbose {
+		fmt.Println("Home called")
+	}
+	/*tmpl := template.Must(template.ParseFiles("html/main.html"))
+	err := tmpl.Execute(w, nil)
+	if err != nil {
+		fmt.Println(err)
+	}*/
+	web.t = templates.NewMain()
+
+	params := templates.DashboardParams{
+		Base: templates.BaseParams{
+			SystemTime: time.Now(),
+		},
+	}
+
+	err := web.t.Dashboard(w, params)
+	if err != nil {
+		err = fmt.Errorf("failed to render dashboard: %w", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+// endpoints presents the endpoints to the user
 func (web *Web) endpoints(w http.ResponseWriter, r *http.Request) {
+	/*if !authenticate(w, r) {
+		err := godotenv.Load()
+		if err != nil {
+			fmt.Printf("error loading .env file: %s", err)
+		}
+
+		jwtAuthentication := os.Getenv("JWT_AUTHENTICATION")
+
+		http.Redirect(w, r, jwtAuthentication, http.StatusTemporaryRedirect)
+		return
+	}*/
 	if verbose {
 		fmt.Println("Endpoints called")
 	}
@@ -173,7 +399,21 @@ func (web *Web) endpoints(w http.ResponseWriter, r *http.Request) {
 
 // This collects the data from the rtmp stat page of nginx and produces a list of active streaming endpoints from given endpoints
 func (web *Web) streams(w http.ResponseWriter, r *http.Request) {
+	/*if !authenticate(w, r) {
+		err := godotenv.Load()
+		if err != nil {
+			fmt.Printf("error loading .env file: %s", err)
+		}
+
+		jwtAuthentication := os.Getenv("JWT_AUTHENTICATION")
+
+		http.Redirect(w, r, jwtAuthentication, http.StatusTemporaryRedirect)
+		return
+	}*/
 	if r.Method == "POST" {
+		if verbose {
+			fmt.Println("Streams POST called")
+		}
 		err := r.ParseForm()
 		if err != nil {
 			fmt.Println(err)
@@ -240,9 +480,23 @@ func (web *Web) streams(w http.ResponseWriter, r *http.Request) {
 
 // This section is the core of the program, where it takes the values set by the user in the webpage and processes the data and sends it to the recorder and the forwarder
 func (web *Web) start(w http.ResponseWriter, r *http.Request) {
+	/*if !authenticate(w, r) {
+		err := godotenv.Load()
+		if err != nil {
+			fmt.Printf("error loading .env file: %s", err)
+		}
+
+		jwtAuthentication := os.Getenv("JWT_AUTHENTICATION")
+
+		http.Redirect(w, r, jwtAuthentication, http.StatusTemporaryRedirect)
+		return
+	}*/
 	errors := false
 	var errorMessage string
 	if r.Method == "POST" {
+		if verbose {
+			fmt.Println("Start POST called")
+		}
 		err := r.ParseForm()
 		if err != nil {
 			fmt.Println(err)
@@ -383,8 +637,16 @@ func (web *Web) start(w http.ResponseWriter, r *http.Request) {
 					} else {
 						forwarder := os.Getenv("FORWARDER")
 						recorder := os.Getenv("RECORDER")
-						username := os.Getenv("USERNAME")
-						password := os.Getenv("PASSWORD")
+						forwarderUsername := os.Getenv("FORWARDER_USERNAME")
+						recorderUsername := os.Getenv("RECORDER_USERNAME")
+						//forwarderAuth := os.Getenv("FORWARDER_AUTH")
+						//recorderAuth := os.Getenv("RECORDER_AUTH")
+						forwarderPassword := os.Getenv("FORWARDER_PASSWORD")
+						recorderPassword := os.Getenv("RECORDER_PASSWORD")
+						//forwarderPrivateKey := os.Getenv("FORWARDER_PRIVATE_KEY")
+						//recorderPrivateKey := os.Getenv("RECORDER_PRIVATE_KEY")
+						//forwarderPassphrase := os.Getenv("FORWARDER_PASSPHRASE")
+						//recorderPassphrase := os.Getenv("RECORDER_PASSPHRASE")
 						transmissionLight := os.Getenv("TRANSMISSION_LIGHT")
 						var wg sync.WaitGroup
 						wg.Add(2)
@@ -392,7 +654,14 @@ func (web *Web) start(w http.ResponseWriter, r *http.Request) {
 							defer wg.Done()
 							if r.FormValue("record") == "on" {
 								recording = true
-								client, session, err := connectToHost(username, password, recorder)
+								var client *ssh.Client
+								var session *ssh.Session
+								var err error
+								//if recorderAuth == "PEM" {
+								//	client, session, err = connectToHostPEM(recorder, recorderUsername, recorderPrivateKey, recorderPassphrase)
+								//} else if recorderAuth == "PASS" {
+								client, session, err = connectToHostPassword(recorder, recorderUsername, recorderPassword)
+								//}
 								if err != nil {
 									fmt.Println("Error connecting to Recorder for start")
 									fmt.Println(err)
@@ -418,7 +687,14 @@ func (web *Web) start(w http.ResponseWriter, r *http.Request) {
 						}()
 						go func() {
 							defer wg.Done()
-							client, session, err := connectToHost(username, password, forwarder)
+							var client *ssh.Client
+							var session *ssh.Session
+							var err error
+							//if forwarderAuth == "PEM" {
+							//	client, session, err = connectToHostPEM(forwarder, forwarderUsername, forwarderPrivateKey, forwarderPassphrase)
+							//} else if forwarderAuth == "PASS" {
+							client, session, err = connectToHostPassword(forwarder, forwarderUsername, forwarderPassword)
+							//}
 							if err != nil {
 								fmt.Println("Error connecting to Forwarder for start")
 								fmt.Println(err)
@@ -506,15 +782,40 @@ func (web *Web) start(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// If the user decides to return at a later date then they can, by inputting the unique code that they were given then they can go to the resume page and enter the code
+// resume is used if the user decides to return at a later date then they can, by inputting the unique code that they were given then they can go to the resume page and enter the code
 func (web *Web) resume(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "GET" {
-		tmpl := template.Must(template.ParseFiles("html/resume.html"))
-		err := tmpl.Execute(w, nil)
+	/*if !authenticate(w, r) {
+		err := godotenv.Load()
 		if err != nil {
-			fmt.Println(err)
+			fmt.Printf("error loading .env file: %s", err)
+		}
+
+		jwtAuthentication := os.Getenv("JWT_AUTHENTICATION")
+
+		http.Redirect(w, r, jwtAuthentication, http.StatusTemporaryRedirect)
+		return
+	}*/
+	if r.Method == "GET" {
+		if verbose {
+			fmt.Println("Resume GET called")
+		}
+		web.t = templates.NewResume()
+
+		params := templates.DashboardParams{
+			Base: templates.BaseParams{
+				SystemTime: time.Now(),
+			},
+		}
+
+		err := web.t.Dashboard(w, params)
+		if err != nil {
+			err = fmt.Errorf("failed to render dashboard: %w", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	} else if r.Method == "POST" {
+		if verbose {
+			fmt.Println("Resume POST called")
+		}
 		db, err := sql.Open("sqlite3", "db/streams.db")
 		if err != nil {
 			fmt.Println(err)
@@ -575,9 +876,12 @@ func (web *Web) resume(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-//
+// status is used to check the status of the streams and does this by tail command of the output logs
 func (web *Web) status(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
+		if verbose {
+			fmt.Println("Status POST called")
+		}
 		db, err := sql.Open("sqlite3", "db/streams.db")
 		if err != nil {
 			fmt.Println(err)
@@ -616,8 +920,16 @@ func (web *Web) status(w http.ResponseWriter, r *http.Request) {
 			}
 			forwarder := os.Getenv("FORWARDER")
 			recorder := os.Getenv("RECORDER")
-			username := os.Getenv("USERNAME")
-			password := os.Getenv("PASSWORD")
+			forwarderUsername := os.Getenv("FORWARDER_USERNAME")
+			recorderUsername := os.Getenv("RECORDER_USERNAME")
+			//forwarderAuth := os.Getenv("FORWARDER_AUTH")
+			//recorderAuth := os.Getenv("RECORDER_AUTH")
+			forwarderPassword := os.Getenv("FORWARDER_PASSWORD")
+			recorderPassword := os.Getenv("RECORDER_PASSWORD")
+			//forwarderPrivateKey := os.Getenv("FORWARDER_PRIVATE_KEY")
+			//recorderPrivateKey := os.Getenv("RECORDER_PRIVATE_KEY")
+			//forwarderPassphrase := os.Getenv("FORWARDER_PASSPHRASE")
+			//recorderPassphrase := os.Getenv("RECORDER_PASSPHRASE")
 			m := make(map[string]string)
 			var wg sync.WaitGroup
 			if data {
@@ -625,7 +937,14 @@ func (web *Web) status(w http.ResponseWriter, r *http.Request) {
 					wg.Add(2)
 					go func() {
 						defer wg.Done()
-						client, session, err := connectToHost(username, password, recorder)
+						var client *ssh.Client
+						var session *ssh.Session
+						var err error
+						//if recorderAuth == "PEM" {
+						//	client, session, err = connectToHostPEM(recorder, recorderUsername, recorderPrivateKey, recorderPassphrase)
+						//} else if recorderAuth == "PASS" {
+						client, session, err = connectToHostPassword(recorder, recorderUsername, recorderPassword)
+						//}
 						if err != nil {
 							fmt.Println("Error connecting to Recorder for status")
 							fmt.Println(err)
@@ -661,7 +980,14 @@ func (web *Web) status(w http.ResponseWriter, r *http.Request) {
 				}
 				go func() {
 					defer wg.Done()
-					client, session, err := connectToHost(username, password, forwarder)
+					var client *ssh.Client
+					var session *ssh.Session
+					var err error
+					//if forwarderAuth == "PEM" {
+					//	client, session, err = connectToHostPEM(forwarder, forwarderUsername, forwarderPrivateKey, forwarderPassphrase)
+					//} else if forwarderAuth == "PASS" {
+					client, session, err = connectToHostPassword(forwarder, forwarderUsername, forwarderPassword)
+					//}
 					if err != nil {
 						fmt.Println("Error connecting to Forwarder for status")
 						fmt.Println(err)
@@ -712,9 +1038,23 @@ func (web *Web) status(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// When the stream is finished then you can stop the stream by pressing the stop button and that would kill all the ffmpeg commands
+// stop is used when the stream is finished then you can stop the stream by pressing the stop button and that would kill all the ffmpeg commands
 func (web *Web) stop(w http.ResponseWriter, r *http.Request) {
+	/*if !authenticate(w, r) {
+		err := godotenv.Load()
+		if err != nil {
+			fmt.Printf("error loading .env file: %s", err)
+		}
+
+		jwtAuthentication := os.Getenv("JWT_AUTHENTICATION")
+
+		http.Redirect(w, r, jwtAuthentication+"list", http.StatusTemporaryRedirect)
+		return
+	}*/
 	if r.Method == "POST" {
+		if verbose {
+			fmt.Println("Stop POST called")
+		}
 		db, err := sql.Open("sqlite3", "db/streams.db")
 		if err != nil {
 			fmt.Println(err)
@@ -752,15 +1092,30 @@ func (web *Web) stop(w http.ResponseWriter, r *http.Request) {
 			}
 			forwarder := os.Getenv("FORWARDER")
 			recorder := os.Getenv("RECORDER")
-			username := os.Getenv("USERNAME")
-			password := os.Getenv("PASSWORD")
+			forwarderUsername := os.Getenv("FORWARDER_USERNAME")
+			recorderUsername := os.Getenv("RECORDER_USERNAME")
+			//forwarderAuth := os.Getenv("FORWARDER_AUTH")
+			//recorderAuth := os.Getenv("RECORDER_AUTH")
+			forwarderPassword := os.Getenv("FORWARDER_PASSWORD")
+			recorderPassword := os.Getenv("RECORDER_PASSWORD")
+			//forwarderPrivateKey := os.Getenv("FORWARDER_PRIVATE_KEY")
+			//recorderPrivateKey := os.Getenv("RECORDER_PRIVATE_KEY")
+			//forwarderPassphrase := os.Getenv("FORWARDER_PASSPHRASE")
+			//recorderPassphrase := os.Getenv("RECORDER_PASSPHRASE")
 			transmissionLight := os.Getenv("TRANSMISSION_LIGHT")
 			var wg sync.WaitGroup
 			if recording {
 				wg.Add(2)
 				go func() {
 					defer wg.Done()
-					client, session, err := connectToHost(username, password, recorder)
+					var client *ssh.Client
+					var session *ssh.Session
+					var err error
+					//if recorderAuth == "PEM" {
+					//	client, session, err = connectToHostPEM(recorder, recorderUsername, recorderPrivateKey, recorderPassphrase)
+					//} else if recorderAuth == "PASS" {
+					client, session, err = connectToHostPassword(recorder, recorderUsername, recorderPassword)
+					//}
 					if err != nil {
 						fmt.Println("Error connecting to Recorder for stop")
 						fmt.Println(err)
@@ -780,7 +1135,14 @@ func (web *Web) stop(w http.ResponseWriter, r *http.Request) {
 			}
 			go func() {
 				defer wg.Done()
-				client, session, err := connectToHost(username, password, forwarder)
+				var client *ssh.Client
+				var session *ssh.Session
+				var err error
+				//if forwarderAuth == "PEM" {
+				//	client, session, err = connectToHostPEM(forwarder, forwarderUsername, forwarderPrivateKey, forwarderPassphrase)
+				//} else if forwarderAuth == "PASS" {
+				client, session, err = connectToHostPassword(forwarder, forwarderUsername, forwarderPassword)
+				//}
 				if err != nil {
 					fmt.Println("Error connecting to Forwarder for stop")
 					fmt.Println(err)
@@ -843,15 +1205,40 @@ func (web *Web) stop(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// This lists all current streams that are registered in the database
+// list lists all current streams that are registered in the database
 func (web *Web) list(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "GET" {
-		tmpl := template.Must(template.ParseFiles("html/list.html"))
-		err := tmpl.Execute(w, nil)
+	/*if !authenticate(w, r) {
+		err := godotenv.Load()
 		if err != nil {
-			fmt.Println(err)
+			fmt.Printf("error loading .env file: %s", err)
+		}
+
+		jwtAuthentication := os.Getenv("JWT_AUTHENTICATION")
+
+		http.Redirect(w, r, jwtAuthentication+"list", http.StatusTemporaryRedirect)
+		return
+	}*/
+	if r.Method == "GET" {
+		if verbose {
+			fmt.Println("Stop GET called")
+		}
+		web.t = templates.NewList()
+
+		params := templates.DashboardParams{
+			Base: templates.BaseParams{
+				SystemTime: time.Now(),
+			},
+		}
+
+		err := web.t.Dashboard(w, params)
+		if err != nil {
+			err = fmt.Errorf("failed to render dashboard: %w", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	} else if r.Method == "POST" {
+		if verbose {
+			fmt.Println("Stop POST called")
+		}
 		db, err := sql.Open("sqlite3", "db/streams.db")
 		if err != nil {
 			fmt.Println(err)
@@ -903,32 +1290,138 @@ func (web *Web) list(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// save
+func (web *Web) save(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "GET" {
+		if verbose {
+			fmt.Println("Save GET called")
+		}
+		web.t = templates.NewSave()
+
+		params := templates.DashboardParams{
+			Base: templates.BaseParams{
+				SystemTime: time.Now(),
+			},
+		}
+
+		err := web.t.Dashboard(w, params)
+		if err != nil {
+			err = fmt.Errorf("failed to render dashboard: %w", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	} else if r.Method == "POST" {
+		if verbose {
+			fmt.Println("Save POST called")
+		}
+	}
+}
+
+// recall
+func (web *Web) recall(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "GET" {
+		if verbose {
+			fmt.Println("Recall GET called")
+		}
+		web.t = templates.NewRecall()
+
+		params := templates.DashboardParams{
+			Base: templates.BaseParams{
+				SystemTime: time.Now(),
+			},
+		}
+
+		err := web.t.Dashboard(w, params)
+		if err != nil {
+			err = fmt.Errorf("failed to render dashboard: %w", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	} else if r.Method == "POST" {
+		if verbose {
+			fmt.Println("Recall POST called")
+		}
+	}
+}
+
 // This is the handler for the YouTube help page
 func (web *Web) youtubeHelp(w http.ResponseWriter, _ *http.Request) {
-	tmpl := template.Must(template.ParseFiles("html/youtubeHelp.html"))
-	err := tmpl.Execute(w, nil)
+	/*if !authenticate(w, r) {
+		err := godotenv.Load()
+		if err != nil {
+			fmt.Printf("error loading .env file: %s", err)
+		}
+
+		jwtAuthentication := os.Getenv("JWT_AUTHENTICATION")
+
+		http.Redirect(w, r, jwtAuthentication+"youtubehelp", http.StatusTemporaryRedirect)
+		return
+	}*/
+
+	if verbose {
+		fmt.Println("YouTube called")
+	}
+
+	web.t = templates.NewYouTubeHelp()
+
+	params := templates.DashboardParams{
+		Base: templates.BaseParams{
+			SystemTime: time.Now(),
+		},
+	}
+
+	err := web.t.Dashboard(w, params)
 	if err != nil {
-		fmt.Println(err)
+		err = fmt.Errorf("failed to render dashboard: %w", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
 // This is the handler for the Facebook help page
 func (web *Web) facebookHelp(w http.ResponseWriter, _ *http.Request) {
-	tmpl := template.Must(template.ParseFiles("html/facebookHelp.html"))
-	err := tmpl.Execute(w, nil)
+	/*if !authenticate(w, r) {
+		err := godotenv.Load()
+		if err != nil {
+			fmt.Printf("error loading .env file: %s", err)
+		}
+
+		jwtAuthentication := os.Getenv("JWT_AUTHENTICATION")
+
+		http.Redirect(w, r, jwtAuthentication+"facebookhelp", http.StatusTemporaryRedirect)
+		return
+	}*/
+
+	if verbose {
+		fmt.Println("Facebook called")
+	}
+
+	web.t = templates.NewFacebookHelp()
+
+	params := templates.DashboardParams{
+		Base: templates.BaseParams{
+			SystemTime: time.Now(),
+		},
+	}
+
+	err := web.t.Dashboard(w, params)
 	if err != nil {
-		fmt.Println(err)
+		err = fmt.Errorf("failed to render dashboard: %w", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
 // This is the handler for any public documents, for example, the style sheet or images
 func (web *Web) public(w http.ResponseWriter, r *http.Request) {
+	if verbose {
+		fmt.Println("Public called")
+	}
 	vars := mux.Vars(r)
 	http.ServeFile(w, r, "public/"+vars["id"])
 }
 
 // This checks if the website stream key is valid using software called COBRA
 func websiteCheck(endpoint string) bool {
+	if verbose {
+		fmt.Println("Website Check called")
+	}
 	err := godotenv.Load()
 	if err != nil {
 		fmt.Printf("error loading .env file: %s", err)
@@ -972,6 +1465,9 @@ func websiteCheck(endpoint string) bool {
 
 // This checks if there are any existing streams still registered in the database
 func existingStreamCheck() bool {
+	if verbose {
+		fmt.Println("Existing Stream Check called")
+	}
 	db, err := sql.Open("sqlite3", "db/streams.db")
 	if err != nil {
 		fmt.Println(err)
@@ -1021,9 +1517,12 @@ func existingStreamCheck() bool {
 }
 
 // This is a general function to ssh to a remote server, any code execution is handled outside this function
-func connectToHost(user, password, host string) (*ssh.Client, *ssh.Session, error) {
+func connectToHostPassword(host, username, password string) (*ssh.Client, *ssh.Session, error) {
+	if verbose {
+		fmt.Println("Connect To Host Password called")
+	}
 	sshConfig := &ssh.ClientConfig{
-		User: user,
+		User: username,
 		Auth: []ssh.AuthMethod{ssh.Password(password)},
 	}
 	sshConfig.HostKeyCallback = ssh.InsecureIgnoreHostKey()
@@ -1044,3 +1543,104 @@ func connectToHost(user, password, host string) (*ssh.Client, *ssh.Session, erro
 
 	return client, session, nil
 }
+
+/*func connectToHostPEM(host, username, privateKeyPath, privateKeyPassword string) (*ssh.Client, *ssh.Session, error) {
+	pemBytes, err := ioutil.ReadFile(privateKeyPath)
+	signer, err := signerFromPem(pemBytes, []byte(privateKeyPassword))
+	if err != nil {
+		return nil, nil, err
+	}
+	sshConfig := &ssh.ClientConfig{
+		User: username,
+		Auth: []ssh.AuthMethod{
+			ssh.PublicKeys(signer),
+		},
+	}
+
+	sshConfig.HostKeyCallback = ssh.InsecureIgnoreHostKey()
+
+	client, err := ssh.Dial("tcp", host, sshConfig)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	session, err := client.NewSession()
+	if err != nil {
+		err := client.Close()
+		if err != nil {
+			return nil, nil, err
+		}
+		return nil, nil, err
+	}
+
+	return client, session, nil
+}
+
+func signerFromPem(pemBytes []byte, password []byte) (ssh.Signer, error) {
+
+	// read pem block
+	err := errors.New("Pem decode failed, no key found")
+	pemBlock, _ := pem.Decode(pemBytes)
+	if pemBlock == nil {
+		return nil, err
+	}
+
+	// handle encrypted key
+	if x509.IsEncryptedPEMBlock(pemBlock) {
+		// decrypt PEM
+		pemBlock.Bytes, err = x509.DecryptPEMBlock(pemBlock, password)
+		if err != nil {
+			return nil, fmt.Errorf("Decrypting PEM block failed %v", err)
+		}
+
+		// get RSA, EC or DSA key
+		key, err := parsePemBlock(pemBlock)
+		if err != nil {
+			return nil, err
+		}
+
+		// generate signer instance from key
+		signer, err := ssh.NewSignerFromKey(key)
+		if err != nil {
+			return nil, fmt.Errorf("Creating signer from encrypted key failed %v", err)
+		}
+
+		return signer, nil
+	} else {
+		// generate signer instance from plain key
+		signer, err := ssh.ParsePrivateKey(pemBytes)
+		if err != nil {
+			return nil, fmt.Errorf("Parsing plain private key failed %v", err)
+		}
+
+		return signer, nil
+	}
+}
+
+func parsePemBlock(block *pem.Block) (interface{}, error) {
+	switch block.Type {
+	case "RSA PRIVATE KEY":
+		key, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+		if err != nil {
+			return nil, fmt.Errorf("Parsing PKCS private key failed %v", err)
+		} else {
+			return key, nil
+		}
+	case "EC PRIVATE KEY":
+		key, err := x509.ParseECPrivateKey(block.Bytes)
+		if err != nil {
+			return nil, fmt.Errorf("Parsing EC private key failed %v", err)
+		} else {
+			return key, nil
+		}
+	case "DSA PRIVATE KEY":
+		key, err := ssh.ParseDSAPrivateKey(block.Bytes)
+		if err != nil {
+			return nil, fmt.Errorf("Parsing DSA private key failed %v", err)
+		} else {
+			return key, nil
+		}
+	default:
+		return nil, fmt.Errorf("Parsing private key failed, unsupported key type %q", block.Type)
+	}
+}*/

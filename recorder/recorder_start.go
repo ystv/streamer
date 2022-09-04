@@ -35,7 +35,7 @@ func main() {
 	if err != nil {
 		fmt.Printf("echo Error loading .env file: %s", err)
 	} else {
-		pendingEdits := os.Getenv("PENDING_EDITS")
+		recordingLocation := os.Getenv("RECORDING_LOCATION")
 		if len(array) == 1 {
 			path = array[0]
 			valid = true
@@ -43,18 +43,18 @@ func main() {
 			for i := 0; i < len(array)-1; i++ {
 				path += array[i] + "/"
 			}
-			err = os.MkdirAll(pendingEdits+path, 0777)
+			err = os.MkdirAll(recordingLocation+path, 0777)
 			if err != nil {
 				fmt.Println("echo " + path)
 				fmt.Println("echo " + err.Error())
-				log.Fatal("echo Error creating " + pendingEdits + path)
+				log.Fatal("echo Error creating " + recordingLocation + path)
 			}
-			_, err1 := os.Stat(pendingEdits + path)
+			_, err1 := os.Stat(recordingLocation + path)
 			if os.IsNotExist(err1) {
 				fmt.Println(" echo RECORDER UNSUCCESSFUL!")
 			} else {
 				temp := array[len(array)-1]
-				_, err2 := os.Stat(pendingEdits + path + "/" + temp)
+				_, err2 := os.Stat(recordingLocation + path + "/" + temp)
 				if os.IsNotExist(err2) {
 					path += array[len(array)-1]
 					valid = true
@@ -63,7 +63,7 @@ func main() {
 					loop := true
 					i := 0
 					for loop {
-						_, err3 := os.Stat(pendingEdits + path + "/" + split[0] + "_" + string(rune(i)) + ".mkv")
+						_, err3 := os.Stat(recordingLocation + path + "/" + split[0] + "_" + string(rune(i)) + ".mkv")
 						if os.IsNotExist(err3) {
 							path += split[0] + string(rune(i)) + ".mkv"
 							loop = false
@@ -87,7 +87,7 @@ func main() {
 			w1p0 := w1.Pane(0)
 
 			path = strings.ReplaceAll(path, ".mkv", "")
-			w1p0.Exec("./recorder_start.sh " + streamServer + streamIn + " \"" + pendingEdits + path + "\" " + unique + " | bash")
+			w1p0.Exec("./recorder_start.sh " + streamServer + streamIn + " \"" + recordingLocation + path + "\" " + unique + " | bash")
 
 			fmt.Println("echo RECORDER STARTED!")
 		} else {
