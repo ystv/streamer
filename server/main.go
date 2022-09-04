@@ -1471,7 +1471,7 @@ func existingStreamCheck() bool {
 	if err != nil {
 		fmt.Println(err)
 	} else {
-		rows, err := db.Query("SELECT stream FROM streams")
+		rows, err := db.Query("SELECT stream FROM (SELECT stream FROM streams UNION ALL SELECT stream FROM stored)")
 		if err != nil {
 			fmt.Println(err)
 		}
