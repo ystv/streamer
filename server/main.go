@@ -29,7 +29,6 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
 	_ "github.com/mattn/go-sqlite3"
-	"golang.org/x/crypto/ssh"
 )
 
 type (
@@ -655,72 +654,27 @@ func (web *Web) start(w http.ResponseWriter, r *http.Request) {
 					recorderStart := "./recorder_start \"" + r.FormValue("stream_selector") + "\" \"" + r.FormValue("save_path") + "\" " + string(b) + " | bash"
 
 					var wg sync.WaitGroup
-					wg.Add(2)
-					go func() {
-						defer wg.Done()
-						if r.FormValue("record") == "on" {
-							recording = true
-							var client *ssh.Client
-							var session *ssh.Session
-							var err error
-							//if recorderAuth == "PEM" {
-							//	client, session, err = connectToHostPEM(recorder, recorderUsername, recorderPrivateKey, recorderPassphrase)
-							//} else if recorderAuth == "PASS" {
-							client, session, err = connectToHostPassword(web.cfg.Recorder, web.cfg.RecorderUsername, web.cfg.RecorderPassword)
-							//}
+					if r.FormValue("record") == "on" {
+						recording = true
+						wg.Add(1)
+						go func() {
+							defer wg.Done()
+							_, err := RunCommandOnHost(web.cfg.Recorder, web.cfg.RecorderUsername, web.cfg.RecorderPassword, recorderStart)
 							if err != nil {
-								fmt.Println("Error connecting to Recorder for start")
-								fmt.Println(err)
+								log.Printf("Error starting recorder: %v", err)
 								errors = true
-								errorMessage = err.Error()
-							} else {
-								_, err = session.CombinedOutput(recorderStart)
-								if err != nil {
-									fmt.Println("Error executing on Recorder for start")
-									fmt.Println(err)
-									errors = true
-									errorMessage = err.Error()
-								} else {
-									err := client.Close()
-									if err != nil {
-										fmt.Println(err)
-										errors = true
-										errorMessage = err.Error()
-									}
-								}
+								errorMessage += err.Error()
 							}
-						}
-					}()
+						}()
+					}
+					wg.Add(1)
 					go func() {
 						defer wg.Done()
-						var client *ssh.Client
-						var session *ssh.Session
-						var err error
-						//if forwarderAuth == "PEM" {
-						//	client, session, err = connectToHostPEM(forwarder, forwarderUsername, forwarderPrivateKey, forwarderPassphrase)
-						//} else if forwarderAuth == "PASS" {
-						client, session, err = connectToHostPassword(web.cfg.Forwarder, web.cfg.ForwarderUsername, web.cfg.ForwarderPassword)
-						//}
+						_, err := RunCommandOnHost(web.cfg.Forwarder, web.cfg.ForwarderUsername, web.cfg.ForwarderPassword, forwarderStart)
 						if err != nil {
-							fmt.Println("Error connecting to Forwarder for start")
-							fmt.Println(err)
+							log.Printf("Error starting forwarder: %v", err)
 							errors = true
-							errorMessage = err.Error()
-						} else {
-							_, err = session.CombinedOutput(forwarderStart)
-							if err != nil {
-								fmt.Println("Error executing on Forwarder for start")
-								fmt.Println(err)
-								errors = true
-								errorMessage = err.Error()
-							} else {
-								err = client.Close()
-								if err != nil {
-									fmt.Println(err)
-									errors = true
-									errorMessage = err.Error()
-								}
-							}
+							errorMessage += err.Error()
 						}
 					}()
 					wg.Wait()
@@ -926,29 +880,14 @@ func (web *Web) status(w http.ResponseWriter, r *http.Request) {
 					wg.Add(2)
 					go func() {
 						defer wg.Done()
-						var client *ssh.Client
-						var session *ssh.Session
-						var err error
-						//if recorderAuth == "PEM" {
-						//	client, session, err = connectToHostPEM(recorder, recorderUsername, recorderPrivateKey, recorderPassphrase)
-						//} else if recorderAuth == "PASS" {
-						client, session, err = connectToHostPassword(web.cfg.Recorder, web.cfg.RecorderUsername, web.cfg.RecorderPassword)
-						//}
+						statusCmd := "./recorder_status.sh " + r.FormValue("unique")
+						dataOut, err := RunCommandOnHost(web.cfg.Recorder, web.cfg.RecorderUsername, web.cfg.RecorderPassword, statusCmd)
 						if err != nil {
-							fmt.Println("Error connecting to Recorder for status")
-							fmt.Println(err)
-						}
-						dataOut, err := session.CombinedOutput("./recorder_status.sh " + r.FormValue("unique"))
-						if err != nil {
-							fmt.Println("Error executing on Recorder for status")
-							fmt.Println(err)
-						}
-						err = client.Close()
-						if err != nil {
-							fmt.Println(err)
+							log.Printf("error running recorder status: %s", err)
+							return
 						}
 
-						dataOut1 := string(dataOut)[:len(dataOut)-2]
+						dataOut1 := dataOut[:len(dataOut)-2]
 
 						if len(dataOut1) > 0 {
 							if strings.Contains(dataOut1, "frame=") {
@@ -969,29 +908,15 @@ func (web *Web) status(w http.ResponseWriter, r *http.Request) {
 				}
 				go func() {
 					defer wg.Done()
-					var client *ssh.Client
-					var session *ssh.Session
-					var err error
-					//if forwarderAuth == "PEM" {
-					//	client, session, err = connectToHostPEM(forwarder, forwarderUsername, forwarderPrivateKey, forwarderPassphrase)
-					//} else if forwarderAuth == "PASS" {
-					client, session, err = connectToHostPassword(web.cfg.Forwarder, web.cfg.ForwarderUsername, web.cfg.ForwarderPassword)
-					//}
+
+					statusCmd := "./forwarder_status " + strconv.FormatBool(website) + " " + strconv.Itoa(streams) + " " + r.FormValue("unique")
+					dataOut, err := RunCommandOnHost(web.cfg.Forwarder, web.cfg.ForwarderUsername, web.cfg.ForwarderPassword, statusCmd)
 					if err != nil {
-						fmt.Println("Error connecting to Forwarder for status")
-						fmt.Println(err)
-					}
-					dataOut, err := session.CombinedOutput("./forwarder_status " + strconv.FormatBool(website) + " " + strconv.Itoa(streams) + " " + r.FormValue("unique"))
-					if err != nil {
-						fmt.Println("Error executing on Forwarder for status")
-						fmt.Println(err)
-					}
-					err = client.Close()
-					if err != nil {
-						fmt.Println(err)
+						log.Printf("error running forwarder status: %s", err)
+						return
 					}
 
-					dataOut1 := string(dataOut)[4 : len(dataOut)-2]
+					dataOut1 := dataOut[4 : len(dataOut)-2]
 
 					dataOut2 := strings.Split(dataOut1, "\u0000")
 
@@ -1080,26 +1005,12 @@ func (web *Web) stop(w http.ResponseWriter, r *http.Request) {
 				wg.Add(2)
 				go func() {
 					defer wg.Done()
-					var client *ssh.Client
-					var session *ssh.Session
-					var err error
-					//if recorderAuth == "PEM" {
-					//	client, session, err = connectToHostPEM(recorder, recorderUsername, recorderPrivateKey, recorderPassphrase)
-					//} else if recorderAuth == "PASS" {
-					client, session, err = connectToHostPassword(web.cfg.Recorder, web.cfg.RecorderUsername, web.cfg.RecorderPassword)
-					//}
+
+					stopCmd := "./recorder_stop " + r.FormValue("unique") + " | bash"
+					_, err := RunCommandOnHost(web.cfg.Recorder, web.cfg.RecorderUsername, web.cfg.RecorderPassword, stopCmd)
 					if err != nil {
-						fmt.Println("Error connecting to Recorder for stop")
-						fmt.Println(err)
-					}
-					_, err = session.CombinedOutput("./recorder_stop " + r.FormValue("unique") + " | bash")
-					if err != nil {
-						fmt.Println("Error executing on Recorder for stop")
-						fmt.Println(err)
-					}
-					err = client.Close()
-					if err != nil {
-						fmt.Println(err)
+						log.Printf("error running recorder stop: %s", err)
+						return
 					}
 				}()
 			} else {
@@ -1107,26 +1018,12 @@ func (web *Web) stop(w http.ResponseWriter, r *http.Request) {
 			}
 			go func() {
 				defer wg.Done()
-				var client *ssh.Client
-				var session *ssh.Session
-				var err error
-				//if forwarderAuth == "PEM" {
-				//	client, session, err = connectToHostPEM(forwarder, forwarderUsername, forwarderPrivateKey, forwarderPassphrase)
-				//} else if forwarderAuth == "PASS" {
-				client, session, err = connectToHostPassword(web.cfg.Forwarder, web.cfg.ForwarderUsername, web.cfg.ForwarderPassword)
-				//}
+
+				stopCmd := "./forwarder_stop " + r.FormValue("unique") + " | bash"
+				_, err := RunCommandOnHost(web.cfg.Forwarder, web.cfg.ForwarderUsername, web.cfg.ForwarderPassword, stopCmd)
 				if err != nil {
-					fmt.Println("Error connecting to Forwarder for stop")
-					fmt.Println(err)
-				}
-				_, err = session.CombinedOutput("./forwarder_stop " + r.FormValue("unique") + " | bash")
-				if err != nil {
-					fmt.Println("Error executing on Forwarder for stop")
-					fmt.Println(err)
-				}
-				err = client.Close()
-				if err != nil {
-					fmt.Println(err)
+					log.Printf("error running forwarder stop: %s", err)
+					return
 				}
 
 				fmt.Println("Forwarder stop success")
@@ -1482,34 +1379,6 @@ func existingStreamCheck() bool {
 		fmt.Println(err)
 	}
 	return false
-}
-
-// connectToHostPassword is a general function to ssh to a remote server, any code execution is handled outside this function
-func connectToHostPassword(host, username, password string) (*ssh.Client, *ssh.Session, error) {
-	if verbose {
-		fmt.Println("Connect To Host Password called")
-	}
-	sshConfig := &ssh.ClientConfig{
-		User: username,
-		Auth: []ssh.AuthMethod{ssh.Password(password)},
-	}
-	sshConfig.HostKeyCallback = ssh.InsecureIgnoreHostKey()
-
-	client, err := ssh.Dial("tcp", host, sshConfig)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	session, err := client.NewSession()
-	if err != nil {
-		err := client.Close()
-		if err != nil {
-			return nil, nil, err
-		}
-		return nil, nil, err
-	}
-
-	return client, session, nil
 }
 
 /*func connectToHostPEM(host, username, privateKeyPath, privateKeyPassword string) (*ssh.Client, *ssh.Session, error) {
