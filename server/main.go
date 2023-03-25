@@ -4,21 +4,16 @@ import (
 	//"crypto/x509"
 	"database/sql"
 	"encoding/json"
-	"github.com/ystv/streamer/server/templates"
-
 	//"encoding/pem"
 	"encoding/xml"
 	//"errors"
 	"fmt"
-	"github.com/gorilla/mux"
-	"github.com/joho/godotenv"
-	_ "github.com/mattn/go-sqlite3"
-	"golang.org/x/crypto/ssh"
 	"io"
 	"io/ioutil"
 	"log"
 	"math"
 	"math/rand"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -27,12 +22,34 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/ystv/streamer/server/templates"
+
+	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
+	"github.com/kelseyhightower/envconfig"
+	_ "github.com/mattn/go-sqlite3"
+	"golang.org/x/crypto/ssh"
 )
 
 type (
 	Web struct {
 		mux *mux.Router
 		t   *templates.Templater
+		cfg Config
+	}
+
+	Config struct {
+		Forwarder         string `envconfig:"FORWARDER"`
+		Recorder          string `envconfig:"RECORDER"`
+		ForwarderUsername string `envconfig:"FORWARDER_USERNAME"`
+		RecorderUsername  string `envconfig:"RECORDER_USERNAME"`
+		ForwarderPassword string `envconfig:"FORWARDER_PASSWORD"`
+		RecorderPassword  string `envconfig:"RECORDER_PASSWORD"`
+		StreamChecker     string `envconfig:"STREAM_CHECKER"`
+		TransmissionLight string `envconfig:"TRANSMISSION_LIGHT"`
+		KeyChecker        string `envconfig:"KEY_CHECKER"`
+		ServerPort        int    `envconfig:"SERVER_PORT"`
 	}
 
 	RTMP struct {
@@ -107,7 +124,22 @@ func main() {
 	} else {
 		verbose = false
 	}
-	web := Web{mux: mux.NewRouter()}
+
+	err := godotenv.Load()
+	if err != nil {
+		log.Printf("error loading .env file: %s", err)
+	}
+
+	var cfg Config
+	err = envconfig.Process("", &cfg)
+	if err != nil {
+		log.Fatalf("failed to process env vars: %s", err)
+	}
+
+	web := Web{
+		mux: mux.NewRouter(),
+		cfg: cfg,
+	}
 	web.mux.HandleFunc("/", web.home)
 	//web.mux.HandleFunc("/authenticate1", web.authenticate1)
 	web.mux.HandleFunc("/endpoints", web.endpoints)
@@ -123,14 +155,9 @@ func main() {
 	web.mux.HandleFunc("/facebookhelp", web.facebookHelp)
 	web.mux.HandleFunc("/public/{id:[a-zA-Z0-9_.-]+}", web.public) // This handles all the public pages that the webpage can request, e.g. css, images and jquery
 
-	err := godotenv.Load()
-	if err != nil {
-		fmt.Printf("error loading .env file: %s", err)
-	}
+	fmt.Println("Server listening on port", web.cfg.ServerPort, "...")
 
-	fmt.Println("Server listening on port", os.Getenv("SERVER_PORT"), "...")
-
-	err = http.ListenAndServe(":"+os.Getenv("SERVER_PORT"), web.mux)
+	err = http.ListenAndServe(net.JoinHostPort("", strconv.Itoa(web.cfg.ServerPort)), web.mux)
 
 	if err != nil {
 		fmt.Println(err)
@@ -355,7 +382,7 @@ func (web *Web) endpoints(w http.ResponseWriter, r *http.Request) {
 			fmt.Printf("error loading .env file: %s", err)
 		}
 
-		response, err := http.Get(os.Getenv("STREAM_CHECKER"))
+		response, err := http.Get(web.cfg.StreamChecker)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -422,7 +449,7 @@ func (web *Web) streams(w http.ResponseWriter, r *http.Request) {
 			fmt.Printf("error loading .env file: %s", err)
 		}
 
-		response, err := http.Get(os.Getenv("STREAM_CHECKER"))
+		response, err := http.Get(web.cfg.StreamChecker)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -508,7 +535,7 @@ func (web *Web) start(w http.ResponseWriter, r *http.Request) {
 			var forwarderStart string
 			if r.FormValue("website_stream") == "on" {
 				websiteStream = true
-				if websiteCheck(r.FormValue("website_stream_endpoint")) {
+				if web.websiteCheck(r.FormValue("website_stream_endpoint")) {
 					websiteValid = true
 					forwarderStart = "./forwarder_start " + r.FormValue("stream_selector") + " " + r.FormValue("website_stream_endpoint") + " "
 				} else {
@@ -627,86 +654,34 @@ func (web *Web) start(w http.ResponseWriter, r *http.Request) {
 
 					recorderStart := "./recorder_start \"" + r.FormValue("stream_selector") + "\" \"" + r.FormValue("save_path") + "\" " + string(b) + " | bash"
 
-					err = godotenv.Load()
-					if err != nil {
-						fmt.Printf("error loading .env file: %s", err)
-						errors = true
-						errorMessage = err.Error()
-					} else {
-						forwarder := os.Getenv("FORWARDER")
-						recorder := os.Getenv("RECORDER")
-						forwarderUsername := os.Getenv("FORWARDER_USERNAME")
-						recorderUsername := os.Getenv("RECORDER_USERNAME")
-						//forwarderAuth := os.Getenv("FORWARDER_AUTH")
-						//recorderAuth := os.Getenv("RECORDER_AUTH")
-						forwarderPassword := os.Getenv("FORWARDER_PASSWORD")
-						recorderPassword := os.Getenv("RECORDER_PASSWORD")
-						//forwarderPrivateKey := os.Getenv("FORWARDER_PRIVATE_KEY")
-						//recorderPrivateKey := os.Getenv("RECORDER_PRIVATE_KEY")
-						//forwarderPassphrase := os.Getenv("FORWARDER_PASSPHRASE")
-						//recorderPassphrase := os.Getenv("RECORDER_PASSPHRASE")
-						transmissionLight := os.Getenv("TRANSMISSION_LIGHT")
-						var wg sync.WaitGroup
-						wg.Add(2)
-						go func() {
-							defer wg.Done()
-							if r.FormValue("record") == "on" {
-								recording = true
-								var client *ssh.Client
-								var session *ssh.Session
-								var err error
-								//if recorderAuth == "PEM" {
-								//	client, session, err = connectToHostPEM(recorder, recorderUsername, recorderPrivateKey, recorderPassphrase)
-								//} else if recorderAuth == "PASS" {
-								client, session, err = connectToHostPassword(recorder, recorderUsername, recorderPassword)
-								//}
-								if err != nil {
-									fmt.Println("Error connecting to Recorder for start")
-									fmt.Println(err)
-									errors = true
-									errorMessage = err.Error()
-								} else {
-									_, err = session.CombinedOutput(recorderStart)
-									if err != nil {
-										fmt.Println("Error executing on Recorder for start")
-										fmt.Println(err)
-										errors = true
-										errorMessage = err.Error()
-									} else {
-										err := client.Close()
-										if err != nil {
-											fmt.Println(err)
-											errors = true
-											errorMessage = err.Error()
-										}
-									}
-								}
-							}
-						}()
-						go func() {
-							defer wg.Done()
+					var wg sync.WaitGroup
+					wg.Add(2)
+					go func() {
+						defer wg.Done()
+						if r.FormValue("record") == "on" {
+							recording = true
 							var client *ssh.Client
 							var session *ssh.Session
 							var err error
-							//if forwarderAuth == "PEM" {
-							//	client, session, err = connectToHostPEM(forwarder, forwarderUsername, forwarderPrivateKey, forwarderPassphrase)
-							//} else if forwarderAuth == "PASS" {
-							client, session, err = connectToHostPassword(forwarder, forwarderUsername, forwarderPassword)
+							//if recorderAuth == "PEM" {
+							//	client, session, err = connectToHostPEM(recorder, recorderUsername, recorderPrivateKey, recorderPassphrase)
+							//} else if recorderAuth == "PASS" {
+							client, session, err = connectToHostPassword(web.cfg.Recorder, web.cfg.RecorderUsername, web.cfg.RecorderPassword)
 							//}
 							if err != nil {
-								fmt.Println("Error connecting to Forwarder for start")
+								fmt.Println("Error connecting to Recorder for start")
 								fmt.Println(err)
 								errors = true
 								errorMessage = err.Error()
 							} else {
-								_, err = session.CombinedOutput(forwarderStart)
+								_, err = session.CombinedOutput(recorderStart)
 								if err != nil {
-									fmt.Println("Error executing on Forwarder for start")
+									fmt.Println("Error executing on Recorder for start")
 									fmt.Println(err)
 									errors = true
 									errorMessage = err.Error()
 								} else {
-									err = client.Close()
+									err := client.Close()
 									if err != nil {
 										fmt.Println(err)
 										errors = true
@@ -714,51 +689,83 @@ func (web *Web) start(w http.ResponseWriter, r *http.Request) {
 									}
 								}
 							}
-						}()
-						wg.Wait()
+						}
+					}()
+					go func() {
+						defer wg.Done()
+						var client *ssh.Client
+						var session *ssh.Session
+						var err error
+						//if forwarderAuth == "PEM" {
+						//	client, session, err = connectToHostPEM(forwarder, forwarderUsername, forwarderPrivateKey, forwarderPassphrase)
+						//} else if forwarderAuth == "PASS" {
+						client, session, err = connectToHostPassword(web.cfg.Forwarder, web.cfg.ForwarderUsername, web.cfg.ForwarderPassword)
+						//}
+						if err != nil {
+							fmt.Println("Error connecting to Forwarder for start")
+							fmt.Println(err)
+							errors = true
+							errorMessage = err.Error()
+						} else {
+							_, err = session.CombinedOutput(forwarderStart)
+							if err != nil {
+								fmt.Println("Error executing on Forwarder for start")
+								fmt.Println(err)
+								errors = true
+								errorMessage = err.Error()
+							} else {
+								err = client.Close()
+								if err != nil {
+									fmt.Println(err)
+									errors = true
+									errorMessage = err.Error()
+								}
+							}
+						}
+					}()
+					wg.Wait()
 
-						if errors == false {
-							_, _ = http.Get(transmissionLight + "transmission_on")
+					if errors == false {
+						_, _ = http.Get(web.cfg.TransmissionLight + "transmission_on")
 
-							db, err = sql.Open("sqlite3", "db/streams.db")
+						db, err = sql.Open("sqlite3", "db/streams.db")
+						if err != nil {
+							fmt.Println(err)
+							errors = true
+							errorMessage = err.Error()
+						} else {
+							stmt, err := db.Prepare("UPDATE streams SET recording = ?, website = ?, streams = ? WHERE stream = ?")
+							if err != nil {
+								fmt.Println(err)
+								errors = true
+								errorMessage = err.Error()
+							}
+
+							res, err := stmt.Exec(recording, websiteStream, streams, string(b))
+							if err != nil {
+								fmt.Println(err)
+								errors = true
+								errorMessage = err.Error()
+							}
+
+							id, err = res.LastInsertId()
+							if err != nil {
+								fmt.Println(err)
+								errors = true
+								errorMessage = err.Error()
+							}
+
+							err = db.Close()
 							if err != nil {
 								fmt.Println(err)
 								errors = true
 								errorMessage = err.Error()
 							} else {
-								stmt, err := db.Prepare("UPDATE streams SET recording = ?, website = ?, streams = ? WHERE stream = ?")
+								_, err = w.Write(b)
 								if err != nil {
 									fmt.Println(err)
 									errors = true
 									errorMessage = err.Error()
-								}
-
-								res, err := stmt.Exec(recording, websiteStream, streams, string(b))
-								if err != nil {
-									fmt.Println(err)
-									errors = true
-									errorMessage = err.Error()
-								}
-
-								id, err = res.LastInsertId()
-								if err != nil {
-									fmt.Println(err)
-									errors = true
-									errorMessage = err.Error()
-								}
-
-								err = db.Close()
-								if err != nil {
-									fmt.Println(err)
-									errors = true
-									errorMessage = err.Error()
-								} else {
-									_, err = w.Write(b)
-									if err != nil {
-										fmt.Println(err)
-										errors = true
-										errorMessage = err.Error()
-									}
 								}
 							}
 						}
@@ -912,22 +919,6 @@ func (web *Web) status(w http.ResponseWriter, r *http.Request) {
 				fmt.Println(err)
 			}
 
-			err = godotenv.Load()
-			if err != nil {
-				fmt.Printf("error loading .env file: %s", err)
-			}
-			forwarder := os.Getenv("FORWARDER")
-			recorder := os.Getenv("RECORDER")
-			forwarderUsername := os.Getenv("FORWARDER_USERNAME")
-			recorderUsername := os.Getenv("RECORDER_USERNAME")
-			//forwarderAuth := os.Getenv("FORWARDER_AUTH")
-			//recorderAuth := os.Getenv("RECORDER_AUTH")
-			forwarderPassword := os.Getenv("FORWARDER_PASSWORD")
-			recorderPassword := os.Getenv("RECORDER_PASSWORD")
-			//forwarderPrivateKey := os.Getenv("FORWARDER_PRIVATE_KEY")
-			//recorderPrivateKey := os.Getenv("RECORDER_PRIVATE_KEY")
-			//forwarderPassphrase := os.Getenv("FORWARDER_PASSPHRASE")
-			//recorderPassphrase := os.Getenv("RECORDER_PASSPHRASE")
 			m := make(map[string]string)
 			var wg sync.WaitGroup
 			if data {
@@ -941,7 +932,7 @@ func (web *Web) status(w http.ResponseWriter, r *http.Request) {
 						//if recorderAuth == "PEM" {
 						//	client, session, err = connectToHostPEM(recorder, recorderUsername, recorderPrivateKey, recorderPassphrase)
 						//} else if recorderAuth == "PASS" {
-						client, session, err = connectToHostPassword(recorder, recorderUsername, recorderPassword)
+						client, session, err = connectToHostPassword(web.cfg.Recorder, web.cfg.RecorderUsername, web.cfg.RecorderPassword)
 						//}
 						if err != nil {
 							fmt.Println("Error connecting to Recorder for status")
@@ -984,7 +975,7 @@ func (web *Web) status(w http.ResponseWriter, r *http.Request) {
 					//if forwarderAuth == "PEM" {
 					//	client, session, err = connectToHostPEM(forwarder, forwarderUsername, forwarderPrivateKey, forwarderPassphrase)
 					//} else if forwarderAuth == "PASS" {
-					client, session, err = connectToHostPassword(forwarder, forwarderUsername, forwarderPassword)
+					client, session, err = connectToHostPassword(web.cfg.Forwarder, web.cfg.ForwarderUsername, web.cfg.ForwarderPassword)
 					//}
 					if err != nil {
 						fmt.Println("Error connecting to Forwarder for status")
@@ -1084,23 +1075,6 @@ func (web *Web) stop(w http.ResponseWriter, r *http.Request) {
 			fmt.Println(err)
 		}
 		if data {
-			err = godotenv.Load()
-			if err != nil {
-				fmt.Printf("error loading .env file: %s", err)
-			}
-			forwarder := os.Getenv("FORWARDER")
-			recorder := os.Getenv("RECORDER")
-			forwarderUsername := os.Getenv("FORWARDER_USERNAME")
-			recorderUsername := os.Getenv("RECORDER_USERNAME")
-			//forwarderAuth := os.Getenv("FORWARDER_AUTH")
-			//recorderAuth := os.Getenv("RECORDER_AUTH")
-			forwarderPassword := os.Getenv("FORWARDER_PASSWORD")
-			recorderPassword := os.Getenv("RECORDER_PASSWORD")
-			//forwarderPrivateKey := os.Getenv("FORWARDER_PRIVATE_KEY")
-			//recorderPrivateKey := os.Getenv("RECORDER_PRIVATE_KEY")
-			//forwarderPassphrase := os.Getenv("FORWARDER_PASSPHRASE")
-			//recorderPassphrase := os.Getenv("RECORDER_PASSPHRASE")
-			transmissionLight := os.Getenv("TRANSMISSION_LIGHT")
 			var wg sync.WaitGroup
 			if recording {
 				wg.Add(2)
@@ -1112,7 +1086,7 @@ func (web *Web) stop(w http.ResponseWriter, r *http.Request) {
 					//if recorderAuth == "PEM" {
 					//	client, session, err = connectToHostPEM(recorder, recorderUsername, recorderPrivateKey, recorderPassphrase)
 					//} else if recorderAuth == "PASS" {
-					client, session, err = connectToHostPassword(recorder, recorderUsername, recorderPassword)
+					client, session, err = connectToHostPassword(web.cfg.Recorder, web.cfg.RecorderUsername, web.cfg.RecorderPassword)
 					//}
 					if err != nil {
 						fmt.Println("Error connecting to Recorder for stop")
@@ -1139,7 +1113,7 @@ func (web *Web) stop(w http.ResponseWriter, r *http.Request) {
 				//if forwarderAuth == "PEM" {
 				//	client, session, err = connectToHostPEM(forwarder, forwarderUsername, forwarderPrivateKey, forwarderPassphrase)
 				//} else if forwarderAuth == "PASS" {
-				client, session, err = connectToHostPassword(forwarder, forwarderUsername, forwarderPassword)
+				client, session, err = connectToHostPassword(web.cfg.Forwarder, web.cfg.ForwarderUsername, web.cfg.ForwarderPassword)
 				//}
 				if err != nil {
 					fmt.Println("Error connecting to Forwarder for stop")
@@ -1192,7 +1166,7 @@ func (web *Web) stop(w http.ResponseWriter, r *http.Request) {
 			}
 			fmt.Println(existingStreamCheck())
 			if !existingStreamCheck() {
-				_, err := http.Get(transmissionLight + "rehearsal_transmission_off") // Output is ignored as it returns a 204 status and there's a weird bug with no content
+				_, err := http.Get(web.cfg.TransmissionLight + "rehearsal_transmission_off") // Output is ignored as it returns a 204 status and there's a weird bug with no content
 				if err != nil && !strings.Contains(err.Error(), "unexpected EOF") {
 					fmt.Println(err.Error())
 				}
@@ -1416,15 +1390,11 @@ func (web *Web) public(w http.ResponseWriter, r *http.Request) {
 }
 
 // websiteCheck checks if the website stream key is valid using software called COBRA
-func websiteCheck(endpoint string) bool {
+func (web *Web) websiteCheck(endpoint string) bool {
 	if verbose {
 		fmt.Println("Website Check called")
 	}
-	err := godotenv.Load()
-	if err != nil {
-		fmt.Printf("error loading .env file: %s", err)
-	}
-	keyChecker := os.Getenv("KEY_CHECKER")
+
 	data := url.Values{}
 	data.Set("call", "publish")
 	var splitting []string
@@ -1434,7 +1404,7 @@ func websiteCheck(endpoint string) bool {
 	data.Set("pwd", splitting[1])
 
 	client := &http.Client{}
-	r, err := http.NewRequest("POST", keyChecker, strings.NewReader(data.Encode()))
+	r, err := http.NewRequest("POST", web.cfg.KeyChecker, strings.NewReader(data.Encode()))
 	if err != nil {
 		fmt.Println(err)
 	}
