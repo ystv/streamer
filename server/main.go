@@ -382,24 +382,10 @@ func (web *Web) endpoints(w http.ResponseWriter, r *http.Request) {
 			fmt.Printf("error loading .env file: %s", err)
 		}
 
-		response, err := http.Get(web.cfg.StreamChecker)
+		streamPageContent, err := getBody(web.cfg.StreamChecker)
 		if err != nil {
 			fmt.Println(err)
 		}
-		defer func(Body io.ReadCloser) {
-			err := Body.Close()
-			if err != nil {
-				fmt.Println(err)
-			}
-		}(response.Body)
-
-		buf := new(strings.Builder)
-		_, err = io.Copy(buf, response.Body)
-		if err != nil {
-			fmt.Println(err)
-		}
-
-		streamPageContent := buf.String()
 
 		var rtmp RTMP
 
@@ -449,24 +435,10 @@ func (web *Web) streams(w http.ResponseWriter, r *http.Request) {
 			fmt.Printf("error loading .env file: %s", err)
 		}
 
-		response, err := http.Get(web.cfg.StreamChecker)
+		streamPageContent, err := getBody(web.cfg.StreamChecker)
 		if err != nil {
 			fmt.Println(err)
 		}
-		defer func(Body io.ReadCloser) {
-			err := Body.Close()
-			if err != nil {
-				fmt.Println(err)
-			}
-		}(response.Body)
-
-		buf := new(strings.Builder)
-		_, err = io.Copy(buf, response.Body)
-		if err != nil {
-			fmt.Println(err)
-		}
-
-		streamPageContent := buf.String()
 
 		var rtmp RTMP
 
@@ -1429,6 +1401,29 @@ func (web *Web) websiteCheck(endpoint string) bool {
 	} else {
 		return false
 	}
+}
+
+func getBody(url string) (body string, err error) {
+	response, err := http.Get(url)
+	if err != nil {
+		return
+	}
+	defer func(Body io.ReadCloser) {
+		err = Body.Close()
+		if err != nil {
+			return
+		}
+	}(response.Body)
+
+	buf := new(strings.Builder)
+	_, err = io.Copy(buf, response.Body)
+	if err != nil {
+		return
+	}
+
+	body = buf.String()
+
+	return
 }
 
 // existingStreamCheck checks if there are any existing streams still registered in the database
