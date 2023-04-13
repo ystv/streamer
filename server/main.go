@@ -140,19 +140,19 @@ func main() {
 		mux: mux.NewRouter(),
 		cfg: cfg,
 	}
-	web.mux.HandleFunc("/", web.home)
 	//web.mux.HandleFunc("/authenticate1", web.authenticate1)
-	web.mux.HandleFunc("/endpoints", web.endpoints)
-	web.mux.HandleFunc("/streams", web.streams)
-	web.mux.HandleFunc("/start", web.start)
-	web.mux.HandleFunc("/resume", web.resume)
-	web.mux.HandleFunc("/status", web.status)
-	web.mux.HandleFunc("/stop", web.stop)
-	web.mux.HandleFunc("/list", web.list)
-	web.mux.HandleFunc("/save", web.save)
-	web.mux.HandleFunc("/recall", web.recall)
-	web.mux.HandleFunc("/youtubehelp", web.youtubeHelp)
-	web.mux.HandleFunc("/facebookhelp", web.facebookHelp)
+	web.mux.HandleFunc("/", web.home)                              // Default view
+	web.mux.HandleFunc("/endpoints", web.endpoints)                // Call made by home to view endpoints
+	web.mux.HandleFunc("/streams", web.streams)                    // Call made by home to view all active streams for the endpoints
+	web.mux.HandleFunc("/start", web.start)                        // Call made by home to start forwarding
+	web.mux.HandleFunc("/resume", web.resume)                      // To return to the page that controls a stream
+	web.mux.HandleFunc("/status", web.status)                      // Call made by home to view status
+	web.mux.HandleFunc("/stop", web.stop)                          // Call made by home to stop forwarding
+	web.mux.HandleFunc("/list", web.list)                          // List view of current forwards
+	web.mux.HandleFunc("/save", web.save)                          // Where you can save a stream for later
+	web.mux.HandleFunc("/recall", web.recall)                      // Where you can recall a saved stream to modify it if needed and start it
+	web.mux.HandleFunc("/youtubehelp", web.youtubeHelp)            // YouTube help page
+	web.mux.HandleFunc("/facebookhelp", web.facebookHelp)          // Facebook help page
 	web.mux.HandleFunc("/public/{id:[a-zA-Z0-9_.-]+}", web.public) // This handles all the public pages that the webpage can request, e.g. css, images and jquery
 
 	fmt.Println("Server listening on port", web.cfg.ServerPort, "...")
