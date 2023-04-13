@@ -1,26 +1,131 @@
 {{define "content"}}
-    <div class="card" id="enter">
-        <div class="card-content">
-            <p class="title">Save a stream</p><br>
-            <form id="resume">
-                <label for="unique">Enter the code you were given before in the box below</label><br>
-                <input class="input" name="unique" id="unique" placeholder="ab12cd34ef"><br>
-                <p id="error" style="color: red"></p><br>
-                <input class="button" id="submit_unique" type="button" value="Submit">
-            </form>
-        </div>
+    <div class="tabs is-toggle is-toggle-rounded">
+        <ul>
+            <li>
+                <a href="/">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="/resume">
+                    <span>Resume</span>
+                </a>
+            </li>
+            <li>
+                <a href="/list">
+                    <span>List</span>
+                </a>
+            </li>
+            <li class="is-active">
+                <a href="/save">
+                    <span>Save</span>
+                </a>
+            </li>
+            <li>
+                <a href="/recall">
+                    <span>Recall</span>
+                </a>
+            </li>
+        </ul>
     </div>
-    <div class="card" id="resumed" hidden>
+    <div id="save_window">
+        <div class="card">
+            <div class="card-content">
+                <p class="title">Save a stream</p>
+                <p>This part allows for you to save the stream details, so you can immediately start a stream when you
+                    have a few streams happening at once, this can be especially useful when Roses is going on.</p>
+            </div>
+        </div>
+        <form id="save">
+            <div class="card">
+                <div class="card-content">
+                    <p class="subtitle">Selection</p>
+                    <table class="table table-bordered" id="endpointTable"></table>
+                    <br>
+                    <label for="stream_input">Stream input </label><br>
+                    <input type="text" id="stream_input" name="stream_input" placeholder="stream1"
+                           class="input"/><br><br>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-content">
+                    <p class="title">Stream outputs</p>
+                    <p class="subtitle">Recording</p>
+                    <p>This is the file output of the stream, it will be saved as a .mkv file and you can specify a path<br>
+                        It will be saved in the pending edits folder on the network drive (not to be confused with the
+                        Google Drive)<br>
+                        The format to follow is (folder/file) e.g. ERN/ERN.mkv, the folder will be created in pending
+                        edits
+                        if it doesn't already exist<br>
+                        The extension (.mkv) will be added to the end of the file if it doesn't already contain it</p>
+                    <br>
+                    <label for="record">Record stream </label>
+                    <input name="record" id="record" type="checkbox" checked><br>
+                    <label for="save_path">MKV save location </label><br>
+                    <input type="text" name="save_path" id="save_path" placeholder="ERN/ERN.mkv" class="input"><br><br>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-content">
+                    <p class="subtitle">Website forwarding</p>
+                    <p>If this is selected then it will default to stream1?pwd=gamer<br>
+                        By default, the website works with streaming to the live endpoint so that is done by default<br>
+                        Use the live endpoint followed by one of the keys in <a
+                                href="https://cobra.dev.ystv.co.uk/streamkeys">cobra</a>
+                        [stream key and password]<br>
+                        This is especially important for events like Roses</p><br>
+                    <label for="website_stream">Stream to website </label>
+                    <input name="website_stream" id="website_stream" type="checkbox" checked><br>
+                    <label for="website_stream_endpoint">Website stream endpoint</label><br>
+                    <input name="website_stream_endpoint"
+                           id="website_stream_endpoint"
+                           placeholder="stream1?pwd=gamer"
+                           class="input" required><br><br>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-content">
+                    <p class="subtitle">Additional forwarding</p>
+                    <p>This section is for adding all the stream servers and keys<br>
+                        All stream servers should start with "rtmp://" or "rtmps://"<br>
+                        If you are unsure how to get the stream servers and keys from YouTube and Facebook then click on
+                        the
+                        links below<br>
+                        <a target="_blank" href="youtubehelp">YouTube</a><br>
+                        <a target="_blank" href="facebookhelp">Facebook</a></p><br>
+                    <label for="input"></label><input type="text" id="input" hidden disabled/>
+                    <table class="table table-bordered" id="dynamic_field">
+                        <tr>
+                            <td><label for="stream_server_0">Enter the stream server - 1 </label><br>
+                                <input type="text" name="stream_server_0" id="stream_server_0"
+                                       placeholder="Enter stream server" class="input" required/><br><br>
+                                <label for="stream_key_0">Enter the stream key - 1 </label><br>
+                                <input type="text" name="stream_key_0" id="stream_key_0" placeholder="Enter stream key"
+                                       class="input" required/><br><br>
+                            </td>
+                            <td>
+                                <button type="button" name="add" id="add" class="btn btn-success button">Add More
+                                </button>
+                            </td>
+                        </tr>
+                    </table>
+                    <p id="error" style="color: red"></p><br>
+                    <input class="button" id="submit_unique" type="button" value="Save">
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="card" id="saved" hidden>
         <div class="card-content">
-            <p class="title">STREAMING!</p><br>
-            <p>The stream has been forwarded, the unique code of this forward is below</p><br>
+            <p class="title">SAVED!</p><br>
+            <p>The stream settings have been saved, the unique code is below</p><br>
             <p id="unique_code" class="subtitle"></p><br>
             <table class="table table-bordered" id="tableStatus"></table>
             <br>
-            <p>This window can be closed as long as you have the code to stop the stream<br>
+            <p>This window can be closed as long as you have the code to start the stream<br>
                 If you want to return later, then you will need to go to <a
-                        href="https://streamer.dev.ystv.co.uk/resume"
-                        target="_blank">https://streamer.dev.ystv.co.uk/resume</a><br><br><br>
+                        href="https://streamer.dev.ystv.co.uk/recall"
+                        target="_blank">https://streamer.dev.ystv.co.uk/recall</a><br><br><br>
                 You can stop the stream by pressing the checkbox and then the button (prevent accidental stops)</p>
             <br><br><br>
             <label for="stop_checkbox">Enable the stop button </label>
@@ -38,97 +143,43 @@
         </div>
     </div>
     <script>
-        document.getElementById('stop_checkbox').onchange = function () {
-            document.getElementById('stop_button').disabled = !this.checked;
-            document.getElementById('stop_button').hidden = !this.checked;
-            if (this.checked) {
-                document.getElementById('stop_button').style.visibility = "visible";
-            } else {
-                document.getElementById('stop_button').style.visibility = "hidden";
-            }
-        };
-
         let unique;
-        let statusInterval;
 
         $(document).ready(function () {
-            $('#submit_unique').click(function () {
-                $('#error').html("")
-                if ($('#unique').val().length === 0) {
-                    $('#error').html("The code field cannot be empty");
-                    return;
-                }
-                $.ajax({
-                    url: 'resume',
-                    type: 'post',
-                    dataType: 'text',
-                    contentType: 'application/x-www-form-urlencoded',
-                    data: $('#resume').serialize(),
-                    success: function (data) {
-                        let dataPart = data.split('~');
-                        if (dataPart[0] !== "ACCEPTED!") {
-                            $('#error').html("Unique code not accepted");
-                            return;
-                        }
-                        document.getElementById('enter').hidden = true;
-                        document.getElementById('enter').style.visibility = "hidden";
-                        document.getElementById('resumed').hidden = false;
-                        document.getElementById('resumed').style.visibility = "visible";
-                        unique = $('#unique').val();
-                        $('#unique_code').html($('#unique').val());
-                        if (dataPart[1] === "true") {
-                            $('#tableStatus').append('<tr><td><p class="subtitle">Recording status</p><p id="recording_status"></p><br></td></tr>');
-                        }
-                        if (dataPart[2] === "true") {
-                            $('#tableStatus').append('<tr><td><p class="subtitle">Website status</p><p id="website_status"></p><br></td></tr>');
-                        }
-                        let streams = parseInt(dataPart[3])
-                        for (let i = 1; i <= streams; i++) {
-                            $('#tableStatus').append('<tr><td><p class="subtitle">Stream ' + i + ' status</p><p id="' + i + '_status"></p><br></td></tr>');
-                        }
-                        statusInterval = setInterval(function () {
-                            $.ajax({
-                                url: 'status',
-                                type: 'post',
-                                dataType: 'text',
-                                contentType: 'application/x-www-form-urlencoded',
-                                data: ({"unique": unique}),
-                                success: function (data) {
-                                    let statusData = data.split('<br><br><br>');
-                                    for (let j = 0; j < statusData.length; j++) {
-                                        let tempStatus = statusData[j].split(":");
-                                        let tempStatus1 = tempStatus[0].trim() + "_status";
-                                        let first = statusData[j].indexOf(":") + 1;
-                                        document.getElementById(tempStatus1).innerHTML = statusData[j].substring(first);
-                                    }
-                                },
-                            })
-                        }, 5000);
-                    },
-                })
+            $.ajax({
+                url: 'endpoints',
+                type: 'post',
+                dataType: 'text',
+                contentType: 'application/x-www-form-urlencoded',
+                data: ({"unique": unique}),
+                success: function (data) {
+                    let endpoints = data.split(" ");
+                    for (let endpoint of endpoints) {
+                        let endpointName = endpoint.split("~");
+                        $('#endpointTable').append('<tr>\n' +
+                            '<td>\n' +
+                            '<label for="' + endpoint + '">Endpoint: ' + endpointName[1] + '</label>\n' +
+                            '</td>\n' +
+                            '<td>\n' +
+                            '<input name="' + endpoint + '" id="' + endpoint + '" type="radio" ' + ((endpointName[1] === "internal") ? 'checked' : '') + '/>\n' +
+                            '</td>' +
+                            '</tr>');
+                    }
+                },
             });
-            $('#stop_button').click(function () {
-                $('#stop_button').disabled = true;
-                console.log("Stop pressed")
-                $.ajax({
-                    url: 'stop',
-                    type: 'post',
-                    dataType: 'text',
-                    contentType: 'application/x-www-form-urlencoded',
-                    data: ({"unique": unique}),
-                    success: function (data) {
-                        if (data === "STOPPED!") {
-                            document.getElementById('resumed').hidden = true;
-                            document.getElementById('resumed').style.visibility = "hidden";
-                            document.getElementById('stopped_window').hidden = false;
-                            document.getElementById('stopped_window').style.visibility = "visible";
-                            unique = "";
-                            clearInterval(statusInterval);
-                        }
-                    },
-                })
-                $('#stop_button').disabled = false;
-            })
+        });
+
+        let i = 1;
+
+        $('#add').click(function () {
+            $('#dynamic_field').append('<tr id="row_' + i + '" class="dynamic-added"><td><label for="stream_server_' + i + '">Enter the stream server - ' + (i + 1) + ' </label><br><input type="text" name="stream_server_' + i + '" id="stream_server_' + i + '" placeholder="Enter stream server" class="input" required/><br><br>\n' +
+                '                <label for="stream_key_' + i + '">Enter the stream key - ' + (i + 1) + ' </label><br><input type="text" name="stream_key_' + i + '" id="stream_key_' + i + '" placeholder="Enter stream key" class="input" required/><br><br></td><td><button type="button" name="remove" id="' + i + '" class="btn btn-danger btn_remove button">X</button></td></tr><br>');
+            i++;
+        });
+
+        $(document).on('click', '.btn_remove', function () {
+            let button_id = $(this).attr("id");
+            $('#row_' + button_id + '').remove();
         });
     </script>
 {{end}}

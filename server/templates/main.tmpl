@@ -1,4 +1,33 @@
 {{define "content"}}
+    <div class="tabs is-toggle is-toggle-rounded">
+        <ul>
+            <li class="is-active">
+                <a href="/">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="/resume">
+                    <span>Resume</span>
+                </a>
+            </li>
+            <li>
+                <a href="/list">
+                    <span>List</span>
+                </a>
+            </li>
+            <li>
+                <a href="/save">
+                    <span>Save</span>
+                </a>
+            </li>
+            <li>
+                <a href="/recall">
+                    <span>Recall</span>
+                </a>
+            </li>
+        </ul>
+    </div>
     <div id="start_window">
         <div class="card">
             <div class="card-content">
@@ -71,10 +100,11 @@
                             This is especially important for events like Roses</p><br>
                         <label for="website_stream">Stream to website </label>
                         <input name="website_stream" id="website_stream" type="checkbox" checked><br>
-                        <label for="website_stream_endpoint"></label><input name="website_stream_endpoint"
-                                                                            id="website_stream_endpoint"
-                                                                            placeholder="stream1?pwd=gamer"
-                                                                            class="input" required><br><br>
+                        <label for="website_stream_endpoint"></label><br>
+                        <input name="website_stream_endpoint"
+                               id="website_stream_endpoint"
+                               placeholder="stream1?pwd=gamer"
+                               class="input" required><br><br>
 
 
                         <p>This section is for adding all the stream servers and keys<br>
