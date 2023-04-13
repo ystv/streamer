@@ -1,132 +1,135 @@
 {{define "content"}}
-<div class="card" id="enter">
-  <div class="card-content">
-    <p class="title">Recall a stream</p><br>
-    <form id="resume">
-      <label for="unique">Enter the code you were given before in the box below</label><br>
-      <input class="input" name="unique" id="unique" placeholder="ab12cd34ef"><br>
-      <p id="error" style="color: red"></p><br>
-      <input class="button" id="submit_unique" type="button" value="Submit">
-    </form>
-  </div>
-</div>
-<div class="card" id="resumed" hidden>
-  <div class="card-content">
-    <p class="title">STREAMING!</p><br>
-    <p>The stream has been forwarded, the unique code of this forward is below</p><br>
-    <p id="unique_code" class="subtitle"></p><br>
-    <table class="table table-bordered" id="tableStatus"></table><br>
-    <p>This window can be closed as long as you have the code to stop the stream<br>
-      If you want to return later, then you will need to go to <a href="https://streamer.dev.ystv.co.uk/resume"
-                                                                  target="_blank">https://streamer.dev.ystv.co.uk/resume</a><br><br><br>
-      You can stop the stream by pressing the checkbox and then the button (prevent accidental stops)</p>
-    <br><br><br>
-    <label for="stop_checkbox">Enable the stop button </label>
-    <input name="stop_checkbox" id="stop_checkbox" type="checkbox"><br>
-    <input name="stop_button" id="stop_button" type="button" class="button" value="|> STOP <|"
-           style="visibility: hidden"
-           disabled hidden>
-  </div>
-</div>
-<div class="card" id="stopped_window" hidden>
-  <div class="card-content">
-    <p class="title">STOPPED!</p>
-    <p>The forwarding has been stopped successfully<br>
-      You can close this window now</p>
-  </div>
-</div>
-<script>
-  document.getElementById('stop_checkbox').onchange = function () {
-    document.getElementById('stop_button').disabled = !this.checked;
-    document.getElementById('stop_button').hidden = !this.checked;
-    if (this.checked) {
-      document.getElementById('stop_button').style.visibility = "visible";
-    } else {
-      document.getElementById('stop_button').style.visibility = "hidden";
-    }
-  };
-
-  let unique;
-  let statusInterval;
-
-  $(document).ready(function () {
-    $('#submit_unique').click(function () {
-      $('#error').html("")
-      if ($('#unique').val().length > 0) {
-        $.ajax({
-          url: 'resume',
-          type: 'post',
-          dataType: 'text',
-          contentType: 'application/x-www-form-urlencoded',
-          data: $('#resume').serialize(),
-          success: function (data) {
-            let dataPart = data.split('~');
-            if (dataPart[0] === "ACCEPTED!") {
-              document.getElementById('enter').hidden = true;
-              document.getElementById('enter').style.visibility = "hidden";
-              document.getElementById('resumed').hidden = false;
-              document.getElementById('resumed').style.visibility = "visible";
-              unique = $('#unique').val();
-              $('#unique_code').html($('#unique').val());
-              if (dataPart[1] === "true") {
-                $('#tableStatus').append('<tr><td><p class="subtitle">Recording status</p><p id="recording_status"></p><br></td></tr>');
-              }
-              if (dataPart[2] === "true") {
-                $('#tableStatus').append('<tr><td><p class="subtitle">Website status</p><p id="website_status"></p><br></td></tr>');
-              }
-              let streams = parseInt(dataPart[3])
-              for (let i = 1; i <= streams; i++) {
-                $('#tableStatus').append('<tr><td><p class="subtitle">Stream ' + i + ' status</p><p id="' + i + '_status"></p><br></td></tr>');
-              }
-              statusInterval = setInterval(function () {
-                $.ajax({
-                  url: 'status',
-                  type: 'post',
-                  dataType: 'text',
-                  contentType: 'application/x-www-form-urlencoded',
-                  data: ({"unique": unique}),
-                  success: function (data) {
-                    let statusData = data.split('<br><br><br>');
-                    for (let j = 0; j < statusData.length; j++) {
-                      let tempStatus = statusData[j].split(":");
-                      let tempStatus1 = tempStatus[0].trim() + "_status";
-                      let first = statusData[j].indexOf(":") + 1;
-                      document.getElementById(tempStatus1).innerHTML = statusData[j].substring(first);
-                    }
-                  },
-                })
-              }, 5000);
+    <div class="card" id="enter">
+        <div class="card-content">
+            <p class="title">Recall a stream</p><br>
+            <form id="resume">
+                <label for="unique">Enter the code you were given before in the box below</label><br>
+                <input class="input" name="unique" id="unique" placeholder="ab12cd34ef"><br>
+                <p id="error" style="color: red"></p><br>
+                <input class="button" id="submit_unique" type="button" value="Submit">
+            </form>
+        </div>
+    </div>
+    <div class="card" id="resumed" hidden>
+        <div class="card-content">
+            <p class="title">STREAMING!</p><br>
+            <p>The stream has been forwarded, the unique code of this forward is below</p><br>
+            <p id="unique_code" class="subtitle"></p><br>
+            <table class="table table-bordered" id="tableStatus"></table>
+            <br>
+            <p>This window can be closed as long as you have the code to stop the stream<br>
+                If you want to return later, then you will need to go to <a
+                        href="https://streamer.dev.ystv.co.uk/resume"
+                        target="_blank">https://streamer.dev.ystv.co.uk/resume</a><br><br><br>
+                You can stop the stream by pressing the checkbox and then the button (prevent accidental stops)</p>
+            <br><br><br>
+            <label for="stop_checkbox">Enable the stop button </label>
+            <input name="stop_checkbox" id="stop_checkbox" type="checkbox"><br>
+            <input name="stop_button" id="stop_button" type="button" class="button" value="|> STOP <|"
+                   style="visibility: hidden"
+                   disabled hidden>
+        </div>
+    </div>
+    <div class="card" id="stopped_window" hidden>
+        <div class="card-content">
+            <p class="title">STOPPED!</p>
+            <p>The forwarding has been stopped successfully<br>
+                You can close this window now</p>
+        </div>
+    </div>
+    <script>
+        document.getElementById('stop_checkbox').onchange = function () {
+            document.getElementById('stop_button').disabled = !this.checked;
+            document.getElementById('stop_button').hidden = !this.checked;
+            if (this.checked) {
+                document.getElementById('stop_button').style.visibility = "visible";
             } else {
-              $('#error').html("Unique code not accepted");
+                document.getElementById('stop_button').style.visibility = "hidden";
             }
-          },
+        };
+
+        let unique;
+        let statusInterval;
+
+        $(document).ready(function () {
+            $('#submit_unique').click(function () {
+                $('#error').html("")
+                if ($('#unique').val().length === 0) {
+                    $('#error').html("The code field cannot be empty");
+                    return;
+                }
+                $.ajax({
+                    url: 'resume',
+                    type: 'post',
+                    dataType: 'text',
+                    contentType: 'application/x-www-form-urlencoded',
+                    data: $('#resume').serialize(),
+                    success: function (data) {
+                        let dataPart = data.split('~');
+                        if (dataPart[0] !== "ACCEPTED!") {
+                            $('#error').html("Unique code not accepted");
+                            return;
+                        }
+                        document.getElementById('enter').hidden = true;
+                        document.getElementById('enter').style.visibility = "hidden";
+                        document.getElementById('resumed').hidden = false;
+                        document.getElementById('resumed').style.visibility = "visible";
+                        unique = $('#unique').val();
+                        $('#unique_code').html($('#unique').val());
+                        if (dataPart[1] === "true") {
+                            $('#tableStatus').append('<tr><td><p class="subtitle">Recording status</p><p id="recording_status"></p><br></td></tr>');
+                        }
+                        if (dataPart[2] === "true") {
+                            $('#tableStatus').append('<tr><td><p class="subtitle">Website status</p><p id="website_status"></p><br></td></tr>');
+                        }
+                        let streams = parseInt(dataPart[3])
+                        for (let i = 1; i <= streams; i++) {
+                            $('#tableStatus').append('<tr><td><p class="subtitle">Stream ' + i + ' status</p><p id="' + i + '_status"></p><br></td></tr>');
+                        }
+                        statusInterval = setInterval(function () {
+                            $.ajax({
+                                url: 'status',
+                                type: 'post',
+                                dataType: 'text',
+                                contentType: 'application/x-www-form-urlencoded',
+                                data: ({"unique": unique}),
+                                success: function (data) {
+                                    let statusData = data.split('<br><br><br>');
+                                    for (let j = 0; j < statusData.length; j++) {
+                                        let tempStatus = statusData[j].split(":");
+                                        let tempStatus1 = tempStatus[0].trim() + "_status";
+                                        let first = statusData[j].indexOf(":") + 1;
+                                        document.getElementById(tempStatus1).innerHTML = statusData[j].substring(first);
+                                    }
+                                },
+                            })
+                        }, 5000);
+                    },
+                })
+            });
+            $('#stop_button').click(function () {
+                $('#stop_button').disabled = true;
+                console.log("Stop pressed")
+                $.ajax({
+                    url: 'stop',
+                    type: 'post',
+                    dataType: 'text',
+                    contentType: 'application/x-www-form-urlencoded',
+                    data: ({"unique": unique}),
+                    success: function (data) {
+                        if (data === "STOPPED!") {
+                            document.getElementById('resumed').hidden = true;
+                            document.getElementById('resumed').style.visibility = "hidden";
+                            document.getElementById('stopped_window').hidden = false;
+                            document.getElementById('stopped_window').style.visibility = "visible";
+                            unique = "";
+                            clearInterval(statusInterval);
+                        }
+                    },
+                })
+                $('#stop_button').disabled = false;
+            })
         })
-      } else {
-        $('#error').html("The code field cannot be empty");
-      }
-    });
-    $('#stop_button').click(function () {
-      $('#stop_button').disabled = true;
-      console.log("Stop pressed")
-      $.ajax({
-        url: 'stop',
-        type: 'post',
-        dataType: 'text',
-        contentType: 'application/x-www-form-urlencoded',
-        data: ({"unique": unique}),
-        success: function (data) {
-          if (data === "STOPPED!") {
-            document.getElementById('resumed').hidden = true;
-            document.getElementById('resumed').style.visibility = "hidden";
-            document.getElementById('stopped_window').hidden = false;
-            document.getElementById('stopped_window').style.visibility = "visible";
-            unique = "";
-            clearInterval(statusInterval);
-          }
-        },
-      })
-      $('#stop_button').disabled = false;
-    })
-  });
-</script>
+        ;
+    </script>
 {{end}}

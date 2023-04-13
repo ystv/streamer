@@ -1,188 +1,199 @@
 {{define "content"}}
-<div id="start_window">
-    <div class="card">
-        <div class="card-content">
-            <p>This tool allows you to select the endpoint that your streaming software is streaming to and then forward
-                it
-                onto
-                your platforms of choice.<br>
-                Streamer is designed to be simple to use, you select the endpoint that you are streaming to by selecting
-                the
-                possible endpoints using the checkboxes below and then pressing "Refresh streams".</p><br>
-            <p class="title">Stream endpoint selector</p>
-            <p class="subtitle">Endpoints</p>
-            <p id='result'></p><br>
-            <p class="subtitle">Selection</p>
-            <form id="endpoint_selector">
-                <table class="table table-bordered" id="endpointTable"></table>
-                <br>
-                <input type="button" id="stream_check" class="button" value="Refresh streams"/>
-            </form>
-            <br>
-        </div>
-    </div>
-
-    <div class="card">
-        <div class="card-content">
-            <form id="stream_outs">
-
-                <p>After refreshing what streams are active, you can select the endpoint with the dropdown box below</p>
-                <br>
-                <p class="subtitle">Select stream</p>
-                <div class="select">
-                    <label for="stream_selector"></label>
-                    <select name="stream_selector" id="stream_selector">
-                        <option value="please_select" selected>Please select</option>
-                    </select>
-                </div>
-                <br><br>
-
-                <div id="stream_further_1" hidden>
-
-                    <p class="title">Stream outputs</p>
-
-                    <p>This is the file output of the stream, it will be saved as a .mkv file and you can specify a path<br>
-                        It will be saved in the pending edits folder on the network drive (not to be confused with the
-                        Google Drive)<br>
-                        The format to follow is (folder/file) e.g. ERN/ERN.mkv, the folder will be created in pending
-                        edits
-                        if it doesn't already exist<br>
-                        The extension (.mkv) will be added to the end of the file if it doesn't already contain it</p>
+    <div id="start_window">
+        <div class="card">
+            <div class="card-content">
+                <p>This tool allows you to select the endpoint that your streaming software is streaming to and then
+                    forward
+                    it
+                    onto
+                    your platforms of choice.<br>
+                    Streamer is designed to be simple to use, you select the endpoint that you are streaming to by
+                    selecting
+                    the
+                    possible endpoints using the checkboxes below and then pressing "Refresh streams".</p><br>
+                <p class="title">Stream endpoint selector</p>
+                <p class="subtitle">Endpoints</p>
+                <p id='result'></p><br>
+                <p class="subtitle">Selection</p>
+                <form id="endpoint_selector">
+                    <table class="table table-bordered" id="endpointTable"></table>
                     <br>
-                    <label for="record">Record stream </label>
-                    <input name="record" id="record" type="checkbox" checked><br>
-                    <label for="save_path">MKV save location </label><br>
-                    <input type="text" name="save_path" id="save_path" placeholder="ERN/ERN.mkv" class="input"
-                           required/><br><br>
+                    <input type="button" id="stream_check" class="button" value="Refresh streams"/>
+                </form>
+                <br>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-content">
+                <form id="stream_outs">
+
+                    <p>After refreshing what streams are active, you can select the endpoint with the dropdown box
+                        below</p>
+                    <br>
+                    <p class="subtitle">Select stream</p>
+                    <div class="select">
+                        <label for="stream_selector"></label>
+                        <select name="stream_selector" id="stream_selector">
+                            <option value="please_select" selected>Please select</option>
+                        </select>
+                    </div>
+                    <br><br>
+
+                    <div id="stream_further_1" hidden>
+
+                        <p class="title">Stream outputs</p>
+
+                        <p>This is the file output of the stream, it will be saved as a .mkv file and you can specify a
+                            path<br>
+                            It will be saved in the pending edits folder on the network drive (not to be confused with
+                            the
+                            Google Drive)<br>
+                            The format to follow is (folder/file) e.g. ERN/ERN.mkv, the folder will be created in
+                            pending
+                            edits
+                            if it doesn't already exist<br>
+                            The extension (.mkv) will be added to the end of the file if it doesn't already contain it
+                        </p>
+                        <br>
+                        <label for="record">Record stream </label>
+                        <input name="record" id="record" type="checkbox" checked><br>
+                        <label for="save_path">MKV save location </label><br>
+                        <input type="text" name="save_path" id="save_path" placeholder="ERN/ERN.mkv" class="input"
+                               required/><br><br>
 
 
-                    <p>If this is selected then it will default to stream1?pwd=gamer<br>
-                        By default, the website works with streaming to the live endpoint so that is done by default<br>
-                        Use the live endpoint followed by one of the keys in <a
-                                href="https://cobra.dev.ystv.co.uk/streamkeys">cobra</a>
-                        [stream key and password]<br>
-                        This is especially important for events like Roses</p><br>
-                    <label for="website_stream">Stream to website </label>
-                    <input name="website_stream" id="website_stream" type="checkbox" checked><br>
-                    <label for="website_stream_endpoint"></label><input name="website_stream_endpoint"
-                                                                        id="website_stream_endpoint"
-                                                                        placeholder="stream1?pwd=gamer"
-                                                                        class="input" required><br><br>
+                        <p>If this is selected then it will default to stream1?pwd=gamer<br>
+                            By default, the website works with streaming to the live endpoint so that is done by default<br>
+                            Use the live endpoint followed by one of the keys in <a
+                                    href="https://cobra.dev.ystv.co.uk/streamkeys">cobra</a>
+                            [stream key and password]<br>
+                            This is especially important for events like Roses</p><br>
+                        <label for="website_stream">Stream to website </label>
+                        <input name="website_stream" id="website_stream" type="checkbox" checked><br>
+                        <label for="website_stream_endpoint"></label><input name="website_stream_endpoint"
+                                                                            id="website_stream_endpoint"
+                                                                            placeholder="stream1?pwd=gamer"
+                                                                            class="input" required><br><br>
 
 
-                    <p>This section is for adding all the stream servers and keys<br>
-                        All stream servers should start with "rtmp://" or "rtmps://"<br>
-                        If you are unsure how to get the stream servers and keys from YouTube and Facebook then click on
-                        the
-                        links below<br>
-                        <a target="_blank" href="youtubehelp">YouTube</a><br>
-                        <a target="_blank" href="facebookhelp">Facebook</a></p><br>
-                    <label for="input"></label><input type="text" id="input" hidden disabled/>
-                    <table class="table table-bordered" id="dynamic_field">
-                        <tr>
-                            <td><label for="stream_server_0">Enter the stream server - 1 </label><br>
-                                <input type="text" name="stream_server_0" id="stream_server_0"
-                                       placeholder="Enter stream server" class="input" required/><br><br>
-                                <label for="stream_key_0">Enter the stream key - 1 </label><br>
-                                <input type="text" name="stream_key_0" id="stream_key_0" placeholder="Enter stream key"
-                                       class="input" required/><br><br>
-                            </td>
-                            <td>
-                                <button type="button" name="add" id="add" class="btn btn-success button">Add More
-                                </button>
-                            </td>
-                        </tr>
-                    </table>
-                    <p id="error" style="color: red"></p><br>
-                    <input id="start" type='button' class="button" value='Start'/>
-                </div>
-            </form>
+                        <p>This section is for adding all the stream servers and keys<br>
+                            All stream servers should start with "rtmp://" or "rtmps://"<br>
+                            If you are unsure how to get the stream servers and keys from YouTube and Facebook then
+                            click on
+                            the
+                            links below<br>
+                            <a target="_blank" href="youtubehelp">YouTube</a><br>
+                            <a target="_blank" href="facebookhelp">Facebook</a></p><br>
+                        <label for="input"></label><input type="text" id="input" hidden disabled/>
+                        <table class="table table-bordered" id="dynamic_field">
+                            <tr>
+                                <td><label for="stream_server_0">Enter the stream server - 1 </label><br>
+                                    <input type="text" name="stream_server_0" id="stream_server_0"
+                                           placeholder="Enter stream server" class="input" required/><br><br>
+                                    <label for="stream_key_0">Enter the stream key - 1 </label><br>
+                                    <input type="text" name="stream_key_0" id="stream_key_0"
+                                           placeholder="Enter stream key"
+                                           class="input" required/><br><br>
+                                </td>
+                                <td>
+                                    <button type="button" name="add" id="add" class="btn btn-success button">Add More
+                                    </button>
+                                </td>
+                            </tr>
+                        </table>
+                        <p id="error" style="color: red"></p><br>
+                        <input id="start" type='button' class="button" value='Start'/>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-</div>
-<div class="card" id="started_window" hidden>
-    <div class="card-content">
-        <p class="title">STARTED!</p><br><br>
-        <p>The stream has been forwarded, the unique code of this forward is below</p><br>
-        <p id="unique" class="subtitle"></p><br>
-        <table class="table table-bordered" id="tableStatus"></table>
-        <br>
-        <p>This window can be closed as long as you have the code to stop the stream<br>
-            If you want to return later, then you will need to go to <a href="https://streamer.dev.ystv.co.uk/resume"
-                                                                        target="_blank">https://streamer.dev.ystv.co.uk/resume</a><br><br><br>
-            You can stop the stream by pressing the checkbox and then the button (prevent accidental stops)</p>
-        <br><br><br>
-        <label for="stop_checkbox">Enable the stop button </label>
-        <input name="stop_checkbox" id="stop_checkbox" type="checkbox"><br>
-        <input name="stop_button" id="stop_button" type="button" class="button" value="|> STOP <|"
-               style="visibility: hidden" disabled hidden>
+    <div class="card" id="started_window" hidden>
+        <div class="card-content">
+            <p class="title">STARTED!</p><br><br>
+            <p>The stream has been forwarded, the unique code of this forward is below</p><br>
+            <p id="unique" class="subtitle"></p><br>
+            <table class="table table-bordered" id="tableStatus"></table>
+            <br>
+            <p>This window can be closed as long as you have the code to stop the stream<br>
+                If you want to return later, then you will need to go to <a
+                        href="https://streamer.dev.ystv.co.uk/resume"
+                        target="_blank">https://streamer.dev.ystv.co.uk/resume</a><br><br><br>
+                You can stop the stream by pressing the checkbox and then the button (prevent accidental stops)</p>
+            <br><br><br>
+            <label for="stop_checkbox">Enable the stop button </label>
+            <input name="stop_checkbox" id="stop_checkbox" type="checkbox"><br>
+            <input name="stop_button" id="stop_button" type="button" class="button" value="|> STOP <|"
+                   style="visibility: hidden" disabled hidden>
+        </div>
     </div>
-</div>
-<div class="card" id="stopped_window" hidden>
-    <div class="card-content">
-        <p class="title">STOPPED!</p>
-        <p>The forwarding has been stopped successfully<br>
-            You can close this window now</p>
+    <div class="card" id="stopped_window" hidden>
+        <div class="card-content">
+            <p class="title">STOPPED!</p>
+            <p>The forwarding has been stopped successfully<br>
+                You can close this window now</p>
+        </div>
     </div>
-</div>
-<script>
-    document.getElementById('website_stream').onchange = function () {
-        document.getElementById('website_stream_endpoint').disabled = !this.checked;
-        document.getElementById('website_stream_endpoint').hidden = !this.checked;
-        if (this.checked) {
-            document.getElementById('website_stream_endpoint').style.visibility = "visible";
-            document.getElementById('website_stream_endpoint').setAttribute('required', 'required');
-        } else {
-            document.getElementById('website_stream_endpoint').style.visibility = "hidden";
-            document.getElementById('website_stream_endpoint').removeAttribute('required');
-        }
-    };
+    <script>
+        document.getElementById('website_stream').onchange = function () {
+            document.getElementById('website_stream_endpoint').disabled = !this.checked;
+            document.getElementById('website_stream_endpoint').hidden = !this.checked;
+            if (this.checked) {
+                document.getElementById('website_stream_endpoint').style.visibility = "visible";
+                document.getElementById('website_stream_endpoint').setAttribute('required', 'required');
+            } else {
+                document.getElementById('website_stream_endpoint').style.visibility = "hidden";
+                document.getElementById('website_stream_endpoint').removeAttribute('required');
+            }
+        };
 
-    document.getElementById('record').onchange = function () {
-        document.getElementById('save_path').disabled = !this.checked;
-        document.getElementById('save_path').hidden = !this.checked;
-        if (this.checked) {
-            document.getElementById('save_path').style.visibility = "visible";
-            document.getElementById('save_path').setAttribute('required', 'required');
-        } else {
-            document.getElementById('save_path').style.visibility = "hidden";
-            document.getElementById('save_path').removeAttribute('required');
-        }
-    };
+        document.getElementById('record').onchange = function () {
+            document.getElementById('save_path').disabled = !this.checked;
+            document.getElementById('save_path').hidden = !this.checked;
+            if (this.checked) {
+                document.getElementById('save_path').style.visibility = "visible";
+                document.getElementById('save_path').setAttribute('required', 'required');
+            } else {
+                document.getElementById('save_path').style.visibility = "hidden";
+                document.getElementById('save_path').removeAttribute('required');
+            }
+        };
 
-    document.getElementById('stop_checkbox').onchange = function () {
-        document.getElementById('stop_button').disabled = !this.checked;
-        document.getElementById('stop_button').hidden = !this.checked;
-        if (this.checked) {
-            document.getElementById('stop_button').style.visibility = "visible";
-        } else {
-            document.getElementById('stop_button').style.visibility = "hidden";
-        }
-    };
+        document.getElementById('stop_checkbox').onchange = function () {
+            document.getElementById('stop_button').disabled = !this.checked;
+            document.getElementById('stop_button').hidden = !this.checked;
+            if (this.checked) {
+                document.getElementById('stop_button').style.visibility = "visible";
+            } else {
+                document.getElementById('stop_button').style.visibility = "hidden";
+            }
+        };
 
-    let unique;
-    let statusInterval;
+        let unique;
+        let statusInterval;
 
-    let streamsCheck = function () {
-        $.ajax({
-            url: 'streams',
-            type: 'post',
-            dataType: 'text',
-            contentType: 'application/x-www-form-urlencoded',
-            data: $('#endpoint_selector').serialize(),
-            success: function (data) {
-                if (data === "No active streams with the current selection") {
-                    $('#result').html(data);
-                    let selectobject = document.getElementById("stream_selector");
-                    for (let i = selectobject.length; i > 0; i--) {
-                        selectobject.remove(i);
+        let streamsCheck = function () {
+            $.ajax({
+                url: 'streams',
+                type: 'post',
+                dataType: 'text',
+                contentType: 'application/x-www-form-urlencoded',
+                data: $('#endpoint_selector').serialize(),
+                success: function (data) {
+                    if (data === "No active streams with the current selection") {
+                        $('#result').html(data);
+                        let selectobject = document.getElementById("stream_selector");
+                        for (let i = selectobject.length; i > 0; i--) {
+                            selectobject.remove(i);
+                        }
+                        if ($('#stream_selector').val() === 'please_select') {
+                            $('#stream_further_1').hide();
+                        } else {
+                            $('#stream_further_1').show();
+                        }
+                        return;
                     }
-                    if ($('#stream_selector').val() === 'please_select') {
-                        $('#stream_further_1').hide();
-                    } else {
-                        $('#stream_further_1').show();
-                    }
-                } else {
                     const myArray = data.split(" ");
                     $('#result').html(data);
 
@@ -203,260 +214,116 @@
                     } else {
                         $('#stream_further_1').show();
                     }
-                }
-            },
-        });
-    }
+                },
+            });
+        }
 
-    document.getElementById("stream_check").addEventListener('click', event => {
-        streamsCheck();
-    });
-
-    $(document).ready(function () {
-        $.ajax({
-            url: 'endpoints',
-            type: 'post',
-            dataType: 'text',
-            contentType: 'application/x-www-form-urlencoded',
-            data: ({"unique": unique}),
-            success: function (data) {
-                let endpoints = data.split(" ");
-                for (let endpoint of endpoints) {
-                    let endpointName = endpoint.split("~");
-                    $('#endpointTable').append('<tr>\n' +
-                        '<td>\n' +
-                        '<label for="' + endpoint + '">Endpoint: ' + endpointName[1] + '</label>\n' +
-                        '</td>\n' +
-                        '<td>\n' +
-                        '<input name="' + endpoint + '" id="' + endpoint + '" type="checkbox" ' + ((endpointName[1] === "internal") ? 'checked' : '') + '/>\n' +
-                        '</td>' +
-                        '</tr>');
-                }
-                streamsCheck();
-            },
-        });
-        $('#stream_selector').change(function () {
-            if ($(this).val() === 'please_select') {
-                $('#stream_further_1').hide();
-            } else {
-                $('#stream_further_1').show();
-                $('#input').val($(this).val())
-            }
-        });
-        let i = 1;
-
-        $('#add').click(function () {
-            $('#dynamic_field').append('<tr id="row_' + i + '" class="dynamic-added"><td><label for="stream_server_' + i + '">Enter the stream server - ' + (i + 1) + ' </label><br><input type="text" name="stream_server_' + i + '" id="stream_server_' + i + '" placeholder="Enter stream server" class="input" required/><br><br>\n' +
-                '                <label for="stream_key_' + i + '">Enter the stream key - ' + (i + 1) + ' </label><br><input type="text" name="stream_key_' + i + '" id="stream_key_' + i + '" placeholder="Enter stream key" class="input" required/><br><br></td><td><button type="button" name="remove" id="' + i + '" class="btn btn-danger btn_remove button">X</button></td></tr><br>');
-            i++;
+        document.getElementById("stream_check").addEventListener('click', event => {
+            streamsCheck();
         });
 
-        $(document).on('click', '.btn_remove', function () {
-            let button_id = $(this).attr("id");
-            $('#row_' + button_id + '').remove();
-        });
-        $('#start').click(function () {
-            $('#start').disabled = true;
-            $('#error').html("")
-            let valid;
-            if ($('#save_path').val().length > 0 && document.getElementById('record').checked) {
-                if ($('#save_path').val().includes(".mkv")) {
-                    if (document.getElementById('website_stream').checked) {
-                        if ($('#website_stream_endpoint').val().length > 0 && $('#website_stream_endpoint').val().includes("?pwd=")) {
-                            if ($('#stream_server_0').val().length > 0 && $('#stream_key_0').val().length > 0) {
-                                if (validURL($('#stream_server_0').val())) {
-                                    valid = true;
-                                    let j = 1;
-                                    let loop = true;
-                                    valid = true;
-                                    while (loop) {
-                                        if ($('#stream_server_' + j).length > 0) {
-                                            if ($('#stream_server_' + j).val().length > 0 && $('#stream_key_' + j).val().length > 0) {
-                                                if (!validURL($('#stream_server_' + j).val())) {
-                                                    console.log("STREAM SERVER");
-                                                    $('#error').html("The stream server must contain \"rtmp://\" or \"rtmps://\" and needs to be a valid url")
-                                                    valid = false;
-                                                }
-                                            } else {
-                                                console.log("ADDITIONAL");
-                                                $('#error').html("The stream server and stream key cannot be empty")
-                                                valid = false;
-                                            }
-                                            if (j < i) {
-                                                j++
-                                            } else {
-                                                loop = false
-                                            }
-                                        } else {
-                                            if (j < i) {
-                                                j++
-                                            } else {
-                                                loop = false
-                                            }
-                                        }
-                                    }
-                                } else {
-                                    console.log("STREAM SERVER");
-                                    $('#error').html("The stream server must contain \"rtmp://\" or \"rtmps://\" and needs to be a valid url")
-                                    valid = false;
-                                }
-                            } else {
-                                console.log("ADDITIONAL");
-                                $('#error').html("The stream server and stream key cannot be empty")
-                                valid = false;
-                            }
-                        } else {
-                            console.log("PWD");
-                            $('#error').html("The website stream must contain \"?pwd=\"")
-                            valid = false;
-                        }
-                    } else {
-                        if ($('#stream_server_0').val().length > 0 && $('#stream_key_0').val().length > 0) {
-                            if (validURL($('#stream_server_0').val())) {
-                                let j = 1;
-                                let loop = true;
-                                valid = true;
-                                while (loop) {
-                                    if ($('#stream_server_' + j).length > 0) {
-                                        if ($('#stream_server_' + j).val().length > 0 && $('#stream_key_' + j).val().length > 0) {
-                                            if (!validURL($('#stream_server_' + j).val())) {
-                                                console.log("STREAM SERVER");
-                                                $('#error').html("The stream server must contain \"rtmp://\" or \"rtmps://\" and needs to be a valid url")
-                                                valid = false;
-                                            }
-                                        } else {
-                                            console.log("ADDITIONAL");
-                                            $('#error').html("The stream server and stream key cannot be empty")
-                                            valid = false
-                                        }
-                                        if (j < i) {
-                                            j++
-                                        } else {
-                                            loop = false
-                                        }
-                                    } else {
-                                        if (j < i) {
-                                            j++
-                                        } else {
-                                            loop = false
-                                        }
-                                    }
-                                }
-                            } else {
-                                console.log("STREAM SERVER");
-                                $('#error').html("The stream server must contain \"rtmp://\" or \"rtmps://\" and needs to be a valid url");
-                                valid = false;
-                            }
-                        } else {
-                            console.log("ADDITIONAL");
-                            $('#error').html("The stream server and stream key cannot be empty");
-                            valid = false;
-                        }
+        $(document).ready(function () {
+            $.ajax({
+                url: 'endpoints',
+                type: 'post',
+                dataType: 'text',
+                contentType: 'application/x-www-form-urlencoded',
+                data: ({"unique": unique}),
+                success: function (data) {
+                    let endpoints = data.split(" ");
+                    for (let endpoint of endpoints) {
+                        let endpointName = endpoint.split("~");
+                        $('#endpointTable').append('<tr>\n' +
+                            '<td>\n' +
+                            '<label for="' + endpoint + '">Endpoint: ' + endpointName[1] + '</label>\n' +
+                            '</td>\n' +
+                            '<td>\n' +
+                            '<input name="' + endpoint + '" id="' + endpoint + '" type="checkbox" ' + ((endpointName[1] === "internal") ? 'checked' : '') + '/>\n' +
+                            '</td>' +
+                            '</tr>');
                     }
+                    streamsCheck();
+                },
+            });
+            $('#stream_selector').change(function () {
+                if ($(this).val() === 'please_select') {
+                    $('#stream_further_1').hide();
                 } else {
-                    console.log("SAVE FILE");
-                    $('#error').html("The save path must end in \".mkv\"");
+                    $('#stream_further_1').show();
+                    $('#input').val($(this).val())
                 }
-            } else if (!document.getElementById('record').checked) {
+            });
+            let i = 1;
+
+            $('#add').click(function () {
+                $('#dynamic_field').append('<tr id="row_' + i + '" class="dynamic-added"><td><label for="stream_server_' + i + '">Enter the stream server - ' + (i + 1) + ' </label><br><input type="text" name="stream_server_' + i + '" id="stream_server_' + i + '" placeholder="Enter stream server" class="input" required/><br><br>\n' +
+                    '                <label for="stream_key_' + i + '">Enter the stream key - ' + (i + 1) + ' </label><br><input type="text" name="stream_key_' + i + '" id="stream_key_' + i + '" placeholder="Enter stream key" class="input" required/><br><br></td><td><button type="button" name="remove" id="' + i + '" class="btn btn-danger btn_remove button">X</button></td></tr><br>');
+                i++;
+            });
+
+            $(document).on('click', '.btn_remove', function () {
+                let button_id = $(this).attr("id");
+                $('#row_' + button_id + '').remove();
+            });
+            $('#start').click(function () {
+                $('#start').disabled = true;
+                $('#error').html("")
+                if ($('#save_path').val().length > 0 && document.getElementById('record').checked) {
+                    if ($('#save_path').val().length === 0) {
+                        console.log("SAVE PATH");
+                        $('#error').html("The save path cannot be empty");
+                        return;
+                    }
+                    if (!$('#save_path').val().includes(".mkv")) {
+                        console.log("SAVE FILE");
+                        $('#error').html("The save path must end in \".mkv\"");
+                        return;
+                    }
+                }
                 if (document.getElementById('website_stream').checked) {
-                    if ($('#website_stream_endpoint').val().length > 0 && $('#website_stream_endpoint').val().includes("?pwd=")) {
-                        if ($('#stream_server_0').val().length > 0 && $('#stream_key_0').val().length > 0) {
-                            if (validURL($('#stream_server_0').val())) {
-                                valid = true;
-                                let j = 1;
-                                let loop = true;
-                                valid = true;
-                                while (loop) {
-                                    if ($('#stream_server_' + j).length > 0) {
-                                        if ($('#stream_server_' + j).val().length > 0 && $('#stream_key_' + j).val().length > 0) {
-                                            if (!validURL($('#stream_server_' + j).val())) {
-                                                console.log("STREAM SERVER");
-                                                $('#error').html("The stream server must contain \"rtmp://\" or \"rtmps://\" and needs to be a valid url")
-                                                valid = false;
-                                            }
-                                        } else {
-                                            console.log("ADDITIONAL");
-                                            $('#error').html("The stream server and stream key cannot be empty")
-                                            valid = false;
-                                        }
-                                        if (j < i) {
-                                            j++
-                                        } else {
-                                            loop = false
-                                        }
-                                    } else {
-                                        if (j < i) {
-                                            j++
-                                        } else {
-                                            loop = false
-                                        }
-                                    }
-                                }
-                            } else {
-                                console.log("STREAM SERVER");
-                                $('#error').html("The stream server must contain \"rtmp://\" or \"rtmps://\" and needs to be a valid url")
-                                valid = false;
-                            }
-                        } else {
-                            console.log("ADDITIONAL");
-                            $('#error').html("The stream server and stream key cannot be empty")
-                            valid = false;
-                        }
-                    } else {
+                    if ($('#website_stream_endpoint').val().length === 0 || !$('#website_stream_endpoint').val().includes("?pwd=")) {
                         console.log("PWD");
                         $('#error').html("The website stream must contain \"?pwd=\"")
-                        valid = false;
-                    }
-                } else {
-                    if ($('#stream_server_0').val().length > 0 && $('#stream_key_0').val().length > 0) {
-                        if (validURL($('#stream_server_0').val())) {
-                            let j = 1;
-                            let loop = true;
-                            valid = true;
-                            while (loop) {
-                                if ($('#stream_server_' + j).length > 0) {
-                                    if ($('#stream_server_' + j).val().length > 0 && $('#stream_key_' + j).val().length > 0) {
-                                        if (!validURL($('#stream_server_' + j).val())) {
-                                            console.log("STREAM SERVER");
-                                            $('#error').html("The stream server must contain \"rtmp://\" or \"rtmps://\" and needs to be a valid url")
-                                            valid = false;
-                                        }
-                                    } else {
-                                        console.log("ADDITIONAL");
-                                        $('#error').html("The stream server and stream key cannot be empty")
-                                        valid = false
-                                    }
-                                    console.log(i + " - " + j)
-                                    if (j < i) {
-                                        j++
-                                    } else {
-                                        loop = false
-                                    }
-                                } else {
-                                    if (j < i) {
-                                        j++
-                                    } else {
-                                        loop = false
-                                    }
-                                }
-                            }
-                        } else {
-                            console.log("STREAM SERVER");
-                            $('#error').html("The stream server must contain \"rtmp://\" or \"rtmps://\" and needs to be a valid url");
-                            valid = false;
-                        }
-                    } else {
-                        console.log("ADDITIONAL");
-                        $('#error').html("The stream server and stream key cannot be empty");
-                        valid = false;
+                        return;
                     }
                 }
-            } else {
-                console.log("SAVE PATH");
-                $('#error').html("The save path cannot be empty");
-                valid = false;
-            }
-            if (valid) {
+                if ($('#stream_server_0').val().length === 0 || $('#stream_key_0').val().length === 0) {
+                    console.log("ADDITIONAL");
+                    $('#error').html("The stream server and stream key cannot be empty")
+                    return;
+                }
+                if (!validURL($('#stream_server_0').val())) {
+                    console.log("STREAM SERVER");
+                    $('#error').html("The stream server must contain \"rtmp://\" or \"rtmps://\" and needs to be a valid url")
+                    return;
+                }
+                let j = 1;
+                while (true) {
+                    if ($('#stream_server_' + j).length === 0) {
+                        if (j < i) {
+                            j++
+                        } else {
+                            break;
+                        }
+                        continue;
+                    }
+                    if ($('#stream_server_' + j).val().length === 0 || $('#stream_key_' + j).val().length === 0) {
+                        console.log("ADDITIONAL - " + j);
+                        $('#error').html("The stream server and stream key cannot be empty")
+                        return;
+                    }
+                    if (!validURL($('#stream_server_' + j).val())) {
+                        console.log("STREAM SERVER - " + j);
+                        $('#error').html("The stream server must contain \"rtmp://\" or \"rtmps://\" and needs to be a valid url")
+                        return;
+                    }
+                    if (j < i) {
+                        j++
+                    } else {
+                        break;
+                    }
+                }
+
                 $.ajax({
                     url: 'start',
                     type: 'post',
@@ -466,87 +333,86 @@
                     success: function (data) {
                         if (data.includes("An error has occurred...\n")) {
                             $('#error').html(data)
-                        } else {
-                            $('#unique').html(data);
-                            document.getElementById('start_window').hidden = true;
-                            document.getElementById('start_window').style.visibility = "hidden";
-                            document.getElementById('started_window').hidden = false;
-                            document.getElementById('started_window').style.visibility = "visible";
-                            unique = data;
-                            if (document.getElementById('record').checked) {
-                                $('#tableStatus').append('<tr><td><p class="subtitle">Recording status</p></td><td><p id="recording_status"></p><br></td></tr>');
-                            }
-                            if (document.getElementById('website_stream').checked) {
-                                $('#tableStatus').append('<tr><td><p class="subtitle">Website status</p></td><td><p id="website_status"></p><br></td></tr>');
-                            }
-                            $('#tableStatus').append('<tr><td><p class="subtitle">Stream 1 status</p></td><td><p id="1_status"></p><br></td></tr>');
-                            let k = 2;
-                            for (let j = 1; j < i; j++) {
-                                try {
-                                    document.getElementById('row_' + j)
-                                    $('#tableStatus').append('<tr><td><p class="subtitle">Stream ' + k + ' status</p></td><td><p id="' + k + '_status"></p><br></td></tr>');
-                                    k++;
-                                } catch (e) {
+                            return;
+                        }
+                        $('#unique').html(data);
+                        document.getElementById('start_window').hidden = true;
+                        document.getElementById('start_window').style.visibility = "hidden";
+                        document.getElementById('started_window').hidden = false;
+                        document.getElementById('started_window').style.visibility = "visible";
+                        unique = data;
+                        if (document.getElementById('record').checked) {
+                            $('#tableStatus').append('<tr><td><p class="subtitle">Recording status</p></td><td><p id="recording_status"></p><br></td></tr>');
+                        }
+                        if (document.getElementById('website_stream').checked) {
+                            $('#tableStatus').append('<tr><td><p class="subtitle">Website status</p></td><td><p id="website_status"></p><br></td></tr>');
+                        }
+                        $('#tableStatus').append('<tr><td><p class="subtitle">Stream 1 status</p></td><td><p id="1_status"></p><br></td></tr>');
+                        let k = 2;
+                        for (let j = 1; j < i; j++) {
+                            try {
+                                document.getElementById('row_' + j)
+                                $('#tableStatus').append('<tr><td><p class="subtitle">Stream ' + k + ' status</p></td><td><p id="' + k + '_status"></p><br></td></tr>');
+                                k++;
+                            } catch (e) {
 
-                                }
                             }
-                            statusInterval = setInterval(function () {
-                                console.log("Status")
-                                $.ajax({
-                                    url: 'status',
-                                    type: 'post',
-                                    dataType: 'text',
-                                    contentType: 'application/x-www-form-urlencoded',
-                                    data: ({"unique": unique}),
-                                    success: function (data) {
-                                        let statusData = data.split('<br><br><br>');
-                                        for (let j = 0; j < statusData.length; j++) {
-                                            let tempStatus = statusData[j].split(":");
-                                            let tempStatus1 = tempStatus[0].trim() + "_status";
-                                            let first = statusData[j].indexOf(":") + 1;
-                                            document.getElementById(tempStatus1).innerHTML = statusData[j].substring(first);
-                                        }
-                                    },
-                                })
-                            }, 5000);
+                        }
+                        statusInterval = setInterval(function () {
+                            console.log("Status")
+                            $.ajax({
+                                url: 'status',
+                                type: 'post',
+                                dataType: 'text',
+                                contentType: 'application/x-www-form-urlencoded',
+                                data: ({"unique": unique}),
+                                success: function (data) {
+                                    let statusData = data.split('<br><br><br>');
+                                    for (let j = 0; j < statusData.length; j++) {
+                                        let tempStatus = statusData[j].split(":");
+                                        let tempStatus1 = tempStatus[0].trim() + "_status";
+                                        let first = statusData[j].indexOf(":") + 1;
+                                        document.getElementById(tempStatus1).innerHTML = statusData[j].substring(first);
+                                    }
+                                },
+                            })
+                        }, 5000);
+                    },
+                });
+                $('#start').disabled = false;
+            });
+            $('#stop_button').click(function () {
+                $('#stop_button').disabled = true;
+                console.log("Stop pressed")
+                $.ajax({
+                    url: 'stop',
+                    type: 'post',
+                    dataType: 'text',
+                    contentType: 'application/x-www-form-urlencoded',
+                    data: ({"unique": unique}),
+                    success: function (data) {
+                        if (data === "STOPPED!") {
+                            document.getElementById('started_window').hidden = true;
+                            document.getElementById('started_window').style.visibility = "hidden";
+                            document.getElementById('stopped_window').hidden = false;
+                            document.getElementById('stopped_window').style.visibility = "visible";
+                            unique = "";
+                            clearInterval(statusInterval)
                         }
                     },
-                })
-            }
-            $('#start').disabled = false;
-        });
-        $('#stop_button').click(function () {
-            $('#stop_button').disabled = true;
-            console.log("Stop pressed")
-            $.ajax({
-                url: 'stop',
-                type: 'post',
-                dataType: 'text',
-                contentType: 'application/x-www-form-urlencoded',
-                data: ({"unique": unique}),
-                success: function (data) {
-                    if (data === "STOPPED!") {
-                        document.getElementById('started_window').hidden = true;
-                        document.getElementById('started_window').style.visibility = "hidden";
-                        document.getElementById('stopped_window').hidden = false;
-                        document.getElementById('stopped_window').style.visibility = "visible";
-                        unique = "";
-                        clearInterval(statusInterval)
-                    }
-                },
+                });
+                $('#stop_button').disabled = false;
             });
-            $('#stop_button').disabled = false;
         });
-    });
 
-    function validURL(str) {
-        var pattern = new RegExp('^(rtmps?:\\/\\/)?' + // protocol
-            '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' + // domain name
-            '((\\d{1,3}\\.){3}\\d{1,3}))' + // OR ip (v4) address
-            '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*' + // port and path
-            '(\\?[;&a-z\\d%_.~+=-]*)?' + // query string
-            '(\\#[-a-z\\d_]*)?$', 'i'); // fragment locator
-        return !!pattern.test(str);
-    }
-</script>
+        function validURL(str) {
+            var pattern = new RegExp('^(rtmps?:\\/\\/)?' + // protocol
+                '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' + // domain name
+                '((\\d{1,3}\\.){3}\\d{1,3}))' + // OR ip (v4) address
+                '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*' + // port and path
+                '(\\?[;&a-z\\d%_.~+=-]*)?' + // query string
+                '(\\#[-a-z\\d_]*)?$', 'i'); // fragment locator
+            return !!pattern.test(str);
+        }
+    </script>
 {{end}}
