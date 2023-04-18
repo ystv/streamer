@@ -151,6 +151,7 @@ func main() {
 	web.mux.HandleFunc("/list", web.list)                          // List view of current forwards
 	web.mux.HandleFunc("/save", web.save)                          // Where you can save a stream for later
 	web.mux.HandleFunc("/recall", web.recall)                      // Where you can recall a saved stream to modify it if needed and start it
+	web.mux.HandleFunc("/startUnique", web.startUnique)            // Call made by home to start forwarding from a recalled stream
 	web.mux.HandleFunc("/youtubehelp", web.youtubeHelp)            // YouTube help page
 	web.mux.HandleFunc("/facebookhelp", web.facebookHelp)          // Facebook help page
 	web.mux.HandleFunc("/public/{id:[a-zA-Z0-9_.-]+}", web.public) // This handles all the public pages that the webpage can request, e.g. css, images and jquery
@@ -488,8 +489,7 @@ func (web *Web) start(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, jwtAuthentication, http.StatusTemporaryRedirect)
 		return
 	}*/
-	errors := false
-	var errorMessage string
+	//errors := false
 	if r.Method == "POST" {
 		if verbose {
 			fmt.Println("Start POST called")
@@ -497,265 +497,258 @@ func (web *Web) start(w http.ResponseWriter, r *http.Request) {
 		err := r.ParseForm()
 		if err != nil {
 			fmt.Println(err)
-			errorMessage = err.Error()
-			errors = true
-		} else {
-			recording := false
-			websiteStream := false
-			streams := 0
-			websiteValid := true
-			var forwarderStart string
-			if r.FormValue("website_stream") == "on" {
-				websiteStream = true
-				if web.websiteCheck(r.FormValue("website_stream_endpoint")) {
-					websiteValid = true
-					forwarderStart = "./forwarder_start " + r.FormValue("stream_selector") + " " + r.FormValue("website_stream_endpoint") + " "
-				} else {
-					websiteValid = false
-					errors = true
-					errorMessage = "Website key check has failed"
-				}
+			errorFunc(err.Error(), w)
+			return
+		}
+		recording := false
+		websiteStream := false
+		streams := 0
+		var forwarderStart string
+		if r.FormValue("website_stream") == "on" {
+			websiteStream = true
+			if web.websiteCheck(r.FormValue("website_stream_endpoint")) {
+				forwarderStart = "./forwarder_start " + r.FormValue("stream_selector") + " " + r.FormValue("website_stream_endpoint") + " "
 			} else {
-				forwarderStart = "./forwarder_start \"" + r.FormValue("stream_selector") + "\" no "
+				fmt.Println("Website key check has failed")
+				errorFunc("Website key check has failed", w)
+				return
 			}
-			if websiteValid {
-				largest := 0
-				var numbers []int
-				for s := range r.PostForm {
-					if strings.Contains(s, "stream_server_") {
-						split := strings.Split(s, "_")
-						conv, _ := strconv.ParseInt(split[2], 10, 64)
-						largest = int(math.Max(float64(largest), float64(conv)))
-						numbers = append(numbers, int(conv))
-					}
-				}
-				sort.Ints(numbers)
+		} else {
+			forwarderStart = "./forwarder_start \"" + r.FormValue("stream_selector") + "\" no "
+		}
+		largest := 0
+		var numbers []int
+		for s := range r.PostForm {
+			if strings.Contains(s, "stream_server_") {
+				split := strings.Split(s, "_")
+				conv, _ := strconv.ParseInt(split[2], 10, 64)
+				largest = int(math.Max(float64(largest), float64(conv)))
+				numbers = append(numbers, int(conv))
+			}
+		}
+		sort.Ints(numbers)
 
-				var b []byte
+		var b []byte
 
-				loop := true
+		loop := true
 
-				db, err := sql.Open("sqlite3", "db/streams.db")
+		db, err := sql.Open("sqlite3", "db/streams.db")
+		if err != nil {
+			fmt.Println(err)
+			errorFunc(err.Error(), w)
+			return
+		}
+
+		for loop {
+			b = make([]byte, 10)
+			for i := range b {
+				b[i] = charset[seededRand.Intn(len(charset))]
+			}
+
+			rows, err := db.Query("SELECT stream FROM streams")
+			if err != nil {
+				fmt.Println(err)
+				errorFunc(err.Error(), w)
+				return
+			}
+			var stream string
+			data := false
+
+			for rows.Next() {
+				err = rows.Scan(&stream)
 				if err != nil {
 					fmt.Println(err)
-					errors = true
-					errorMessage = err.Error()
-				}
-
-				for loop {
-					b = make([]byte, 10)
-					for i := range b {
-						b[i] = charset[seededRand.Intn(len(charset))]
-					}
-
-					rows, err := db.Query("SELECT stream FROM streams")
-					if err != nil {
-						fmt.Println(err)
-						errors = true
-						errorMessage = err.Error()
-					}
-					var stream string
-					data := false
-
-					for rows.Next() {
-						err = rows.Scan(&stream)
-						if err != nil {
-							fmt.Println(err)
-							errors = true
-							errorMessage = err.Error()
-						} else {
-							data = true
-							if stream == string(b) {
-								loop = true
-								break
-							} else {
-								loop = false
-							}
-						}
-					}
-
-					if !data {
+					errorFunc(err.Error(), w)
+					return
+				} else {
+					data = true
+					if stream == string(b) {
+						loop = true
+						break
+					} else {
 						loop = false
 					}
-
-					err = rows.Close()
-					if err != nil {
-						fmt.Println(err)
-						errors = true
-						errorMessage = err.Error()
-					}
 				}
+			}
 
-				stmt, err := db.Prepare("INSERT INTO streams(stream, recording, website, streams) values(?, false, false, 0)")
+			if !data {
+				loop = false
+			}
+
+			err = rows.Close()
+			if err != nil {
+				fmt.Println(err)
+				errorFunc(err.Error(), w)
+				return
+			}
+		}
+
+		stmt, err := db.Prepare("INSERT INTO streams(stream, recording, website, streams) values(?, false, false, 0)")
+		if err != nil {
+			fmt.Println(err)
+			errorFunc(err.Error(), w)
+			return
+		}
+
+		res, err := stmt.Exec(string(b))
+		if err != nil {
+			fmt.Println(err)
+			errorFunc(err.Error(), w)
+			return
+		}
+
+		id, err := res.LastInsertId()
+		if err != nil {
+			fmt.Println(err)
+			errorFunc(err.Error(), w)
+			return
+		}
+
+		err = db.Close()
+		if err != nil {
+			fmt.Println(err)
+			errorFunc(err.Error(), w)
+			return
+		}
+
+		if id == 0 {
+			fmt.Println("id is 0!")
+			errorFunc("id is 0!", w)
+			return
+		}
+
+		forwarderStart += string(b) + " "
+		for _, index := range numbers {
+			server := r.FormValue("stream_server_" + strconv.Itoa(index))
+			if server[len(server)-1] != '/' {
+				server += "/"
+			}
+			forwarderStart += "\"" + server + "\" \"" + r.FormValue("stream_key_"+strconv.Itoa(index)) + "\" "
+			streams++
+		}
+		forwarderStart += "| bash"
+
+		recorderStart := "./recorder_start \"" + r.FormValue("stream_selector") + "\" \"" + r.FormValue("save_path") + "\" " + string(b) + " | bash"
+
+		var wg sync.WaitGroup
+		wg.Add(2)
+		errors := false
+		go func() {
+			defer wg.Done()
+			if r.FormValue("record") == "on" {
+				recording = true
+				var client *ssh.Client
+				var session *ssh.Session
+				var err error
+				//if recorderAuth == "PEM" {
+				//	client, session, err = connectToHostPEM(recorder, recorderUsername, recorderPrivateKey, recorderPassphrase)
+				//} else if recorderAuth == "PASS" {
+				client, session, err = connectToHostPassword(web.cfg.Recorder, web.cfg.RecorderUsername, web.cfg.RecorderPassword)
+				//}
+				if err != nil {
+					fmt.Println(err, "Error connecting to Recorder for start")
+					errorFunc(err.Error()+" - Error connecting to Recorder for start", w)
+					return
+				}
+				_, err = session.CombinedOutput(recorderStart)
+				if err != nil {
+					fmt.Println(err, "Error executing on Recorder for start")
+					errorFunc(err.Error()+" - Error executing on Recorder for start", w)
+					return
+				}
+				err = client.Close()
 				if err != nil {
 					fmt.Println(err)
-					errors = true
-					errorMessage = err.Error()
+					errorFunc(err.Error(), w)
+					return
 				}
-
-				res, err := stmt.Exec(string(b))
-				if err != nil {
-					fmt.Println(err)
-					errors = true
-					errorMessage = err.Error()
-				}
-
-				id, err := res.LastInsertId()
-				if err != nil {
-					fmt.Println(err)
-					errors = true
-					errorMessage = err.Error()
-				}
-
-				err = db.Close()
-				if err != nil {
-					fmt.Println(err)
-					errors = true
-					errorMessage = err.Error()
-				} else if id != 0 && !errors {
-					forwarderStart += string(b) + " "
-					for _, index := range numbers {
-						server := r.FormValue("stream_server_" + strconv.Itoa(index))
-						if server[len(server)-1] != '/' {
-							server += "/"
-						}
-						forwarderStart += "\"" + server + "\" \"" + r.FormValue("stream_key_"+strconv.Itoa(index)) + "\" "
-						streams++
-					}
-					forwarderStart += "| bash"
-
-					recorderStart := "./recorder_start \"" + r.FormValue("stream_selector") + "\" \"" + r.FormValue("save_path") + "\" " + string(b) + " | bash"
-
-					var wg sync.WaitGroup
-					wg.Add(2)
-					go func() {
-						defer wg.Done()
-						if r.FormValue("record") == "on" {
-							recording = true
-							var client *ssh.Client
-							var session *ssh.Session
-							var err error
-							//if recorderAuth == "PEM" {
-							//	client, session, err = connectToHostPEM(recorder, recorderUsername, recorderPrivateKey, recorderPassphrase)
-							//} else if recorderAuth == "PASS" {
-							client, session, err = connectToHostPassword(web.cfg.Recorder, web.cfg.RecorderUsername, web.cfg.RecorderPassword)
-							//}
-							if err != nil {
-								fmt.Println("Error connecting to Recorder for start")
-								fmt.Println(err)
-								errors = true
-								errorMessage = err.Error()
-							} else {
-								_, err = session.CombinedOutput(recorderStart)
-								if err != nil {
-									fmt.Println("Error executing on Recorder for start")
-									fmt.Println(err)
-									errors = true
-									errorMessage = err.Error()
-								} else {
-									err := client.Close()
-									if err != nil {
-										fmt.Println(err)
-										errors = true
-										errorMessage = err.Error()
-									}
-								}
-							}
-						}
-					}()
-					go func() {
-						defer wg.Done()
-						var client *ssh.Client
-						var session *ssh.Session
-						var err error
-						//if forwarderAuth == "PEM" {
-						//	client, session, err = connectToHostPEM(forwarder, forwarderUsername, forwarderPrivateKey, forwarderPassphrase)
-						//} else if forwarderAuth == "PASS" {
-						client, session, err = connectToHostPassword(web.cfg.Forwarder, web.cfg.ForwarderUsername, web.cfg.ForwarderPassword)
-						//}
-						if err != nil {
-							fmt.Println("Error connecting to Forwarder for start")
-							fmt.Println(err)
-							errors = true
-							errorMessage = err.Error()
-						} else {
-							_, err = session.CombinedOutput(forwarderStart)
-							if err != nil {
-								fmt.Println("Error executing on Forwarder for start")
-								fmt.Println(err)
-								errors = true
-								errorMessage = err.Error()
-							} else {
-								err = client.Close()
-								if err != nil {
-									fmt.Println(err)
-									errors = true
-									errorMessage = err.Error()
-								}
-							}
-						}
-					}()
-					wg.Wait()
-
-					if errors == false {
-						_, _ = http.Get(web.cfg.TransmissionLight + "transmission_on")
-
-						db, err = sql.Open("sqlite3", "db/streams.db")
-						if err != nil {
-							fmt.Println(err)
-							errors = true
-							errorMessage = err.Error()
-						} else {
-							stmt, err := db.Prepare("UPDATE streams SET recording = ?, website = ?, streams = ? WHERE stream = ?")
-							if err != nil {
-								fmt.Println(err)
-								errors = true
-								errorMessage = err.Error()
-							}
-
-							res, err := stmt.Exec(recording, websiteStream, streams, string(b))
-							if err != nil {
-								fmt.Println(err)
-								errors = true
-								errorMessage = err.Error()
-							}
-
-							id, err = res.LastInsertId()
-							if err != nil {
-								fmt.Println(err)
-								errors = true
-								errorMessage = err.Error()
-							}
-
-							err = db.Close()
-							if err != nil {
-								fmt.Println(err)
-								errors = true
-								errorMessage = err.Error()
-							} else {
-								_, err = w.Write(b)
-								if err != nil {
-									fmt.Println(err)
-									errors = true
-									errorMessage = err.Error()
-								}
-							}
-						}
-					}
-				}
-			} else {
-				fmt.Println("Failed to authenticate website stream")
+			}
+		}()
+		go func() {
+			defer wg.Done()
+			var client *ssh.Client
+			var session *ssh.Session
+			var err error
+			//if forwarderAuth == "PEM" {
+			//	client, session, err = connectToHostPEM(forwarder, forwarderUsername, forwarderPrivateKey, forwarderPassphrase)
+			//} else if forwarderAuth == "PASS" {
+			client, session, err = connectToHostPassword(web.cfg.Forwarder, web.cfg.ForwarderUsername, web.cfg.ForwarderPassword)
+			//}
+			if err != nil {
+				fmt.Println(err, "Error connecting to Forwarder for start")
+				errorFunc(err.Error()+" - Error connecting to Forwarder for start", w)
 				errors = true
-				errorMessage = "Failed to authenticate website stream"
+				return
+			}
+			_, err = session.CombinedOutput(forwarderStart)
+			if err != nil {
+				fmt.Println(err, "Error executing on Forwarder for start")
+				errorFunc(err.Error()+" - Error executing on Forwarder for start", w)
+				errors = true
+				return
+			}
+			err = client.Close()
+			if err != nil {
+				fmt.Println(err)
+				errorFunc(err.Error(), w)
+				errors = true
+				return
+			}
+		}()
+		wg.Wait()
+
+		if errors == false {
+			_, _ = http.Get(web.cfg.TransmissionLight + "transmission_on")
+
+			db, err = sql.Open("sqlite3", "db/streams.db")
+			if err != nil {
+				fmt.Println(err)
+				errorFunc(err.Error(), w)
+				return
+			}
+			stmt, err := db.Prepare("UPDATE streams SET recording = ?, website = ?, streams = ? WHERE stream = ?")
+			if err != nil {
+				fmt.Println(err)
+				errorFunc(err.Error(), w)
+				return
+			}
+
+			res, err := stmt.Exec(recording, websiteStream, streams, string(b))
+			if err != nil {
+				fmt.Println(err)
+				errorFunc(err.Error(), w)
+				return
+			}
+
+			id, err = res.LastInsertId()
+			if err != nil {
+				fmt.Println(err)
+				errorFunc(err.Error(), w)
+				return
+			}
+
+			err = db.Close()
+			if err != nil {
+				fmt.Println(err)
+				errorFunc(err.Error(), w)
+				return
+			}
+
+			_, err = w.Write(b)
+			if err != nil {
+				fmt.Println(err)
+				errorFunc(err.Error(), w)
+				return
 			}
 		}
 	}
-	if errors {
-		fmt.Println("An error has occurred...\n" + errorMessage)
-		_, err := w.Write([]byte("An error has occurred...\n" + errorMessage))
-		if err != nil {
-			fmt.Println(err)
-		}
+}
+
+func errorFunc(errs string, w http.ResponseWriter) {
+	fmt.Println("An error has occurred...\n" + errs)
+	_, err := w.Write([]byte("An error has occurred...\n" + errs))
+	if err != nil {
+		fmt.Println(err)
 	}
 }
 
