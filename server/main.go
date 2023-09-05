@@ -965,10 +965,20 @@ func (web *Web) status(w http.ResponseWriter, r *http.Request) {
 								last := strings.LastIndex(dataOut4[1], "\r")
 								dataOut4[1] = dataOut4[1][:last]
 								last = strings.LastIndex(dataOut4[1], "\r") + 1
-								m[strings.Trim(dataOut4[0], " ")] = dataOut4[1][:first] + "\n" + dataOut4[1][last:]
+								if len(dataOut4) > 1 {
+									m[strings.Trim(dataOut4[0], " ")] = dataOut4[1][:first] + "\n" + dataOut4[1][last:]
+								} else {
+									fmt.Println(dataOut4)
+									m[strings.Trim(dataOut4[0], " ")] = ""
+								}
 							} else {
 								dataOut4 := strings.Split(dataOut3, "~:~")
-								m[strings.Trim(dataOut4[0], " ")] = dataOut4[1]
+								if len(dataOut4) > 1 {
+									m[strings.Trim(dataOut4[0], " ")] = dataOut4[1]
+								} else {
+									fmt.Println(dataOut4)
+									m[strings.Trim(dataOut4[0], " ")] = ""
+								}
 							}
 						}
 					}
