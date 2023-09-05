@@ -124,7 +124,11 @@
                         </tr>
                     </table>
                     <p id="error" style="color: red"></p><br>
-                    <input class="button" id="start" type="button" value="Start">
+                    <input class="button" id="start" type="button" value="Start"><br><br><br>
+                    <label for="delete_checkbox">Enable the delete button </label>
+                    <input name="delete_checkbox" id="delete_checkbox" type="checkbox"><br>
+                    <input name="delete_button" id="delete_button" type="button" class="button" value="|> DELETE <|"
+                           style="visibility: hidden" disabled hidden>
                 </div>
             </div>
         </form>
@@ -152,6 +156,13 @@
         <div class="card-content">
             <p class="title">STOPPED!</p>
             <p>The forwarding has been stopped successfully<br>
+                You can close this window now</p>
+        </div>
+    </div>
+    <div class="card" id="deleted_window" hidden>
+        <div class="card-content">
+            <p class="title">DELETED!</p>
+            <p>The saved stream has been deleted<br>
                 You can close this window now</p>
         </div>
     </div>
@@ -187,6 +198,16 @@
                 document.getElementById('stop_button').style.visibility = "visible";
             } else {
                 document.getElementById('stop_button').style.visibility = "hidden";
+            }
+        };
+
+        document.getElementById('delete_checkbox').onchange = function () {
+            document.getElementById('delete_button').disabled = !this.checked;
+            document.getElementById('delete_button').hidden = !this.checked;
+            if (this.checked) {
+                document.getElementById('delete_button').style.visibility = "visible";
+            } else {
+                document.getElementById('delete_button').style.visibility = "hidden";
             }
         };
 
@@ -307,36 +328,48 @@
                 })
             });
 
+            let startPressed = false;
+
             $('#start').click(function () {
+                if (startPressed) {
+                    console.log("Start pressed multiple times");
+                    return;
+                }
+                startPressed = true;
                 $('#start').disabled = true;
                 $('#error').html("")
                 if ($('#save_path').val().length > 0 && document.getElementById('record').checked) {
                     if ($('#save_path').val().length === 0) {
                         console.log("SAVE PATH");
                         $('#error').html("The save path cannot be empty");
+                        startPressed = false;
                         return;
                     }
                     if (!$('#save_path').val().includes(".mkv")) {
                         console.log("SAVE FILE");
                         $('#error').html("The save path must end in \".mkv\"");
+                        startPressed = false;
                         return;
                     }
                 }
                 if (document.getElementById('website_stream').checked) {
                     if ($('#website_stream_endpoint').val().length === 0 || !$('#website_stream_endpoint').val().includes("?pwd=")) {
                         console.log("PWD");
-                        $('#error').html("The website stream must contain \"?pwd=\"")
+                        $('#error').html("The website stream must contain \"?pwd=\"");
+                        startPressed = false;
                         return;
                     }
                 }
                 if ($('#stream_server_0').val().length === 0 || $('#stream_key_0').val().length === 0) {
                     console.log("ADDITIONAL");
-                    $('#error').html("The stream server and stream key cannot be empty")
+                    $('#error').html("The stream server and stream key cannot be empty");
+                    startPressed = false;
                     return;
                 }
                 if (!validURL($('#stream_server_0').val())) {
                     console.log("STREAM SERVER");
-                    $('#error').html("The stream server must contain \"rtmp://\" or \"rtmps://\" and needs to be a valid url")
+                    $('#error').html("The stream server must contain \"rtmp://\" or \"rtmps://\" and needs to be a valid url");
+                    startPressed = false;
                     return;
                 }
                 let j = 1;
@@ -351,12 +384,14 @@
                     }
                     if ($('#stream_server_' + j).val().length === 0 || $('#stream_key_' + j).val().length === 0) {
                         console.log("ADDITIONAL - " + j);
-                        $('#error').html("The stream server and stream key cannot be empty")
+                        $('#error').html("The stream server and stream key cannot be empty");
+                        startPressed = false;
                         return;
                     }
                     if (!validURL($('#stream_server_' + j).val())) {
                         console.log("STREAM SERVER - " + j);
-                        $('#error').html("The stream server must contain \"rtmp://\" or \"rtmps://\" and needs to be a valid url")
+                        $('#error').html("The stream server must contain \"rtmp://\" or \"rtmps://\" and needs to be a valid url");
+                        startPressed = false;
                         return;
                     }
                     if (j < i) {
@@ -374,7 +409,8 @@
                     data: $('#recall_form').serialize(),
                     success: function (data) {
                         if (data.includes("An error has occurred...\n")) {
-                            $('#error').html(data)
+                            $('#error').html(data);
+                            startPressed = false;
                             return;
                         }
                         console.log(data);
@@ -446,6 +482,29 @@
                     },
                 })
                 $('#stop_button').disabled = false;
+            });
+
+            $('#delete_button').click(function () {
+                $('#delete_button').disabled = true;
+                console.log("Delete pressed")
+                $.ajax({
+                    url: 'delete',
+                    type: 'post',
+                    dataType: 'text',
+                    contentType: 'application/x-www-form-urlencoded',
+                    data: ({"unique": unique}),
+                    success: function (data) {
+                        if (data === "DELETED!") {
+                            document.getElementById('recalled').hidden = true;
+                            document.getElementById('recall').style.visibility = "hidden";
+                            document.getElementById('deleted_window').hidden = false;
+                            document.getElementById('deleted_window').style.visibility = "visible";
+                            unique = "";
+                            clearInterval(statusInterval);
+                        }
+                    },
+                })
+                $('#delete_button').disabled = false;
             })
         });
 
