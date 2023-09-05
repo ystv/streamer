@@ -97,9 +97,10 @@ type (
 
 const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
-var verbose bool
-
-var seededRand = rand.New(rand.NewSource(time.Now().UnixNano()))
+var (
+	verbose    bool
+	seededRand = rand.New(rand.NewSource(time.Now().UnixNano()))
+)
 
 // main function is the start and the root for the website
 func main() {
@@ -744,14 +745,6 @@ func (web *Web) start(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-	}
-}
-
-func errorFunc(errs string, w http.ResponseWriter) {
-	fmt.Println("An error has occurred...\n" + errs)
-	_, err := w.Write([]byte("An error has occurred...\n" + errs))
-	if err != nil {
-		fmt.Println(err)
 	}
 }
 
@@ -1911,6 +1904,14 @@ func getBody(url string) (body string, err error) {
 	body = buf.String()
 
 	return
+}
+
+func errorFunc(errs string, w http.ResponseWriter) {
+	fmt.Println("An error has occurred...\n" + errs)
+	_, err := w.Write([]byte("An error has occurred...\n" + errs))
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 // existingStreamCheck checks if there are any existing streams still registered in the database
