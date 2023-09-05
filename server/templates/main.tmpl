@@ -298,36 +298,48 @@
                 $('#row_' + button_id + '').remove();
             });
 
+            let startPressed = false;
+
             $('#start').click(function () {
+                if (startPressed) {
+                    console.log("Start pressed multiple times");
+                    return;
+                }
+                startPressed = true;
                 $('#start').disabled = true;
                 $('#error').html("")
                 if ($('#save_path').val().length > 0 && document.getElementById('record').checked) {
                     if ($('#save_path').val().length === 0) {
                         console.log("SAVE PATH");
                         $('#error').html("The save path cannot be empty");
+                        startPressed = false;
                         return;
                     }
                     if (!$('#save_path').val().includes(".mkv")) {
                         console.log("SAVE FILE");
                         $('#error').html("The save path must end in \".mkv\"");
+                        startPressed = false;
                         return;
                     }
                 }
                 if (document.getElementById('website_stream').checked) {
                     if ($('#website_stream_endpoint').val().length === 0 || !$('#website_stream_endpoint').val().includes("?pwd=")) {
                         console.log("PWD");
-                        $('#error').html("The website stream must contain \"?pwd=\"")
+                        $('#error').html("The website stream must contain \"?pwd=\"");
+                        startPressed = false;
                         return;
                     }
                 }
                 if ($('#stream_server_0').val().length === 0 || $('#stream_key_0').val().length === 0) {
                     console.log("ADDITIONAL");
-                    $('#error').html("The stream server and stream key cannot be empty")
+                    $('#error').html("The stream server and stream key cannot be empty");
+                    startPressed = false;
                     return;
                 }
                 if (!validURL($('#stream_server_0').val())) {
                     console.log("STREAM SERVER");
-                    $('#error').html("The stream server must contain \"rtmp://\" or \"rtmps://\" and needs to be a valid url")
+                    $('#error').html("The stream server must contain \"rtmp://\" or \"rtmps://\" and needs to be a valid url");
+                    startPressed = false;
                     return;
                 }
                 let j = 1;
@@ -342,12 +354,14 @@
                     }
                     if ($('#stream_server_' + j).val().length === 0 || $('#stream_key_' + j).val().length === 0) {
                         console.log("ADDITIONAL - " + j);
-                        $('#error').html("The stream server and stream key cannot be empty")
+                        $('#error').html("The stream server and stream key cannot be empty");
+                        startPressed = false;
                         return;
                     }
                     if (!validURL($('#stream_server_' + j).val())) {
                         console.log("STREAM SERVER - " + j);
-                        $('#error').html("The stream server must contain \"rtmp://\" or \"rtmps://\" and needs to be a valid url")
+                        $('#error').html("The stream server must contain \"rtmp://\" or \"rtmps://\" and needs to be a valid url");
+                        startPressed = false;
                         return;
                     }
                     if (j < i) {
@@ -365,7 +379,8 @@
                     data: $('#stream_outs').serialize(),
                     success: function (data) {
                         if (data.includes("An error has occurred...\n")) {
-                            $('#error').html(data)
+                            $('#error').html(data);
+                            startPressed = false;
                             return;
                         }
                         $('#unique').html(data);
