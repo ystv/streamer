@@ -1,4 +1,4 @@
-package main
+package helper
 
 import (
 	"fmt"
@@ -6,8 +6,8 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-// connectToHostPassword is a general function to ssh to a remote server, any code execution is handled outside this function
-func connectToHostPassword(host, username, password string) (*ssh.Client, *ssh.Session, error) {
+// ConnectToHostPassword is a general function to ssh to a remote server, any code execution is handled outside this function
+func ConnectToHostPassword(host, username, password string, verbose bool) (*ssh.Client, *ssh.Session, error) {
 	if verbose {
 		fmt.Println("Connect To Host Password called")
 	}
@@ -34,14 +34,14 @@ func connectToHostPassword(host, username, password string) (*ssh.Client, *ssh.S
 	return client, session, nil
 }
 
-func RunCommandOnHost(host, username, password, command string) (string, error) {
+func RunCommandOnHost(host, username, password, command string, verbose bool) (string, error) {
 	var client *ssh.Client
 	var session *ssh.Session
 	var err error
 	//if forwarderAuth == "PEM" {
 	//	client, session, err = connectToHostPEM(forwarder, forwarderUsername, forwarderPrivateKey, forwarderPassphrase)
 	//} else if forwarderAuth == "PASS" {
-	client, session, err = connectToHostPassword(host, username, password)
+	client, session, err = ConnectToHostPassword(host, username, password, verbose)
 	//}
 	if err != nil {
 		return "", fmt.Errorf("error connecting to host: %w", err)

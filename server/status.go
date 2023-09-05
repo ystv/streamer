@@ -4,7 +4,8 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"log"
+	"github.com/ystv/streamer/server/helper"
+	"golang.org/x/crypto/ssh"
 	"net/http"
 	"strconv"
 	"strings"
@@ -56,14 +57,29 @@ func (web *Web) status(w http.ResponseWriter, r *http.Request) {
 					wg.Add(2)
 					go func() {
 						defer wg.Done()
-						statusCmd := "./recorder_status.sh " + r.FormValue("unique")
-						dataOut, err := RunCommandOnHost(web.cfg.Recorder, web.cfg.RecorderUsername, web.cfg.RecorderPassword, statusCmd)
+						var client *ssh.Client
+						var session *ssh.Session
+						var err error
+						//if recorderAuth == "PEM" {
+						//	client, session, err = connectToHostPEM(recorder, recorderUsername, recorderPrivateKey, recorderPassphrase)
+						//} else if recorderAuth == "PASS" {
+						client, session, err = helper.ConnectToHostPassword(web.cfg.Recorder, web.cfg.RecorderUsername, web.cfg.RecorderPassword, verbose)
+						//}
 						if err != nil {
-							log.Printf("error running recorder status: %s", err)
-							return
+							fmt.Println("Error connecting to Recorder for status")
+							fmt.Println(err)
+						}
+						dataOut, err := session.CombinedOutput("./recorder_status.sh " + r.FormValue("unique"))
+						if err != nil {
+							fmt.Println("Error executing on Recorder for status")
+							fmt.Println(err)
+						}
+						err = client.Close()
+						if err != nil {
+							fmt.Println(err)
 						}
 
-						dataOut1 := dataOut[:len(dataOut)-2]
+						dataOut1 := string(dataOut)[:len(dataOut)-2]
 
 						if len(dataOut1) > 0 {
 							if strings.Contains(dataOut1, "frame=") {
@@ -84,15 +100,29 @@ func (web *Web) status(w http.ResponseWriter, r *http.Request) {
 				}
 				go func() {
 					defer wg.Done()
-
-					statusCmd := "./forwarder_status " + strconv.FormatBool(website) + " " + strconv.Itoa(streams) + " " + r.FormValue("unique")
-					dataOut, err := RunCommandOnHost(web.cfg.Forwarder, web.cfg.ForwarderUsername, web.cfg.ForwarderPassword, statusCmd)
+					var client *ssh.Client
+					var session *ssh.Session
+					var err error
+					//if forwarderAuth == "PEM" {
+					//	client, session, err = connectToHostPEM(forwarder, forwarderUsername, forwarderPrivateKey, forwarderPassphrase)
+					//} else if forwarderAuth == "PASS" {
+					client, session, err = helper.ConnectToHostPassword(web.cfg.Forwarder, web.cfg.ForwarderUsername, web.cfg.ForwarderPassword, verbose)
+					//}
 					if err != nil {
-						log.Printf("error running forwarder status: %s", err)
-						return
+						fmt.Println("Error connecting to Forwarder for status")
+						fmt.Println(err)
+					}
+					dataOut, err := session.CombinedOutput("./forwarder_status " + strconv.FormatBool(website) + " " + strconv.Itoa(streams) + " " + r.FormValue("unique"))
+					if err != nil {
+						fmt.Println("Error executing on Forwarder for status")
+						fmt.Println(err)
+					}
+					err = client.Close()
+					if err != nil {
+						fmt.Println(err)
 					}
 
-					dataOut1 := dataOut[4 : len(dataOut)-2]
+					dataOut1 := string(dataOut)[4 : len(dataOut)-2]
 
 					dataOut2 := strings.Split(dataOut1, "\u0000")
 
@@ -104,10 +134,20 @@ func (web *Web) status(w http.ResponseWriter, r *http.Request) {
 								last := strings.LastIndex(dataOut4[1], "\r")
 								dataOut4[1] = dataOut4[1][:last]
 								last = strings.LastIndex(dataOut4[1], "\r") + 1
-								m[strings.Trim(dataOut4[0], " ")] = dataOut4[1][:first] + "\n" + dataOut4[1][last:]
+								if len(dataOut4) > 1 {
+									m[strings.Trim(dataOut4[0], " ")] = dataOut4[1][:first] + "\n" + dataOut4[1][last:]
+								} else {
+									fmt.Println(dataOut4)
+									m[strings.Trim(dataOut4[0], " ")] = ""
+								}
 							} else {
 								dataOut4 := strings.Split(dataOut3, "~:~")
-								m[strings.Trim(dataOut4[0], " ")] = dataOut4[1]
+								if len(dataOut4) > 1 {
+									m[strings.Trim(dataOut4[0], " ")] = dataOut4[1]
+								} else {
+									fmt.Println(dataOut4)
+									m[strings.Trim(dataOut4[0], " ")] = ""
+								}
 							}
 						}
 					}

@@ -50,7 +50,7 @@ func (web *Web) resume(w http.ResponseWriter, r *http.Request) {
 
 		}
 
-		rows, err := db.Query("SELECT * FROM streams WHERE stream = ?", r.FormValue("unique"))
+		rows, err := db.Query("SELECT stream, recording, website, streams FROM streams WHERE stream = ?", r.FormValue("unique"))
 		if err != nil {
 			fmt.Println(err)
 		}

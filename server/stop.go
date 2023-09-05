@@ -3,9 +3,10 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"log"
+	"github.com/ystv/streamer/server/helper"
+	"github.com/ystv/streamer/server/helper/tx"
+	"golang.org/x/crypto/ssh"
 	"net/http"
-	"strings"
 	"sync"
 )
 
@@ -62,12 +63,26 @@ func (web *Web) stop(w http.ResponseWriter, r *http.Request) {
 				wg.Add(2)
 				go func() {
 					defer wg.Done()
-
-					stopCmd := "./recorder_stop " + r.FormValue("unique") + " | bash"
-					_, err := RunCommandOnHost(web.cfg.Recorder, web.cfg.RecorderUsername, web.cfg.RecorderPassword, stopCmd)
+					var client *ssh.Client
+					var session *ssh.Session
+					var err error
+					//if recorderAuth == "PEM" {
+					//	client, session, err = connectToHostPEM(recorder, recorderUsername, recorderPrivateKey, recorderPassphrase)
+					//} else if recorderAuth == "PASS" {
+					client, session, err = helper.ConnectToHostPassword(web.cfg.Recorder, web.cfg.RecorderUsername, web.cfg.RecorderPassword, verbose)
+					//}
 					if err != nil {
-						log.Printf("error running recorder stop: %s", err)
-						return
+						fmt.Println("Error connecting to Recorder for stop")
+						fmt.Println(err)
+					}
+					_, err = session.CombinedOutput("./recorder_stop " + r.FormValue("unique") + " | bash")
+					if err != nil {
+						fmt.Println("Error executing on Recorder for stop")
+						fmt.Println(err)
+					}
+					err = client.Close()
+					if err != nil {
+						fmt.Println(err)
 					}
 				}()
 			} else {
@@ -75,12 +90,26 @@ func (web *Web) stop(w http.ResponseWriter, r *http.Request) {
 			}
 			go func() {
 				defer wg.Done()
-
-				stopCmd := "./forwarder_stop " + r.FormValue("unique") + " | bash"
-				_, err := RunCommandOnHost(web.cfg.Forwarder, web.cfg.ForwarderUsername, web.cfg.ForwarderPassword, stopCmd)
+				var client *ssh.Client
+				var session *ssh.Session
+				var err error
+				//if forwarderAuth == "PEM" {
+				//	client, session, err = connectToHostPEM(forwarder, forwarderUsername, forwarderPrivateKey, forwarderPassphrase)
+				//} else if forwarderAuth == "PASS" {
+				client, session, err = helper.ConnectToHostPassword(web.cfg.Forwarder, web.cfg.ForwarderUsername, web.cfg.ForwarderPassword, verbose)
+				//}
 				if err != nil {
-					log.Printf("error running forwarder stop: %s", err)
-					return
+					fmt.Println("Error connecting to Forwarder for stop")
+					fmt.Println(err)
+				}
+				_, err = session.CombinedOutput("./forwarder_stop " + r.FormValue("unique") + " | bash")
+				if err != nil {
+					fmt.Println("Error executing on Forwarder for stop")
+					fmt.Println(err)
+				}
+				err = client.Close()
+				if err != nil {
+					fmt.Println(err)
 				}
 
 				fmt.Println("Forwarder stop success")
@@ -118,12 +147,10 @@ func (web *Web) stop(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				fmt.Println(err.Error())
 			}
-			fmt.Println(existingStreamCheck())
-			if !existingStreamCheck() {
-				_, err := http.Get(web.cfg.TransmissionLight + "rehearsal_transmission_off") // Output is ignored as it returns a 204 status and there's a weird bug with no content
-				if err != nil && !strings.Contains(err.Error(), "unexpected EOF") {
-					fmt.Println(err.Error())
-				}
+
+			err = helper.HandleTXLight(web.cfg.TransmissionLight, tx.AllOff, verbose)
+			if err != nil {
+				fmt.Println(err)
 			}
 		} else {
 

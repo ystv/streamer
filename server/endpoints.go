@@ -4,7 +4,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"github.com/joho/godotenv"
-	"io"
+	"github.com/ystv/streamer/server/helper"
 	"net/http"
 	"strings"
 )
@@ -34,24 +34,10 @@ func (web *Web) endpoints(w http.ResponseWriter, r *http.Request) {
 			fmt.Printf("error loading .env file: %s", err)
 		}
 
-		response, err := http.Get(web.cfg.StreamChecker)
+		streamPageContent, err := helper.GetBody(web.cfg.StreamChecker)
 		if err != nil {
 			fmt.Println(err)
 		}
-		defer func(Body io.ReadCloser) {
-			err := Body.Close()
-			if err != nil {
-				fmt.Println(err)
-			}
-		}(response.Body)
-
-		buf := new(strings.Builder)
-		_, err = io.Copy(buf, response.Body)
-		if err != nil {
-			fmt.Println(err)
-		}
-
-		streamPageContent := buf.String()
 
 		var rtmp RTMP
 

@@ -14,8 +14,8 @@ import (
 	"sync"
 )
 
-// start is the core of the program, where it takes the values set by the user in the webpage and processes the data and sends it to the recorder and the forwarder
-func (web *Web) start(w http.ResponseWriter, r *http.Request) {
+// startUnique is the core of the program, where it takes the values set by the user in the webpage and processes the data and sends it to the recorder and the forwarder with a specified unique key
+func (web *Web) startUnique(w http.ResponseWriter, r *http.Request) {
 	/*if !authenticate(w, r) {
 		err := godotenv.Load()
 		if err != nil {
@@ -30,7 +30,7 @@ func (web *Web) start(w http.ResponseWriter, r *http.Request) {
 	//errors := false
 	if r.Method == "POST" {
 		if verbose {
-			fmt.Println("Start POST called")
+			fmt.Println("StartUnique POST called")
 		}
 		err := r.ParseForm()
 		if err != nil {
@@ -38,6 +38,20 @@ func (web *Web) start(w http.ResponseWriter, r *http.Request) {
 			errorFunc(err.Error(), w)
 			return
 		}
+		fmt.Println(r)
+		unique := r.FormValue("unique_code")
+		if len(unique) != 10 {
+			errorFunc("Unique key invalid", w)
+			return
+		}
+
+		db, err := sql.Open("sqlite3", "db/streams.db")
+		if err != nil {
+			fmt.Println(err)
+			errorFunc(err.Error(), w)
+			return
+		}
+
 		recording := false
 		websiteStream := false
 		streams := 0
@@ -47,7 +61,6 @@ func (web *Web) start(w http.ResponseWriter, r *http.Request) {
 			if web.websiteCheck(r.FormValue("website_stream_endpoint")) {
 				forwarderStart = "./forwarder_start " + r.FormValue("stream_selector") + " " + r.FormValue("website_stream_endpoint") + " "
 			} else {
-				fmt.Println("Website key check has failed")
 				errorFunc("Website key check has failed", w)
 				return
 			}
@@ -66,96 +79,86 @@ func (web *Web) start(w http.ResponseWriter, r *http.Request) {
 		}
 		sort.Ints(numbers)
 
-		var b []byte
-
-		loop := true
-
-		db, err := sql.Open("sqlite3", "db/streams.db")
+		rows, err := db.Query("SELECT stream FROM stored")
 		if err != nil {
-			fmt.Println(err)
 			errorFunc(err.Error(), w)
 			return
 		}
+		var stream string
 
-		for loop {
-			b = make([]byte, 10)
-			for i := range b {
-				b[i] = charset[seededRand.Intn(len(charset))]
-			}
-
-			rows, err := db.Query("SELECT stream FROM streams")
+		for rows.Next() {
+			err = rows.Scan(&stream)
 			if err != nil {
-				fmt.Println(err)
 				errorFunc(err.Error(), w)
 				return
 			}
-			var stream string
-			data := false
-
-			for rows.Next() {
-				err = rows.Scan(&stream)
-				if err != nil {
-					fmt.Println(err)
-					errorFunc(err.Error(), w)
-					return
-				} else {
-					data = true
-					if stream == string(b) {
-						loop = true
-						break
-					} else {
-						loop = false
-					}
-				}
-			}
-
-			if !data {
-				loop = false
-			}
-
-			err = rows.Close()
-			if err != nil {
-				fmt.Println(err)
-				errorFunc(err.Error(), w)
+			if stream == unique {
+				break
+			} else {
+				errorFunc("Cannot find data in stored", w)
 				return
 			}
+		}
+
+		err = rows.Close()
+		if err != nil {
+			errorFunc(err.Error(), w)
+			return
 		}
 
 		stmt, err := db.Prepare("INSERT INTO streams(stream, recording, website, streams) values(?, false, false, 0)")
 		if err != nil {
-			fmt.Println(err)
 			errorFunc(err.Error(), w)
 			return
 		}
 
-		res, err := stmt.Exec(string(b))
+		res, err := stmt.Exec(unique)
 		if err != nil {
-			fmt.Println(err)
 			errorFunc(err.Error(), w)
 			return
 		}
 
 		id, err := res.LastInsertId()
 		if err != nil {
-			fmt.Println(err)
 			errorFunc(err.Error(), w)
+			return
+		}
+
+		stmt, err = db.Prepare("DELETE FROM stored WHERE stream = ?")
+		if err != nil {
+			errorFunc(err.Error(), w)
+			return
+		}
+
+		res, err = stmt.Exec(unique)
+		if err != nil {
+			errorFunc(err.Error(), w)
+			return
+		}
+
+		affect, err := res.RowsAffected()
+		if err != nil {
+			errorFunc(err.Error(), w)
+			return
+		}
+
+		if affect == 0 {
+			errorFunc("Failed to remove from stored", w)
 			return
 		}
 
 		err = db.Close()
 		if err != nil {
-			fmt.Println(err)
 			errorFunc(err.Error(), w)
 			return
 		}
 
 		if id == 0 {
-			fmt.Println("id is 0!")
 			errorFunc("id is 0!", w)
 			return
 		}
 
-		forwarderStart += string(b) + " "
+		forwarderStart += unique + " "
 		for _, index := range numbers {
 			server := r.FormValue("stream_server_" + strconv.Itoa(index))
 			if server[len(server)-1] != '/' {
@@ -166,7 +169,7 @@ func (web *Web) start(w http.ResponseWriter, r *http.Request) {
 		}
 		forwarderStart += "| bash"
 
-		recorderStart := "./recorder_start \"" + r.FormValue("stream_selector") + "\" \"" + r.FormValue("save_path") + "\" " + string(b) + " | bash"
+		recorderStart := "./recorder_start \"" + r.FormValue("stream_selector") + "\" \"" + r.FormValue("save_path") + "\" " + unique + " | bash"
 
 		var wg sync.WaitGroup
 		wg.Add(2)
@@ -247,14 +250,15 @@ func (web *Web) start(w http.ResponseWriter, r *http.Request) {
 				errorFunc(err.Error(), w)
 				return
 			}
-			stmt, err := db.Prepare("UPDATE streams SET input = ?, recording = ?, website = ?, streams = ? WHERE stream = ?")
+
+			stmt, err := db.Prepare("UPDATE streams SET recording = ?, website = ?, streams = ? WHERE stream = ?")
 			if err != nil {
 				fmt.Println(err)
 				errorFunc(err.Error(), w)
 				return
 			}
 
-			res, err := stmt.Exec(r.FormValue("stream_selector"), recording, websiteStream, streams, string(b))
+			res, err := stmt.Exec(recording, websiteStream, streams, unique)
 			if err != nil {
 				fmt.Println(err)
 				errorFunc(err.Error(), w)
@@ -275,7 +279,7 @@ func (web *Web) start(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			_, err = w.Write(b)
+			_, err = w.Write([]byte(unique))
 			if err != nil {
 				fmt.Println(err)
 				errorFunc(err.Error(), w)

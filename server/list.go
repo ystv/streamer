@@ -45,50 +45,73 @@ func (web *Web) list(w http.ResponseWriter, r *http.Request) {
 		}
 		db, err := sql.Open("sqlite3", "db/streams.db")
 		if err != nil {
-			fmt.Println(err)
-		} else {
-
+			errorFunc(err.Error(), w)
+			return
 		}
 
-		rows, err := db.Query("SELECT stream FROM streams")
+		rows, err := db.Query("SELECT stream, input FROM streams")
 		if err != nil {
-			fmt.Println(err)
+			errorFunc(err.Error(), w)
+			return
 		}
-		var stream string
+		var stream, input string
 
 		var streams []string
 
 		data := false
 
 		for rows.Next() {
-			err = rows.Scan(&stream)
+			err = rows.Scan(&stream, &input)
 			if err != nil {
-				fmt.Println(err)
+				errorFunc(err.Error(), w)
+				return
 			}
 			data = true
-			streams = append(streams, stream)
+			streams = append(streams, "Active", "-", stream, "-", input)
+			streams = append(streams, "<br>")
 		}
 
 		err = rows.Close()
 		if err != nil {
-			fmt.Println(err)
+			errorFunc(err.Error(), w)
+			return
+		}
+
+		rows, err = db.Query("SELECT stream, input FROM stored")
+		if err != nil {
+			errorFunc(err.Error(), w)
+			return
+		}
+
+		for rows.Next() {
+			err = rows.Scan(&stream, &input)
+			if err != nil {
+				errorFunc(err.Error(), w)
+				return
+			}
+			data = true
+			streams = append(streams, "Saved", "-", stream, "-", input)
+			streams = append(streams, "<br>")
 		}
 
 		err = db.Close()
 		if err != nil {
-			fmt.Println(err)
+			errorFunc(err.Error(), w)
+			return
 		}
 
 		if !data {
 			_, err = w.Write([]byte("No current streams"))
 			if err != nil {
-				fmt.Println(err)
+				errorFunc(err.Error(), w)
+				return
 			}
 		} else {
 			stringByte := strings.Join(streams, "\x20")
 			_, err = w.Write([]byte(stringByte))
 			if err != nil {
-				fmt.Println(err)
+				errorFunc(err.Error(), w)
+				return
 			}
 		}
 	}
