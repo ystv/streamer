@@ -77,22 +77,6 @@ type (
 		XMLName xml.Name `xml:"stream"`
 		Name    string   `xml:"name"`
 	}
-
-	/*Claims struct {
-		Id    int          `json:"id"`
-		Perms []Permission `json:"perms"`
-		Exp   int64        `json:"exp"`
-		jwt.StandardClaims
-	}*/
-
-	/*Permission struct {
-		Permission string `json:"perms"`
-		jwt.StandardClaims
-	}*/
-
-	/*Views struct {
-		cookie *sessions.CookieStore
-	}*/
 )
 
 const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
@@ -168,175 +152,20 @@ func main() {
 	}
 }
 
-//
-/*func authenticate(w http.ResponseWriter, r *http.Request) bool {
-	_ = w
-	response, err := http.Get("https://auth.dev.ystv.co.uk/api/set_token")
-	if err != nil {
-		fmt.Println(err)
-	}
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-			fmt.Println(err)
-		}
-	}(response.Body)
-	buf := new(strings.Builder)
-	_, err = io.Copy(buf, response.Body)
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println(buf.String())
-	reqToken := r.Header.Get("Authorization")
-	//splitToken := strings.Split(reqToken, "Bearer ")
-	//reqToken = splitToken[1]
-	fmt.Println("Token - ", reqToken)
-	err = godotenv.Load()
-	if err != nil {
-		fmt.Printf("error loading .env file: %s", err)
-	}
-
-	sess := session.Get(r)
-	if sess == nil {
-		fmt.Println("None")
-	} else {
-		fmt.Println(sess)
-	}
-
-	jwtAuthentication := os.Getenv("JWT_AUTHENTICATION")
-
-	http.Redirect(w, r, jwtAuthentication+"authenticate1", http.StatusTemporaryRedirect)
-	return false
-}
-
-//
-func (web *Web) authenticate1(w http.ResponseWriter, r *http.Request) {
-	_ = w
-	reqToken := r.Header.Get("Authorization")
-	//splitToken := strings.Split(reqToken, "Bearer ")
-	//reqToken = splitToken[1]
-	fmt.Println("Token - ", reqToken)
-	err := godotenv.Load()
-	if err != nil {
-		fmt.Printf("error loading .env file: %s", err)
-	}
-	jwtKey := os.Getenv("JWT_KEY")
-
-	//fmt.Println(r.Cookies())
-
-	fmt.Println(r)
-
-	view := Views{}
-
-	view.cookie = sessions.NewCookieStore(
-		[]byte("444bd23239f14b804af0ae40375c8feec80b699684f4d1a6d86f59658edb3706caaa306fd3361e6353bf54c0df66adb7c1e395cac79a72ee0339dc1892fd478e"),
-		[]byte("444bd23239f14b804af0ae40375c8feec80b699684f4d1a6d86f59658edb3706"),
-	)
-
-	sess, err := view.cookie.Get(r, "session")
-
-	fmt.Println(sess)
-
-	_ = sess
-
-	//store := sessions.NewCookieStore([]byte(os.Getenv("SESSION_KEY")))
-
-	//session, err := store.Get(r, "session-name")
-
-	//fmt.Println(err)
-
-	//fmt.Println(session.ID)
-
-	//fmt.Println(session)
-
-	//fmt.Println(session.Values["token"])
-
-	response, err := http.Get("https://auth.dev.ystv.co.uk/api/set_token")
-	if err != nil {
-		fmt.Println(err)
-	}
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-			fmt.Println(err)
-		}
-	}(response.Body)
-
-	buf := new(strings.Builder)
-	_, err = io.Copy(buf, response.Body)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	tokenPage := buf.String()
-
-	_ = tokenPage
-
-	//fmt.Println(tokenPage)
-
-	fmt.Println(r.Cookie("session"))
-
-	c, err := r.Cookie("token")
-	if err != nil {
-		if err == http.ErrNoCookie {
-			fmt.Println(err)
-
-		}
-		fmt.Println(err)
-		return
-	}
-
-	claims := &Claims{}
-
-	// Parse the JWT string and store the result in `claims`.
-	// Note that we are passing the key in this method as well. This method will return an error
-	// if the token is invalid (if it has expired according to the expiry time we set on sign in),
-	// or if the signature does not match
-	tkn, err := jwt.ParseWithClaims(c.Value, claims, func(token *jwt.Token) (interface{}, error) {
-		return jwtKey, nil
-	})
-	fmt.Println(tkn)
-	if err != nil {
-		if err == jwt.ErrSignatureInvalid {
-			fmt.Println("Unauthorised")
-			fmt.Println(err)
-			return
-		}
-		fmt.Println(err)
-		return
-	}
-	if !tkn.Valid {
-		fmt.Println("Unauthorised")
-		return
-	}
-	if time.Now().Unix() > claims.Exp {
-		fmt.Println("Expired")
-		return
-	}
-	for _, perm := range claims.Perms {
-		if perm.Permission == "Streamer" {
-			fmt.Println("~~~Success~~~")
-			return
-		}
-	}
-	fmt.Println("Unauthorised")
-	return
-}*/
-
 // home is the basic html writer that provides the main page for Streamer
 func (web *Web) home(w http.ResponseWriter, r *http.Request) {
 	_ = r
-	/*if !authenticate(w, r) {
-		err := godotenv.Load()
-		if err != nil {
-			fmt.Printf("error loading .env file: %s", err)
-		}
-
-		jwtAuthentication := os.Getenv("JWT_AUTHENTICATION")
-
-		http.Redirect(w, r, jwtAuthentication+"authenticate1", http.StatusTemporaryRedirect)
-		return
-	}*/
+	//if !authenticate(w, r) {
+	//	err := godotenv.Load()
+	//	if err != nil {
+	//		fmt.Printf("error loading .env file: %s", err)
+	//	}
+	//
+	//	jwtAuthentication := os.Getenv("JWT_AUTHENTICATION")
+	//
+	//	http.Redirect(w, r, jwtAuthentication+"authenticate1", http.StatusTemporaryRedirect)
+	//	return
+	//}
 	if verbose {
 		fmt.Println("Home called")
 	}
