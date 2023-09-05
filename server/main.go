@@ -152,6 +152,7 @@ func main() {
 	web.mux.HandleFunc("/list", web.list)                          // List view of current forwards
 	web.mux.HandleFunc("/save", web.save)                          // Where you can save a stream for later
 	web.mux.HandleFunc("/recall", web.recall)                      // Where you can recall a saved stream to modify it if needed and start it
+	web.mux.HandleFunc("/delete", web.delete)                      // Deletes the saved stream if it is no longer needed
 	web.mux.HandleFunc("/startUnique", web.startUnique)            // Call made by home to start forwarding from a recalled stream
 	web.mux.HandleFunc("/youtubehelp", web.youtubeHelp)            // YouTube help page
 	web.mux.HandleFunc("/facebookhelp", web.facebookHelp)          // Facebook help page
@@ -710,14 +711,14 @@ func (web *Web) start(w http.ResponseWriter, r *http.Request) {
 				errorFunc(err.Error(), w)
 				return
 			}
-			stmt, err := db.Prepare("UPDATE streams SET recording = ?, website = ?, streams = ? WHERE stream = ?")
+			stmt, err := db.Prepare("UPDATE streams SET input = ?, recording = ?, website = ?, streams = ? WHERE stream = ?")
 			if err != nil {
 				fmt.Println(err)
 				errorFunc(err.Error(), w)
 				return
 			}
 
-			res, err := stmt.Exec(recording, websiteStream, streams, string(b))
+			res, err := stmt.Exec(r.FormValue("stream_selector"), recording, websiteStream, streams, string(b))
 			if err != nil {
 				fmt.Println(err)
 				errorFunc(err.Error(), w)
@@ -789,7 +790,7 @@ func (web *Web) resume(w http.ResponseWriter, r *http.Request) {
 
 		}
 
-		rows, err := db.Query("SELECT * FROM streams WHERE stream = ?", r.FormValue("unique"))
+		rows, err := db.Query("SELECT stream, recording, website, streams FROM streams WHERE stream = ?", r.FormValue("unique"))
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -1176,25 +1177,25 @@ func (web *Web) list(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		rows, err := db.Query("SELECT stream FROM streams")
+		rows, err := db.Query("SELECT stream, input FROM streams")
 		if err != nil {
 			errorFunc(err.Error(), w)
 			return
 		}
-		var stream string
+		var stream, input string
 
 		var streams []string
 
 		data := false
 
 		for rows.Next() {
-			err = rows.Scan(&stream)
+			err = rows.Scan(&stream, &input)
 			if err != nil {
 				errorFunc(err.Error(), w)
 				return
 			}
 			data = true
-			streams = append(streams, "Active - "+stream)
+			streams = append(streams, "Active", "-", stream, "-", input)
 			streams = append(streams, "<br>")
 		}
 
@@ -1204,20 +1205,20 @@ func (web *Web) list(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		rows, err = db.Query("SELECT stream FROM stored")
+		rows, err = db.Query("SELECT stream, input FROM stored")
 		if err != nil {
 			errorFunc(err.Error(), w)
 			return
 		}
 
 		for rows.Next() {
-			err = rows.Scan(&stream)
+			err = rows.Scan(&stream, &input)
 			if err != nil {
 				errorFunc(err.Error(), w)
 				return
 			}
 			data = true
-			streams = append(streams, "Saved - "+stream)
+			streams = append(streams, "Saved", "-", stream, "-", input)
 			streams = append(streams, "<br>")
 		}
 
@@ -1479,6 +1480,70 @@ func (web *Web) recall(w http.ResponseWriter, r *http.Request) {
 		if accepted {
 			fmt.Println("ACCEPTED!")
 			_, err := w.Write([]byte("ACCEPTED!~" + input + "~" + recording + "~" + website + "~" + streams))
+			if err != nil {
+				fmt.Println(err)
+			}
+		} else {
+			fmt.Println("REJECTED!")
+			_, err := w.Write([]byte("REJECTED!"))
+			if err != nil {
+				fmt.Println(err)
+			}
+		}
+	}
+}
+
+// delete will delete the saved stream before it can start
+func (web *Web) delete(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "POST" {
+		if verbose {
+			fmt.Println("Delete POST called")
+		}
+		db, err := sql.Open("sqlite3", "db/streams.db")
+		if err != nil {
+			fmt.Println(err)
+		} else {
+
+		}
+
+		rows, err := db.Query("SELECT stream FROM stored WHERE stream = ?", r.FormValue("unique"))
+		if err != nil {
+			fmt.Println(err)
+		}
+		var stream string
+
+		data := false
+
+		accepted := false
+
+		for rows.Next() {
+			err = rows.Scan(&stream)
+			if err != nil {
+				fmt.Println(err)
+			}
+			data = true
+			if stream == r.FormValue("unique") {
+				accepted = true
+			}
+		}
+
+		if !data {
+			fmt.Println("No data")
+		}
+
+		err = rows.Close()
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		err = db.Close()
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		if accepted {
+			fmt.Println("DELETED!")
+			_, err := w.Write([]byte("DELETED!"))
 			if err != nil {
 				fmt.Println(err)
 			}
@@ -1924,6 +1989,112 @@ func existingStreamCheck() bool {
 		fmt.Println(err)
 	} else {
 		rows, err := db.Query("SELECT stream FROM (SELECT stream FROM streams UNION ALL SELECT stream FROM stored)")
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		err = db.Close()
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		var stream string
+
+		for rows.Next() {
+			err = rows.Scan(&stream)
+			if err != nil {
+				fmt.Println(err)
+			}
+			err = rows.Close()
+			if err != nil {
+				fmt.Println(err)
+			}
+			err = db.Close()
+			if err != nil {
+				fmt.Println(err)
+			}
+			return true
+		}
+		err = rows.Close()
+		if err != nil {
+			fmt.Println(err)
+		}
+		err = db.Close()
+		if err != nil {
+			fmt.Println(err)
+		}
+		return false
+	}
+	err = db.Close()
+	if err != nil {
+		fmt.Println(err)
+	}
+	return false
+}
+
+// savedStreamCheck checks if there are any existing streams still registered in the database
+func savedStreamCheck() bool {
+	if verbose {
+		fmt.Println("Saved Stream Check called")
+	}
+	db, err := sql.Open("sqlite3", "db/streams.db")
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		rows, err := db.Query("SELECT stream FROM stored")
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		err = db.Close()
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		var stream string
+
+		for rows.Next() {
+			err = rows.Scan(&stream)
+			if err != nil {
+				fmt.Println(err)
+			}
+			err = rows.Close()
+			if err != nil {
+				fmt.Println(err)
+			}
+			err = db.Close()
+			if err != nil {
+				fmt.Println(err)
+			}
+			return true
+		}
+		err = rows.Close()
+		if err != nil {
+			fmt.Println(err)
+		}
+		err = db.Close()
+		if err != nil {
+			fmt.Println(err)
+		}
+		return false
+	}
+	err = db.Close()
+	if err != nil {
+		fmt.Println(err)
+	}
+	return false
+}
+
+// activeStreamCheck checks if there are any existing streams still registered in the database
+func activeStreamCheck() bool {
+	if verbose {
+		fmt.Println("Active Stream Check called")
+	}
+	db, err := sql.Open("sqlite3", "db/streams.db")
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		rows, err := db.Query("SELECT stream FROM streams")
 		if err != nil {
 			fmt.Println(err)
 		}
