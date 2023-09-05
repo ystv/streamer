@@ -698,7 +698,10 @@ func (web *Web) start(w http.ResponseWriter, r *http.Request) {
 		wg.Wait()
 
 		if errors == false {
-			_, _ = http.Get(web.cfg.TransmissionLight + "transmission_on")
+			err = handleTXLight(web.cfg.TransmissionLight, "start")
+			if err != nil {
+				fmt.Println(err)
+			}
 
 			db, err = sql.Open("sqlite3", "db/streams.db")
 			if err != nil {
@@ -1129,12 +1132,10 @@ func (web *Web) stop(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				fmt.Println(err.Error())
 			}
-			fmt.Println(existingStreamCheck())
-			if !existingStreamCheck() {
-				_, err := http.Get(web.cfg.TransmissionLight + "rehearsal_transmission_off") // Output is ignored as it returns a 204 status and there's a weird bug with no content
-				if err != nil && !strings.Contains(err.Error(), "unexpected EOF") {
-					fmt.Println(err.Error())
-				}
+
+			err = handleTXLight(web.cfg.TransmissionLight, "stop")
+			if err != nil {
+				fmt.Println(err)
 			}
 		} else {
 
@@ -1386,6 +1387,11 @@ func (web *Web) save(w http.ResponseWriter, r *http.Request) {
 			fmt.Println(err)
 			errorFunc(err.Error(), w)
 			return
+		}
+
+		err = handleTXLight(web.cfg.TransmissionLight, "save")
+		if err != nil {
+			fmt.Println(err)
 		}
 
 		err = db.Close()
@@ -1718,7 +1724,10 @@ func (web *Web) startUnique(w http.ResponseWriter, r *http.Request) {
 		wg.Wait()
 
 		if errors == false {
-			_, _ = http.Get(web.cfg.TransmissionLight + "transmission_on")
+			err = handleTXLight(web.cfg.TransmissionLight, "start")
+			if err != nil {
+				fmt.Println(err)
+			}
 
 			db, err = sql.Open("sqlite3", "db/streams.db")
 			if err != nil {
@@ -1985,103 +1994,37 @@ func connectToHostPassword(host, username, password string) (*ssh.Client, *ssh.S
 	return client, session, nil
 }
 
-/*func connectToHostPEM(host, username, privateKeyPath, privateKeyPassword string) (*ssh.Client, *ssh.Session, error) {
-	pemBytes, err := ioutil.ReadFile(privateKeyPath)
-	signer, err := signerFromPem(pemBytes, []byte(privateKeyPassword))
-	if err != nil {
-		return nil, nil, err
-	}
-	sshConfig := &ssh.ClientConfig{
-		User: username,
-		Auth: []ssh.AuthMethod{
-			ssh.PublicKeys(signer),
-		},
-	}
-
-	sshConfig.HostKeyCallback = ssh.InsecureIgnoreHostKey()
-
-	client, err := ssh.Dial("tcp", host, sshConfig)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	session, err := client.NewSession()
-	if err != nil {
-		err := client.Close()
-		if err != nil {
-			return nil, nil, err
+func handleTXLight(url, function string) (err error) {
+	switch function {
+	case "start":
+		_, err = http.Get(url + "transmission_on")
+		if err != nil && !strings.Contains(err.Error(), "unexpected EOF") {
+			return
 		}
-		return nil, nil, err
-	}
-
-	return client, session, nil
-}
-
-func signerFromPem(pemBytes []byte, password []byte) (ssh.Signer, error) {
-
-	// read pem block
-	err := errors.New("Pem decode failed, no key found")
-	pemBlock, _ := pem.Decode(pemBytes)
-	if pemBlock == nil {
-		return nil, err
-	}
-
-	// handle encrypted key
-	if x509.IsEncryptedPEMBlock(pemBlock) {
-		// decrypt PEM
-		pemBlock.Bytes, err = x509.DecryptPEMBlock(pemBlock, password)
-		if err != nil {
-			return nil, fmt.Errorf("Decrypting PEM block failed %v", err)
+		break
+	case "stop":
+		if !existingStreamCheck() {
+			_, err = http.Get(url + "rehearsal_transmission_off") // Output is ignored as it returns a 204 status and there's a weird bug with no content
+			if err != nil && !strings.Contains(err.Error(), "unexpected EOF") {
+				return
+			}
+		} else if !savedStreamCheck() {
+			_, err = http.Get(url + "rehearsal_on")
+			if err != nil && !strings.Contains(err.Error(), "unexpected EOF") {
+				return
+			}
 		}
-
-		// get RSA, EC or DSA key
-		key, err := parsePemBlock(pemBlock)
-		if err != nil {
-			return nil, err
+		break
+	case "save":
+		if !activeStreamCheck() {
+			_, err = http.Get(url + "rehearsal_on")
+			if err != nil && !strings.Contains(err.Error(), "unexpected EOF") {
+				return
+			}
 		}
-
-		// generate signer instance from key
-		signer, err := ssh.NewSignerFromKey(key)
-		if err != nil {
-			return nil, fmt.Errorf("Creating signer from encrypted key failed %v", err)
-		}
-
-		return signer, nil
-	} else {
-		// generate signer instance from plain key
-		signer, err := ssh.ParsePrivateKey(pemBytes)
-		if err != nil {
-			return nil, fmt.Errorf("Parsing plain private key failed %v", err)
-		}
-
-		return signer, nil
-	}
-}
-
-func parsePemBlock(block *pem.Block) (interface{}, error) {
-	switch block.Type {
-	case "RSA PRIVATE KEY":
-		key, err := x509.ParsePKCS1PrivateKey(block.Bytes)
-		if err != nil {
-			return nil, fmt.Errorf("Parsing PKCS private key failed %v", err)
-		} else {
-			return key, nil
-		}
-	case "EC PRIVATE KEY":
-		key, err := x509.ParseECPrivateKey(block.Bytes)
-		if err != nil {
-			return nil, fmt.Errorf("Parsing EC private key failed %v", err)
-		} else {
-			return key, nil
-		}
-	case "DSA PRIVATE KEY":
-		key, err := ssh.ParseDSAPrivateKey(block.Bytes)
-		if err != nil {
-			return nil, fmt.Errorf("Parsing DSA private key failed %v", err)
-		} else {
-			return key, nil
-		}
+		break
 	default:
-		return nil, fmt.Errorf("Parsing private key failed, unsupported key type %q", block.Type)
+		err = fmt.Errorf("unexpected function string: \"%s\"", function)
 	}
-}*/
+	return
+}
