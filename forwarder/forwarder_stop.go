@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/wricardo/gomux"
+	"github.com/ystv/streamer/gomux"
 	"log"
 	"os"
 	"path/filepath"

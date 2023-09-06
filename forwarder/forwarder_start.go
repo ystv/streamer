@@ -3,7 +3,7 @@ package main
 import (
 	_ "embed"
 	"fmt"
-	"github.com/wricardo/gomux"
+	"github.com/ystv/streamer/gomux"
 	"os"
 	"strconv"
 )
