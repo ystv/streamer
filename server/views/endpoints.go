@@ -1,16 +1,17 @@
-package main
+package views
 
 import (
 	"encoding/xml"
 	"fmt"
 	"github.com/joho/godotenv"
+	"github.com/labstack/echo/v4"
 	"github.com/ystv/streamer/server/helper"
 	"net/http"
 	"strings"
 )
 
-// endpoints presents the endpoints to the user
-func (web *Web) endpoints(w http.ResponseWriter, r *http.Request) {
+// EndpointsFunc presents the endpoints to the user
+func (v *Views) EndpointsFunc(c echo.Context) error {
 	/*if !authenticate(w, r) {
 		err := godotenv.Load()
 		if err != nil {
@@ -22,11 +23,11 @@ func (web *Web) endpoints(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, jwtAuthentication, http.StatusTemporaryRedirect)
 		return
 	}*/
-	if verbose {
+	if v.conf.Verbose {
 		fmt.Println("Endpoints called")
 	}
-	if r.Method == "POST" {
-		if verbose {
+	if c.Request().Method == "POST" {
+		if v.conf.Verbose {
 			fmt.Println("Endpoints POST")
 		}
 		err := godotenv.Load()
@@ -34,7 +35,7 @@ func (web *Web) endpoints(w http.ResponseWriter, r *http.Request) {
 			fmt.Printf("error loading .env file: %s", err)
 		}
 
-		streamPageContent, err := helper.GetBody(web.cfg.StreamChecker)
+		streamPageContent, err := helper.GetBody(v.conf.StreamServer + "/stat")
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -53,9 +54,8 @@ func (web *Web) endpoints(w http.ResponseWriter, r *http.Request) {
 		}
 
 		stringByte := strings.Join(endpoints, "\x20")
-		_, err = w.Write([]byte(stringByte))
-		if err != nil {
-			fmt.Println(err)
-		}
+
+		return c.String(http.StatusOK, stringByte)
 	}
+	return echo.NewHTTPError(http.StatusMethodNotAllowed, "invalid method")
 }

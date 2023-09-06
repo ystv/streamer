@@ -25,7 +25,8 @@
     <br><br>
     {{block "content" .}}{{end}}
     <br><br>
-    <footer id="footer">Streamer - created by Liam Burnand 2022</footer>
+    {{ $year := thisYear }}
+    <footer id="footer">Streamer - created by Liam Burnand 2022{{if ne $year 2022}}-{{ $year }}{{end}}</footer>
     <script>
         const toggleSwitch = document.querySelector('.theme-switch input[type="checkbox"]');
 

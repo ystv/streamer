@@ -1,78 +1,35 @@
 package main
 
 import (
-	"encoding/xml"
+	"embed"
 	"fmt"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+	"github.com/ystv/streamer/server/store"
+	"github.com/ystv/streamer/server/views"
 	"log"
-	"math/rand"
-	"net"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
-	"time"
 
-	"github.com/ystv/streamer/server/templates"
-
-	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
-	_ "github.com/mattn/go-sqlite3"
 )
 
 type (
-	Web struct {
-		mux *mux.Router
-		t   *templates.Templater
-		cfg Config
-	}
-
-	Config struct {
-		Forwarder         string `envconfig:"FORWARDER"`
-		Recorder          string `envconfig:"RECORDER"`
-		ForwarderUsername string `envconfig:"FORWARDER_USERNAME"`
-		RecorderUsername  string `envconfig:"RECORDER_USERNAME"`
-		ForwarderPassword string `envconfig:"FORWARDER_PASSWORD"`
-		RecorderPassword  string `envconfig:"RECORDER_PASSWORD"`
-		StreamChecker     string `envconfig:"STREAM_CHECKER"`
-		TransmissionLight string `envconfig:"TRANSMISSION_LIGHT"`
-		KeyChecker        string `envconfig:"KEY_CHECKER"`
-		ServerPort        int    `envconfig:"SERVER_PORT"`
-	}
-
-	RTMP struct {
-		XMLName xml.Name `xml:"rtmp"`
-		Server  Server   `xml:"server"`
-	}
-
-	Server struct {
-		XMLName      xml.Name      `xml:"server"`
-		Applications []Application `xml:"application"`
-	}
-
-	Application struct {
-		XMLName xml.Name `xml:"application"`
-		Name    string   `xml:"name"`
-		Live    Live     `xml:"live"`
-	}
-
-	Live struct {
-		XMLName xml.Name `xml:"live"`
-		Streams []Stream `xml:"stream"`
-	}
-
-	Stream struct {
-		XMLName xml.Name `xml:"stream"`
-		Name    string   `xml:"name"`
+	Router struct {
+		config views.Config
+		router *echo.Echo
+		views  *views.Views
 	}
 )
-
-const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
 var (
-	verbose    bool
-	seededRand = rand.New(rand.NewSource(time.Now().UnixNano()))
+	verbose bool
 )
+
+//go:embed public/*
+var embeddedFiles embed.FS
 
 // main function is the start and the root for the website
 func main() {
@@ -103,47 +60,72 @@ func main() {
 		log.Printf("error loading .env file: %s", err)
 	}
 
-	var cfg Config
-	err = envconfig.Process("", &cfg)
+	var config views.Config
+	err = envconfig.Process("", &config)
 	if err != nil {
 		log.Fatalf("failed to process env vars: %s", err)
 	}
 
-	web := Web{
-		mux: mux.NewRouter(),
-		cfg: cfg,
+	root := false
+
+	_, err = os.ReadFile("/store/backend.go")
+	if err == nil {
+		root = true
 	}
-	//web.mux.HandleFunc("/authenticate1", web.authenticate1)
-	web.mux.HandleFunc("/", web.home)                              // Default view
-	web.mux.HandleFunc("/endpoints", web.endpoints)                // Call made by home to view endpoints
-	web.mux.HandleFunc("/streams", web.streams)                    // Call made by home to view all active streams for the endpoints
-	web.mux.HandleFunc("/start", web.start)                        // Call made by home to start forwarding
-	web.mux.HandleFunc("/resume", web.resume)                      // To return to the page that controls a stream
-	web.mux.HandleFunc("/status", web.status)                      // Call made by home to view status
-	web.mux.HandleFunc("/stop", web.stop)                          // Call made by home to stop forwarding
-	web.mux.HandleFunc("/list", web.list)                          // List view of current forwards
-	web.mux.HandleFunc("/save", web.save)                          // Where you can save a stream for later
-	web.mux.HandleFunc("/recall", web.recall)                      // Where you can recall a saved stream to modify it if needed and start it
-	web.mux.HandleFunc("/delete", web.delete)                      // Deletes the saved stream if it is no longer needed
-	web.mux.HandleFunc("/startUnique", web.startUnique)            // Call made by home to start forwarding from a recalled stream
-	web.mux.HandleFunc("/youtubehelp", web.youtubeHelp)            // YouTube help page
-	web.mux.HandleFunc("/facebookhelp", web.facebookHelp)          // Facebook help page
-	web.mux.HandleFunc("/public/{id:[a-zA-Z0-9_.-]+}", web.public) // This handles all the public pages that the webpage can request, e.g. css, images and jquery
 
-	fmt.Println("Server listening on port", web.cfg.ServerPort, "...")
-
-	err = http.ListenAndServe(net.JoinHostPort("", strconv.Itoa(web.cfg.ServerPort)), web.mux)
-
+	newStore, err := store.NewStore(root)
 	if err != nil {
-		fmt.Println(err)
-		return
+		log.Fatal("Failed to create store: ", err)
 	}
+
+	r := &Router{
+		config: config,
+		router: echo.New(),
+		views:  views.New(config, newStore),
+	}
+	r.router.HideBanner = true
+
+	r.router.Debug = verbose
+
+	r.middleware()
+
+	r.loadRoutes()
+
+	r.router.Logger.Error(r.router.Start(r.config.ServerAddress))
+	log.Fatalf("failed to start router on address %s", r.config.ServerAddress)
 }
 
-func errorFunc(errs string, w http.ResponseWriter) {
-	fmt.Println("An error has occurred...\n" + errs)
-	_, err := w.Write([]byte("An error has occurred...\n" + errs))
-	if err != nil {
-		fmt.Println(err)
-	}
+func (r *Router) middleware() {
+	r.router.Pre(middleware.RemoveTrailingSlash())
+	r.router.Use(middleware.Recover())
+	r.router.Use(middleware.BodyLimit("15M"))
+	r.router.Use(middleware.GzipWithConfig(middleware.GzipConfig{
+		Level: 5,
+	}))
+}
+
+func (r *Router) loadRoutes() {
+	r.router.RouteNotFound("/*", r.views.Error404)
+
+	r.router.HTTPErrorHandler = r.views.CustomHTTPErrorHandler
+
+	assetHandler := http.FileServer(http.FS(echo.MustSubFS(embeddedFiles, "public/")))
+
+	r.router.GET("/public/*", echo.WrapHandler(http.StripPrefix("/public/", assetHandler)))
+
+	validMethods := []string{http.MethodGet, http.MethodPost}
+	r.router.Match(validMethods, "/", r.views.HomeFunc)
+	r.router.Match(validMethods, "/endpoints", r.views.EndpointsFunc)
+	r.router.Match(validMethods, "/streams", r.views.StreamsFunc)         // Call made by home to view all active streams for the endpoints
+	r.router.Match(validMethods, "/start", r.views.StartFunc)             // Call made by home to start forwarding
+	r.router.Match(validMethods, "/resume", r.views.ResumeFunc)           // To return to the page that controls a stream
+	r.router.Match(validMethods, "/status", r.views.StatusFunc)           // Call made by home to view status
+	r.router.Match(validMethods, "/stop", r.views.StopFunc)               // Call made by home to stop forwarding
+	r.router.Match(validMethods, "/list", r.views.ListFunc)               // List view of current forwards
+	r.router.Match(validMethods, "/save", r.views.SaveFunc)               // Where you can save a stream for later
+	r.router.Match(validMethods, "/recall", r.views.RecallFunc)           // Where you can recall a saved stream to modify it if needed and start it
+	r.router.Match(validMethods, "/delete", r.views.DeleteFunc)           // Deletes the saved stream if it is no longer needed
+	r.router.Match(validMethods, "/startUnique", r.views.StartUniqueFunc) // Call made by home to start forwarding from a recalled stream
+	r.router.Match(validMethods, "/youtubehelp", r.views.YoutubeHelpFunc) // YouTube help page
+	r.router.Match(validMethods, "/facebookhelp", r.views.FacebookHelpFunc)
 }

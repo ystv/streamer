@@ -1,4 +1,4 @@
-package main
+package views
 
 import (
 	"fmt"
@@ -10,8 +10,8 @@ import (
 )
 
 // websiteCheck checks if the website stream key is valid using software called COBRA
-func (web *Web) websiteCheck(endpoint string) bool {
-	if verbose {
+func (v *Views) websiteCheck(endpoint string) bool {
+	if v.conf.Verbose {
 		fmt.Println("Website Check called")
 	}
 
@@ -24,7 +24,7 @@ func (web *Web) websiteCheck(endpoint string) bool {
 	data.Set("pwd", splitting[1])
 
 	client := &http.Client{}
-	r, err := http.NewRequest("POST", web.cfg.KeyChecker, strings.NewReader(data.Encode()))
+	r, err := http.NewRequest("POST", v.conf.KeyChecker, strings.NewReader(data.Encode()))
 	if err != nil {
 		fmt.Println(err)
 	}

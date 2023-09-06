@@ -1,4 +1,4 @@
-package helper
+package views
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func HandleTXLight(url string, function tx.FunctionTX, verbose bool) (err error) {
+func (v *Views) HandleTXLight(url string, function tx.FunctionTX) (err error) {
 	switch function {
 	case tx.TransmissionOn:
 		_, err = http.Get(url + tx.TransmissionOn.String())
@@ -16,12 +16,12 @@ func HandleTXLight(url string, function tx.FunctionTX, verbose bool) (err error)
 		}
 		break
 	case tx.AllOff:
-		if !ExistingStreamCheck(verbose) {
+		if !v.ExistingStreamCheck() {
 			_, err = http.Get(url + tx.AllOff.String()) // Output is ignored as it returns a 204 status and there's a weird bug with no content
 			if err != nil && !strings.Contains(err.Error(), "unexpected EOF") {
 				return
 			}
-		} else if !SavedStreamCheck(verbose) {
+		} else if !v.SavedStreamCheck() {
 			_, err = http.Get(url + tx.RehearsalOn.String())
 			if err != nil && !strings.Contains(err.Error(), "unexpected EOF") {
 				return
@@ -29,7 +29,7 @@ func HandleTXLight(url string, function tx.FunctionTX, verbose bool) (err error)
 		}
 		break
 	case tx.RehearsalOn:
-		if !ActiveStreamCheck(verbose) {
+		if !v.ActiveStreamCheck() {
 			_, err = http.Get(url + tx.RehearsalOn.String())
 			if err != nil && !strings.Contains(err.Error(), "unexpected EOF") {
 				return

@@ -1,0 +1,16 @@
+{{define "title"}}Error{{end}}
+{{define "content"}}
+    <section class="hero is-fullheight" style="min-height: 95vh">
+        <div class="hero-body">
+            <div class="container">
+                <div class="columns box">
+                    <div class="column">
+                        <h1 class="title">An error occurred</h1>
+                        <h2 class="subtitle">Error code: <code>{{.Code}}</code></h2>
+                        <p>We apologise for the inconvenience but the following error has occurred: <code>{{.Error}}</code><br><br>If this error does not make sense then please message Computing Team on slack.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{{end}}

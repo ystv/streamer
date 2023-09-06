@@ -1,0 +1,24 @@
+syntax = "proto3";
+package storage;
+option go_package = "github.com/ystv/streamer/server/storage";
+
+message Streamer {
+    repeated Stored stored = 1;
+    repeated Stream stream = 2;
+}
+
+message Stored {
+    string stream = 1;
+    string input = 2;
+    string recording = 3;
+    string website = 4;
+    repeated string streams = 5;
+}
+
+message Stream {
+    string stream = 1;
+    string input = 2;
+    bool recording = 3;
+    bool website = 4;
+    uint64 streams = 5;
+}
