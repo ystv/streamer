@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/ystv/streamer/gomux"
+	"github.com/comtop1/gomux"
 	"log"
 	"os"
 	"os/exec"
