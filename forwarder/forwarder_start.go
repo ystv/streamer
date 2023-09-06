@@ -1,31 +1,17 @@
 package main
 
 import (
+	_ "embed"
 	"fmt"
-	"github.com/joho/godotenv"
 	"github.com/wricardo/gomux"
-	"log"
 	"os"
 	"strconv"
-	"strings"
 )
 
-func main() {
-	if strings.Contains(os.Args[0], "/var/folders") || strings.Contains(os.Args[0], "/tmp/go") || strings.Contains(os.Args[0], "./forwarder_start") {
-		if len(os.Args) < 5 {
-			log.Fatalf("echo Arguments error")
-		}
-		for i := 0; i < len(os.Args)-1; i++ {
-			os.Args[i] = os.Args[i+1]
-		}
-	} else {
-		if len(os.Args) < 4 {
-			log.Fatalf("echo Arguments error")
-		}
-	}
-	streamIn := os.Args[0]
-	websiteOut := os.Args[1]
-	unique := os.Args[2]
+//go:embed forwarder_start.sh
+var startScript string
+
+func start(unique, streamIn, websiteOut, streamServer string) {
 	var serversKeys []string
 	for i := 3; i < len(os.Args)-1; i++ {
 		serversKeys = append(serversKeys, os.Args[i])
@@ -39,32 +25,26 @@ func main() {
 
 	var panes []*gomux.Pane
 
-	err := godotenv.Load()
-	if err != nil {
-		fmt.Printf("echo Error loading .env file: %s", err)
+	if websiteOut != "no" {
+		panes = append(panes, w1.Pane(0))
+		panes[0].Exec("./forwarder_start.sh " + streamServer + streamIn + " " + streamServer + "live/" + websiteOut + " " + unique + " " + strconv.Itoa(0) + " | bash")
 	} else {
-		streamServer := os.Getenv("STREAM_SERVER")
-		if websiteOut != "no" {
-			panes = append(panes, w1.Pane(0))
-			panes[0].Exec("./forwarder_start.sh " + streamServer + streamIn + " " + streamServer + "live/" + websiteOut + " " + unique + " " + strconv.Itoa(0) + " | bash")
-		} else {
-			panes = append(panes, w1.Pane(0))
-			panes[0].Exec("echo No website stream")
-		}
-		j := 1
-		k := 0
-		for i := 0; i < len(serversKeys); i = i + 2 {
-			if (i%8) == 0 && i != 0 {
-				k++
-				w1 = s.AddWindow("FORWARDING - " + strconv.Itoa(k))
-				panes = append(panes, w1.Pane(0))
-			}
-			panes = append(panes, w1.Pane(0).Split())
-			fmt.Println("echo", (i/2)+1)
-			panes[(i/2)+1].Exec("./forwarder_start.sh " + streamServer + streamIn + " " + serversKeys[i] + serversKeys[i+1] + " " + unique + " " + strconv.Itoa(j) + " | bash")
-			j++
-		}
-
-		fmt.Println("echo FORWARDER STARTED!")
+		panes = append(panes, w1.Pane(0))
+		panes[0].Exec("echo No website stream")
 	}
+	j := 1
+	k := 0
+	for i := 0; i < len(serversKeys); i = i + 2 {
+		if (i%8) == 0 && i != 0 {
+			k++
+			w1 = s.AddWindow("FORWARDING - " + strconv.Itoa(k))
+			panes = append(panes, w1.Pane(0))
+		}
+		panes = append(panes, w1.Pane(0).Split())
+		fmt.Println("echo", (i/2)+1)
+		panes[(i/2)+1].Exec("./forwarder_start.sh " + streamServer + streamIn + " " + serversKeys[i] + serversKeys[i+1] + " " + unique + " " + strconv.Itoa(j) + " | bash")
+		j++
+	}
+
+	fmt.Println("echo FORWARDER STARTED!")
 }
