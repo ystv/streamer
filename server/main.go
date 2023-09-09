@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+	"encoding/json"
 	"fmt"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -129,4 +130,22 @@ func (r *Router) loadRoutes() {
 	r.router.Match(validMethods, "/youtubehelp", r.views.YoutubeHelpFunc)               // YouTube help page
 	r.router.Match(validMethods, "/facebookhelp", r.views.FacebookHelpFunc)             // Facebook help page
 	r.router.Match(validMethods, "/"+r.config.StreamerWebsocketPath, r.views.Websocket) // Websocket for the recorder and forwarder to communicate on
+	r.router.GET("/api/health", func(c echo.Context) error {
+		marshal, err := json.Marshal(struct {
+			Status int `json:"status"`
+		}{
+			Status: http.StatusOK,
+		})
+		if err != nil {
+			fmt.Println(err)
+			return &echo.HTTPError{
+				Code:     http.StatusBadRequest,
+				Message:  err.Error(),
+				Internal: err,
+			}
+		}
+
+		c.Response().Header().Set("Content-Type", "application/json")
+		return c.JSON(http.StatusOK, marshal)
+	})
 }
