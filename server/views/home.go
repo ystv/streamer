@@ -23,5 +23,24 @@ func (v *Views) HomeFunc(c echo.Context) error {
 		fmt.Println("Home called")
 	}
 
-	return v.template.RenderTemplate(c.Response().Writer, nil, templates.MainTemplate)
+	_, rec := v.cache.Get("recorder")
+	_, fow := v.cache.Get("forwarder")
+
+	var err error
+
+	if !rec && !fow {
+		err = fmt.Errorf("no recorder or forwarder available")
+	} else if !rec {
+		err = fmt.Errorf("no recorder available")
+	} else if !fow {
+		err = fmt.Errorf("no forwarder available")
+	}
+
+	data := struct {
+		Error error
+	}{
+		Error: err,
+	}
+
+	return v.template.RenderTemplate(c.Response().Writer, data, templates.MainTemplate)
 }

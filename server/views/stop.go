@@ -38,6 +38,16 @@ func (v *Views) StopFunc(c echo.Context) error {
 		}
 
 		var wg sync.WaitGroup
+		_, rec := v.cache.Get("recorder")
+		_, fow := v.cache.Get("forwarder")
+
+		if (!rec && stream.Recording) && !fow {
+			err = fmt.Errorf("no recorder or forwarder available")
+		} else if !rec && stream.Recording {
+			err = fmt.Errorf("no recorder available")
+		} else if !fow {
+			err = fmt.Errorf("no forwarder available")
+		}
 		if stream.Recording {
 			wg.Add(2)
 			go func() {
