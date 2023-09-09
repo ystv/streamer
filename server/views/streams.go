@@ -27,8 +27,15 @@ func (v *Views) StreamsFunc(c echo.Context) error {
 			fmt.Println("Streams POST called")
 		}
 
+		err := c.Request().ParseForm()
+		if err != nil {
+			c.Logger().Error(err)
+			return err
+		}
+
 		streamPageContent, err := helper.GetBody("http://" + v.conf.StreamServer + "stat")
 		if err != nil {
+			c.Logger().Error(err)
 			return err
 		}
 
@@ -36,6 +43,7 @@ func (v *Views) StreamsFunc(c echo.Context) error {
 
 		err = xml.Unmarshal([]byte(streamPageContent), &rtmp)
 		if err != nil {
+			c.Logger().Error(err)
 			return err
 		}
 
