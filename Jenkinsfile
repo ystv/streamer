@@ -44,33 +44,27 @@ pipeline {
 
     stage('Push images to registry') {
       steps {
-        stage('Push server image to registry') {
-          script {
-            docker.withRegistry('https://' + registryEndpoint, 'docker-registry') {
-              serverImage.push()
-              if (env.BRANCH_IS_PRIMARY) {
-                serverImage.push('latest')
-              }
+        script {
+          docker.withRegistry('https://' + registryEndpoint, 'docker-registry') {
+            serverImage.push()
+            if (env.BRANCH_IS_PRIMARY) {
+              serverImage.push('latest')
             }
           }
         }
-        stage('Push forwarder image to registry') {
-          script {
-            docker.withRegistry('https://' + registryEndpoint, 'docker-registry') {
-              forwarderImage.push()
-              if (env.BRANCH_IS_PRIMARY) {
-                forwarderImage.push('latest')
-              }
+        script {
+          docker.withRegistry('https://' + registryEndpoint, 'docker-registry') {
+            forwarderImage.push()
+            if (env.BRANCH_IS_PRIMARY) {
+              forwarderImage.push('latest')
             }
           }
         }
-        stage('Push recorder image to registry') {
-          script {
-            docker.withRegistry('https://' + registryEndpoint, 'docker-registry') {
-              recorderImage.push()
-              if (env.BRANCH_IS_PRIMARY) {
-                recorderImage.push('latest')
-              }
+        script {
+          docker.withRegistry('https://' + registryEndpoint, 'docker-registry') {
+            recorderImage.push()
+            if (env.BRANCH_IS_PRIMARY) {
+              recorderImage.push('latest')
             }
           }
         }
