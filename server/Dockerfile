@@ -15,4 +15,5 @@ RUN apk update && apk add git && apk add make && apk add protoc && apk add proto
 RUN GOOS=linux GOARCH=amd64 make
 
 EXPOSE 8084
+
 ENTRYPOINT ["/bin/streamer"]
