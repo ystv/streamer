@@ -19,7 +19,7 @@ pipeline {
     stage('Build images') {
       steps {
         script {
-          dir("server) {
+          dir("server") {
             docker.withRegistry('https://' + registryEndpoint, 'docker-registry') {
               serverImage = docker.build(serverImageName, ".")
             }
