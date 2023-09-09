@@ -1,13 +1,16 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/websocket"
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
+	"github.com/labstack/echo/v4"
 	"github.com/mitchellh/mapstructure"
 	"log"
+	"net/http"
 	"net/url"
 	"os"
 	"os/signal"
@@ -91,6 +94,45 @@ func main() {
 		log.Fatalf("failed to process env vars: %s", err)
 	}
 
+	e := echo.New()
+	e.HideBanner = true
+	e.GET("/api/health", func(c echo.Context) error {
+		marshal, err := json.Marshal(struct {
+			Status int `json:"status"`
+		}{
+			Status: http.StatusOK,
+		})
+		if err != nil {
+			fmt.Println(err)
+			return &echo.HTTPError{
+				Code:     http.StatusBadRequest,
+				Message:  err.Error(),
+				Internal: err,
+			}
+		}
+
+		c.Response().Header().Set("Content-Type", "application/json")
+		return c.JSON(http.StatusOK, marshal)
+	})
+
+	go func() {
+		if err = e.Start(":1323"); err != nil {
+			e.Logger.Fatal("shutting down the server")
+		}
+	}()
+
+	interrupt := make(chan os.Signal, 1)
+	signal.Notify(interrupt, os.Interrupt)
+	go func() {
+		for sig := range interrupt {
+			if err = e.Shutdown(context.Background()); err != nil {
+				e.Logger.Fatal(err)
+			}
+			fmt.Printf("signal: %s\n", sig)
+			os.Exit(0)
+		}
+	}()
+
 	for {
 		run(config)
 	}
@@ -108,7 +150,7 @@ func run(config Config) {
 			os.Exit(0)
 		}
 	}()
-	u := url.URL{Scheme: "ws", Host: config.StreamerWebAddress, Path: "/" + config.StreamerWebsocketPath}
+	u := url.URL{Scheme: "wss", Host: config.StreamerWebAddress, Path: "/" + config.StreamerWebsocketPath}
 	log.Printf("connecting to %s://%s", u.Scheme, u.Host)
 	c, resp, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
