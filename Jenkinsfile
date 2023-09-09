@@ -21,21 +21,21 @@ pipeline {
         script {
           dir("server") {
             docker.withRegistry('https://' + registryEndpoint, 'docker-registry') {
-              serverImage = docker.build(serverImageName, ".")
+              serverImage = docker.build(serverImageName, "--no-cache .")
             }
           }
         }
         script {
           dir("forwarder") {
             docker.withRegistry('https://' + registryEndpoint, 'docker-registry') {
-              forwarderImage = docker.build(forwarderImageName, ".")
+              forwarderImage = docker.build(forwarderImageName, "--no-cache .")
             }
           }
         }
         script {
           dir("recorder") {
             docker.withRegistry('https://' + registryEndpoint, 'docker-registry') {
-              recorderImage = docker.build(recorderImageName, ".")
+              recorderImage = docker.build(recorderImageName, "--no-cache .")
             }
           }
         }
