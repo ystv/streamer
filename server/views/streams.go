@@ -27,7 +27,7 @@ func (v *Views) StreamsFunc(c echo.Context) error {
 			fmt.Println("Streams POST called")
 		}
 
-		streamPageContent, err := helper.GetBody(v.conf.StreamServer + "/stat")
+		streamPageContent, err := helper.GetBody("http://" + v.conf.StreamServer + "stat")
 		if err != nil {
 			return err
 		}

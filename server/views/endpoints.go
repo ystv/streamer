@@ -35,7 +35,7 @@ func (v *Views) EndpointsFunc(c echo.Context) error {
 			fmt.Printf("error loading .env file: %s", err)
 		}
 
-		streamPageContent, err := helper.GetBody(v.conf.StreamServer + "/stat")
+		streamPageContent, err := helper.GetBody("http://" + v.conf.StreamServer + "stat")
 		if err != nil {
 			fmt.Println(err)
 		}
