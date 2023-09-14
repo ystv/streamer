@@ -9,6 +9,7 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	"github.com/labstack/echo/v4"
 	"github.com/mitchellh/mapstructure"
+	"github.com/patrickmn/go-cache"
 	"log"
 	"net/http"
 	"net/url"
@@ -35,6 +36,11 @@ type (
 		StreamerWebAddress    string `envconfig:"STREAMER_WEB_ADDRESS"`
 		StreamerWebsocketPath string `envconfig:"STREAMER_WEBSOCKET_PATH"`
 	}
+
+	Views struct {
+		Config Config
+		cache  *cache.Cache
+	}
 )
 
 func main() {
@@ -44,6 +50,11 @@ func main() {
 	err := envconfig.Process("", &config)
 	if err != nil {
 		log.Fatalf("failed to process env vars: %s", err)
+	}
+
+	err = os.MkdirAll("/logs", 0777)
+	if err != nil {
+		log.Fatalf("error creating /logs: %+v", err)
 	}
 
 	e := echo.New()
@@ -80,21 +91,27 @@ func main() {
 			if err = e.Shutdown(context.Background()); err != nil {
 				e.Logger.Fatal(err)
 			}
-			fmt.Printf("signal: %s\n", sig)
+			log.Printf("signal: %s\n", sig)
 			os.Exit(0)
 		}
 	}()
 
+	v := Views{
+		Config: config,
+		cache:  cache.New(cache.NoExpiration, 1*time.Hour),
+	}
+
 	for {
-		run(config, interrupt)
+		v.run(config, interrupt)
 	}
 }
 
-func run(config Config, interrupt chan os.Signal) {
+func (v *Views) run(config Config, interrupt chan os.Signal) {
 	messageOut := make(chan []byte)
 	errorChannel := make(chan error, 1)
 	done := make(chan struct{})
 	u := url.URL{Scheme: "wss", Host: config.StreamerWebAddress, Path: "/" + config.StreamerWebsocketPath}
+	//u := url.URL{Scheme: "ws", Host: "localhost:8084", Path: "/" + config.StreamerWebsocketPath}
 	log.Printf("connecting to %s://%s", u.Scheme, u.Host)
 	c, resp, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
@@ -104,11 +121,9 @@ func run(config Config, interrupt chan os.Signal) {
 		log.Printf("failed to dial url: %+v", err)
 	}
 
-	//finish := false
 	defer func() {
 		if r := recover(); r != nil {
 			log.Printf("Restarting...")
-			//finish = true
 			select {
 			case <-messageOut:
 				break
@@ -132,7 +147,6 @@ func run(config Config, interrupt chan os.Signal) {
 		}
 	}()
 
-	//When the program closes close the connection
 	defer c.Close()
 	go func() {
 		defer close(done)
@@ -144,7 +158,6 @@ func run(config Config, interrupt chan os.Signal) {
 		err = c.WriteMessage(websocket.TextMessage, []byte("recorder"))
 		if err != nil {
 			log.Printf("failed to write name: %+v", err)
-			//finish = true
 			close(errorChannel)
 			return
 		}
@@ -153,27 +166,20 @@ func run(config Config, interrupt chan os.Signal) {
 		if err != nil {
 			log.Printf("failed to read acknowledgement: %+v", err)
 			close(errorChannel)
-			//finish = true
 			return
 		}
 
 		if string(msg) != "ACKNOWLEDGED" {
 			log.Printf("failed to read acknowledgement: %s", string(msg))
 			close(errorChannel)
-			//finish = true
 			return
 		} else {
 			log.Println("ACKNOWLEDGED")
 			log.Printf("connected to  %s://%s", u.Scheme, u.Host)
 		}
-		//for !finish {
+
 		for {
-			//if finish {
-			//	close(errorChannel)
-			//	return
-			//}
 			msgType, message, err := c.ReadMessage()
-			//fmt.Printf("Message type: %d\nMessage: %s\nError: %+v\n", msgType, message, err)
 			if err != nil {
 				log.Printf("failed to read: %+v", err)
 				close(errorChannel)
@@ -193,15 +199,8 @@ func run(config Config, interrupt chan os.Signal) {
 		}
 	}()
 
-	//ticker := time.NewTicker(time.Second)
-	//defer ticker.Stop()
 	defer close(errorChannel)
-	//for !finish {
 	for {
-		//if finish {
-		//	//ticker.Stop()
-		//	return
-		//}
 		select {
 		case <-done:
 		case <-interrupt:
@@ -215,7 +214,7 @@ func run(config Config, interrupt chan os.Signal) {
 			err = json.Unmarshal(m, &t)
 			if err != nil {
 				log.Printf("failed to unmarshal data: %+v", err)
-				err = c.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("failed to unmarshal data: %+v", err)))
+				err = c.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("ERROR: failed to unmarshal data: %+v", err)))
 				if err != nil {
 					log.Printf("failed to write error response : %+v", err)
 					return
@@ -225,7 +224,7 @@ func run(config Config, interrupt chan os.Signal) {
 
 			if len(t.Unique) != 10 {
 				log.Printf("failed to get unique, length is not equal to 10: %d", len(t.Unique))
-				err = c.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("failed to get unique, length is not equal to 10: %d", len(t.Unique))))
+				err = c.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("ERROR: failed to get unique, length is not equal to 10: %d", len(t.Unique))))
 				if err != nil {
 					log.Printf("failed to write error response : %+v", err)
 					return
@@ -233,22 +232,60 @@ func run(config Config, interrupt chan os.Signal) {
 				continue
 			}
 
+			var out string
 			switch t.Action {
 			case "start":
-				fmt.Println(t)
-
 				var t1 RecorderStart
 
 				err = mapstructure.Decode(t.Payload, &t1)
 				if err != nil {
 					log.Printf("failed to decode: %+v", err)
+					err = c.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("ERROR: failed to decode: %+v", err)))
+					if err != nil {
+						log.Printf("failed to write error response : %+v", err)
+					}
+					return
+				}
+
+				if len(t1.StreamIn) == 0 || len(t1.PathOut) == 0 {
+					err = c.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("ERROR: failed to get payload for start: %+v", err)))
+					if err != nil {
+						log.Printf("failed to write error response : %+v", err)
+					}
+					return
 				}
 
 				t.Payload = t1
 
-				fmt.Println(t)
+				err = v.start(t)
+				if err != nil {
+					log.Printf("failed to start recorder: %+v", err)
+					err = c.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("ERROR: failed to start recorder: %+v", err)))
+					if err != nil {
+						log.Printf("failed to write error response : %+v", err)
+					}
+					return
+				}
 			case "status":
+				out, err = v.status(t)
+				if err != nil {
+					log.Printf("failed to get status recorder: %+v", err)
+					err = c.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("ERROR: failed to get status recorder: %+v", err)))
+					if err != nil {
+						log.Printf("failed to write error response : %+v", err)
+					}
+					return
+				}
 			case "stop":
+				err = v.stop(t)
+				if err != nil {
+					log.Printf("failed to stop recorder: %+v", err)
+					err = c.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("ERROR: failed to stop recorder: %+v", err)))
+					if err != nil {
+						log.Printf("failed to write error response : %+v", err)
+					}
+					return
+				}
 			default:
 				log.Printf("failed to get action: %s", t.Action)
 				err = c.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("failed to get action: %s", t.Action)))
@@ -258,33 +295,18 @@ func run(config Config, interrupt chan os.Signal) {
 				}
 				continue
 			}
-			//err := c.WriteMessage(websocket.TextMessage, []byte(m))
-			//if err != nil {
-			//	log.Println("write2:", err)
-			//	return
-			//}
-			//case t := <-ticker.C:
-			//	log.Printf("Ticker: %s", t.Format("2006-01-02T15:04:05"))
-			//	err := c.WriteMessage(websocket.TextMessage, []byte(t.String()))
-			//	if err != nil {
-			//		log.Println("write3:", err)
-			//		return
-			//	}
-			//case <-interrupt:
-			// Cleanly close the connection by sending a close message and then
-			// waiting (with timeout) for the server to close the connection.
-			//err := c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
-			//if err != nil {
-			//	log.Println("write close:", err)
-			//	return
-			//}
-			//select {
-			//case <-done:
-			//}
-			//return
-			//case <-errorChannel:
-			//	//finish = true
-			//	return
+
+			response := "OKAY"
+
+			if len(out) > 0 {
+				response += "±~±" + out // Some arbitrary connector string that is unlikely to be used ever by anything else
+			}
+
+			err = c.WriteMessage(websocket.TextMessage, []byte(response))
+			if err != nil {
+				log.Printf("failed to write okay response : %+v", err)
+				return
+			}
 		}
 	}
 }
