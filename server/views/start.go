@@ -3,10 +3,9 @@ package views
 import (
 	"fmt"
 	"github.com/labstack/echo/v4"
-	"github.com/ystv/streamer/server/helper"
 	"github.com/ystv/streamer/server/helper/tx"
 	"github.com/ystv/streamer/server/storage"
-	"golang.org/x/crypto/ssh"
+	"log"
 	"math"
 	"net/http"
 	"sort"
@@ -17,37 +16,37 @@ import (
 
 // StartFunc is the core of the program, where it takes the values set by the user in the webpage and processes the data and sends it to the recorder and the forwarder
 func (v *Views) StartFunc(c echo.Context) error {
-	/*if !authenticate(w, r) {
-		err := godotenv.Load()
-		if err != nil {
-			fmt.Printf("error loading .env file: %s", err)
-		}
-
-		jwtAuthentication := os.Getenv("JWT_AUTHENTICATION")
-
-		http.Redirect(w, r, jwtAuthentication, http.StatusTemporaryRedirect)
-		return
-	}*/
-	//errors := false
 	if c.Request().Method == "POST" {
 		if v.conf.Verbose {
 			fmt.Println("Start POST called")
 		}
 
+		transporter := Transporter{
+			Action: "start",
+		}
+
+		fStart := ForwarderStart{
+			StreamIn: c.FormValue("stream_selector"),
+		}
+
+		rStart := RecorderStart{
+			StreamIn: c.FormValue("stream_selector"),
+			PathOut:  c.FormValue("save_path"),
+		}
+
 		recording := false
 		websiteStream := false
-		var streams uint64
-		var forwarderStart string
 		if c.FormValue("website_stream") == "on" {
 			websiteStream = true
 			if v.websiteCheck(c.FormValue("website_stream_endpoint")) {
-				forwarderStart = "./forwarder_start " + c.FormValue("stream_selector") + " " + c.FormValue("website_stream_endpoint") + " "
+				fStart.WebsiteOut = c.FormValue("website_stream_endpoint")
 			} else {
 				return fmt.Errorf("website key check has failed")
 			}
-		} else {
-			forwarderStart = "./forwarder_start \"" + c.FormValue("stream_selector") + "\" no "
 		}
+
+		// This section finds the number of the stream from the form
+		// You can miss values out and some rearranging will have to be done
 		largest := 0
 		var numbers []int
 		for s := range c.Request().PostForm {
@@ -107,18 +106,18 @@ func (v *Views) StartFunc(c echo.Context) error {
 			}
 		}
 
-		forwarderStart += string(b) + " "
+		transporter.Unique = string(b)
+
+		streamsMap := make(map[string]string)
 		for _, index := range numbers {
 			server := c.FormValue("stream_server_" + strconv.Itoa(index))
 			if server[len(server)-1] != '/' {
 				server += "/"
 			}
-			forwarderStart += "\"" + server + "\" \"" + c.FormValue("stream_key_"+strconv.Itoa(index)) + "\" "
-			streams++
+			streamsMap[server] = c.FormValue("stream_key_" + strconv.Itoa(index))
 		}
-		forwarderStart += "| bash"
 
-		recorderStart := "./recorder_start \"" + c.FormValue("stream_selector") + "\" \"" + c.FormValue("save_path") + "\" " + string(b) + " | bash"
+		fStart.Streams = streamsMap
 
 		var wg sync.WaitGroup
 		wg.Add(2)
@@ -127,54 +126,45 @@ func (v *Views) StartFunc(c echo.Context) error {
 			defer wg.Done()
 			if c.FormValue("record") == "on" {
 				recording = true
-				var client *ssh.Client
-				var session *ssh.Session
-				var err error
-				//if recorderAuth == "PEM" {
-				//	client, session, err = connectToHostPEM(recorder, recorderUsername, recorderPrivateKey, recorderPassphrase)
-				//} else if recorderAuth == "PASS" {
-				client, session, err = helper.ConnectToHostPassword(v.conf.Recorder, v.conf.RecorderUsername, v.conf.RecorderPassword, v.conf.Verbose)
-				//}
+				recorderTransporter := transporter
+				recorderTransporter.Payload = rStart
+				response, err := v.wsHelper("recorder", recorderTransporter)
 				if err != nil {
-					fmt.Println(err, "Error connecting to Recorder for start")
+					log.Println(err, "Error sending to Recorder for start")
+					errors = true
 					return
 				}
-				_, err = session.CombinedOutput(recorderStart)
-				if err != nil {
-					fmt.Println(err, "Error executing on Recorder for start")
+				if strings.Contains(response, "ERROR") {
+					log.Printf("Error sending to Recorder for start: %s", response)
+					errors = true
 					return
 				}
-				err = client.Close()
-				if err != nil {
-					fmt.Println(err)
+				if !strings.Contains(response, "OKAY") {
+					log.Printf("invalid response from Recorder for start: %s", response)
+					errors = true
 					return
 				}
 			}
 		}()
 		go func() {
 			defer wg.Done()
-			var client *ssh.Client
-			var session *ssh.Session
-			var err error
-			//if forwarderAuth == "PEM" {
-			//	client, session, err = connectToHostPEM(forwarder, forwarderUsername, forwarderPrivateKey, forwarderPassphrase)
-			//} else if forwarderAuth == "PASS" {
-			client, session, err = helper.ConnectToHostPassword(v.conf.Forwarder, v.conf.ForwarderUsername, v.conf.ForwarderPassword, v.conf.Verbose)
-			//}
+			forwarderTransporter := transporter
+			forwarderTransporter.Payload = fStart
+			response, err := v.wsHelper("recorder", forwarderTransporter)
 			if err != nil {
-				fmt.Println(err, "Error connecting to Forwarder for start")
+				log.Println(err, "Error sending to Forwarder for start")
 				errors = true
 				return
 			}
-			_, err = session.CombinedOutput(forwarderStart)
-			if err != nil {
-				fmt.Println(err, "Error executing on Forwarder for start")
+			if strings.Contains(response, "ERROR") {
+				log.Printf("Error sending to Forwarder for start: %s", response)
 				errors = true
 				return
 			}
-			err = client.Close()
-			if err != nil {
-				fmt.Println(err)
+			if !strings.Contains(response, "OKAY") {
+				log.Printf("invalid response from Forwarder for start: %s", response)
+				errors = true
+				return
 			}
 		}()
 		wg.Wait()
@@ -182,7 +172,7 @@ func (v *Views) StartFunc(c echo.Context) error {
 		if errors == false {
 			err := v.HandleTXLight(v.conf.TransmissionLight, tx.TransmissionOn)
 			if err != nil {
-				fmt.Println(err)
+				log.Println(err)
 			}
 
 			s, err := v.store.AddStream(&storage.Stream{
@@ -190,7 +180,7 @@ func (v *Views) StartFunc(c echo.Context) error {
 				Input:     c.FormValue("stream_selector"),
 				Recording: recording,
 				Website:   websiteStream,
-				Streams:   streams,
+				Streams:   uint64(len(streamsMap)),
 			})
 			if err != nil {
 				return err
