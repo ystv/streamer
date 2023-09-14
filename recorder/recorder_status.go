@@ -2,29 +2,32 @@ package main
 
 import (
 	"bufio"
-	_ "embed"
+	"bytes"
 	"fmt"
-	"log"
 	"os/exec"
-	"strings"
 )
 
-//go:embed recorder_status.sh
-var statusScript string
+func (v *Views) status(transporter Transporter) (string, error) {
+	c := exec.Command("tail", "-n", "26", fmt.Sprintf("\"logs/%s.txt\"", transporter.Unique))
 
-func status(unique string) {
-	c := exec.Command("bash", "-s", "-", unique, "|", "bash")
+	var stdout bytes.Buffer
+	c.Stdout = &stdout
 
-	c.Stdin = strings.NewReader(statusScript)
+	var errOut string
+
+	if err := c.Run(); err != nil {
+		errOut = fmt.Sprintf("could not run command: %+v", err)
+	}
 
 	stderr, _ := c.StderrPipe()
-	b, err := c.Output()
-	if err != nil {
-		log.Fatalf("echo %+v", err)
-	}
 	scanner := bufio.NewScanner(stderr)
 	for scanner.Scan() {
-		log.Fatalf("echo %s", scanner.Text())
+		errOut += "\n" + scanner.Text()
 	}
-	fmt.Printf("echo %s", string(b))
+
+	if len(errOut) != 0 {
+		return "", fmt.Errorf(errOut)
+	}
+
+	return stdout.String(), nil
 }
