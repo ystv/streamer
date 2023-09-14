@@ -1,20 +1,18 @@
 package main
 
 import (
-	_ "embed"
 	"fmt"
-	"github.com/comtop1/gomux"
+	"github.com/patrickmn/go-cache"
 	"log"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
+	"time"
 )
 
-//go:embed recorder_start.sh
-var startScript string
-
-func start(unique, streamIn, pathOut, recordingLocation, streamServer string) {
-	array := strings.Split(pathOut, "/")
+func (v *Views) start(transporter Transporter) error {
+	array := strings.Split(transporter.Payload.(RecorderStart).PathOut, "/")
 	valid := false
 	var path string
 
@@ -25,18 +23,16 @@ func start(unique, streamIn, pathOut, recordingLocation, streamServer string) {
 		for i := 0; i < len(array)-1; i++ {
 			path += array[i] + "/"
 		}
-		err := os.MkdirAll(recordingLocation+path, 0777)
+		err := os.MkdirAll(v.Config.RecordingLocation+path, 0777)
 		if err != nil {
-			fmt.Println("echo " + path)
-			fmt.Println("echo " + err.Error())
-			log.Fatal("echo Error creating " + recordingLocation + path)
+			return fmt.Errorf("error creating %s: %w", v.Config.RecordingLocation+path, err)
 		}
-		_, err1 := os.Stat(recordingLocation + path)
+		_, err1 := os.Stat(v.Config.RecordingLocation + path)
 		if os.IsNotExist(err1) {
-			log.Fatal(" echo RECORDER UNSUCCESSFUL!")
+			return fmt.Errorf("unable to get path: %w", err1)
 		}
 		temp := array[len(array)-1]
-		_, err2 := os.Stat(recordingLocation + path + "/" + temp)
+		_, err2 := os.Stat(v.Config.RecordingLocation + path + "/" + temp)
 		if os.IsNotExist(err2) {
 			path += array[len(array)-1]
 			valid = true
@@ -45,7 +41,7 @@ func start(unique, streamIn, pathOut, recordingLocation, streamServer string) {
 			loop := true
 			i := 0
 			for loop {
-				_, err3 := os.Stat(recordingLocation + path + "/" + split[0] + "_" + string(rune(i)) + ".mkv")
+				_, err3 := os.Stat(v.Config.RecordingLocation + path + "/" + split[0] + "_" + string(rune(i)) + ".mkv")
 				if os.IsNotExist(err3) {
 					path += split[0] + string(rune(i)) + ".mkv"
 					loop = false
@@ -57,30 +53,57 @@ func start(unique, streamIn, pathOut, recordingLocation, streamServer string) {
 		}
 	}
 	if !valid {
-		log.Fatal("echo Invalid string")
+		return fmt.Errorf("invalid path")
 	}
-	sessionName := "STREAM RECORDING - " + unique
 
-	s := gomux.NewSession(sessionName, os.Stdout)
+	streamIn := "rtmp://" + v.Config.StreamServer + transporter.Payload.(RecorderStart).StreamIn
+	path = v.Config.RecordingLocation + path
 
-	w1 := s.AddWindow("RECORDING")
+	finish := make(chan bool)
 
-	w1p0 := w1.Pane(0)
+	go func() {
+		var i uint64
+		for {
+			v.cache.Delete(transporter.Unique)
+			switch {
+			case <-finish:
+				return
+			default:
+				c := exec.Command("ffmpeg", "-i", "\""+streamIn+"\"", "-c", "copy", "\""+path+"_"+strconv.FormatUint(i, 10)+".txt\"", ">>", "\"/logs/"+transporter.Unique+"\"", "2>&1")
+				err := v.cache.Add(transporter.Unique, c, cache.NoExpiration)
+				if err != nil {
+					log.Println(err)
+					return
+				}
+				if err = c.Run(); err != nil {
+					log.Println("could not run command: ", err)
+				}
+				time.Sleep(500 * time.Millisecond)
+			}
+			i++
+		}
+	}()
 
-	path = strings.ReplaceAll(path, ".mkv", "")
+	go func() {
+		for {
+			switch {
+			case <-finish:
+				cmd, ok := v.cache.Get(transporter.Unique)
+				if !ok {
+					log.Println("unable to get cmd from cache")
+				}
+				c1 := cmd.(*exec.Cmd)
+				err := c1.Process.Kill()
+				if err != nil {
+					log.Println(err)
+				}
+				break
+			default:
+				time.Sleep(1 * time.Second) // This is so it doesn't spam constantly and take the entire CPU up
+				break
+			}
+		}
+	}()
 
-	c := exec.Command("sh", "-s", "-", streamServer+streamIn, fmt.Sprintf("\"%s%s\"", recordingLocation, path), unique, "|", "bash")
-
-	c.Stdin = strings.NewReader(startScript)
-
-	b, e := c.Output()
-	if e != nil {
-		fmt.Println(e)
-	}
-	fmt.Println(string(b))
-
-	w1p0.Exec("./recorder_start.sh " + streamServer + streamIn + " \"" + recordingLocation + path + "\" " + unique + " | bash")
-
-	fmt.Println("echo RECORDER STARTED!")
-
+	return nil
 }
