@@ -2,6 +2,8 @@ FROM golang:1.21.1-alpine3.18 AS build
 
 LABEL site="ystv-streamer-forwarder"
 
+VOLUME /logs
+
 WORKDIR /src/
 
 COPY go.mod .
