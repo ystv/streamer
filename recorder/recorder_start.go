@@ -61,6 +61,11 @@ func (v *Views) start(transporter Transporter) error {
 
 	finish := make(chan bool)
 
+	err := v.cache.Add(transporter.Unique+"Finish", finish, cache.NoExpiration)
+	if err != nil {
+		return err
+	}
+
 	go func() {
 		var i uint64
 		for {
