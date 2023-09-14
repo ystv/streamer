@@ -1,6 +1,7 @@
 package views
 
 import (
+	"fmt"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
 	"github.com/patrickmn/go-cache"
@@ -68,6 +69,7 @@ func (v *Views) Websocket(c echo.Context) error {
 			err = ws.WriteMessage(websocket.TextMessage, res)
 			if err != nil {
 				c.Logger().Error(err)
+				close(internalChannel)
 				close(clientChannel)
 				v.cache.Delete(name)
 				v.cache.Delete(name + "Internal")
@@ -77,6 +79,8 @@ func (v *Views) Websocket(c echo.Context) error {
 			_, msg, err = ws.ReadMessage()
 			if err != nil {
 				c.Logger().Error(err)
+				internalChannel <- []byte(fmt.Sprintf("ERROR: failed to read message from %s: %+v", name, err))
+				close(internalChannel)
 				close(clientChannel)
 				v.cache.Delete(name)
 				v.cache.Delete(name + "Internal")
