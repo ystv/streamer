@@ -130,6 +130,7 @@ func (r *Router) loadRoutes() {
 	r.router.Match(validMethods, "/youtubehelp", r.views.YoutubeHelpFunc)               // YouTube help page
 	r.router.Match(validMethods, "/facebookhelp", r.views.FacebookHelpFunc)             // Facebook help page
 	r.router.Match(validMethods, "/"+r.config.StreamerWebsocketPath, r.views.Websocket) // Websocket for the recorder and forwarder to communicate on
+	r.router.Match(validMethods, "/activeStreams", r.views.ActiveStreamsFunc)
 	r.router.GET("/api/health", func(c echo.Context) error {
 		marshal, err := json.Marshal(struct {
 			Status int `json:"status"`
