@@ -17,25 +17,37 @@ pipeline {
 
   stages {
     stage('Build images') {
-      steps {
-        script {
-          dir("server") {
-            docker.withRegistry('https://' + registryEndpoint, 'docker-registry') {
-              serverImage = docker.build(serverImageName, "--no-cache .")
+      stages {
+        stage('Build Server') {
+          steps {
+            script {
+              dir("server") {
+                docker.withRegistry('https://' + registryEndpoint, 'docker-registry') {
+                  serverImage = docker.build(serverImageName, "--no-cache .")
+                }
+              }
             }
           }
         }
-        script {
-          dir("forwarder") {
-            docker.withRegistry('https://' + registryEndpoint, 'docker-registry') {
-              forwarderImage = docker.build(forwarderImageName, "--no-cache .")
+        stage('Build Forwarder') {
+          steps {
+            script {
+              dir("forwarder") {
+                docker.withRegistry('https://' + registryEndpoint, 'docker-registry') {
+                  forwarderImage = docker.build(forwarderImageName, "--no-cache .")
+                }
+              }
             }
           }
         }
-        script {
-          dir("recorder") {
-            docker.withRegistry('https://' + registryEndpoint, 'docker-registry') {
-              recorderImage = docker.build(recorderImageName, "--no-cache .")
+        stage('Build Recorder') {
+          steps {
+            script {
+              dir("recorder") {
+                docker.withRegistry('https://' + registryEndpoint, 'docker-registry') {
+                  recorderImage = docker.build(recorderImageName, "--no-cache .")
+                }
+              }
             }
           }
         }
@@ -43,28 +55,36 @@ pipeline {
     }
 
     stage('Push images to registry') {
-      steps {
-        script {
-          docker.withRegistry('https://' + registryEndpoint, 'docker-registry') {
-            serverImage.push()
-            if (env.BRANCH_IS_PRIMARY) {
-              serverImage.push('latest')
+      stages {
+        stage('Push Server image to registry') {
+          steps {
+            script {
+              docker.withRegistry('https://' + registryEndpoint, 'docker-registry') {
+                serverImage.push()
+                if (env.BRANCH_IS_PRIMARY) {
+                  serverImage.push('latest')
+                }
+              }
             }
           }
-        }
-        script {
-          docker.withRegistry('https://' + registryEndpoint, 'docker-registry') {
-            forwarderImage.push()
-            if (env.BRANCH_IS_PRIMARY) {
-              forwarderImage.push('latest')
+          stage('Push Forwarder image to registry') {
+            script {
+              docker.withRegistry('https://' + registryEndpoint, 'docker-registry') {
+                forwarderImage.push()
+                if (env.BRANCH_IS_PRIMARY) {
+                  forwarderImage.push('latest')
+                }
+              }
             }
           }
-        }
-        script {
-          docker.withRegistry('https://' + registryEndpoint, 'docker-registry') {
-            recorderImage.push()
-            if (env.BRANCH_IS_PRIMARY) {
-              recorderImage.push('latest')
+          stage('Push Recorder image to registry') {
+            script {
+              docker.withRegistry('https://' + registryEndpoint, 'docker-registry') {
+                recorderImage.push()
+                if (env.BRANCH_IS_PRIMARY) {
+                  recorderImage.push('latest')
+                }
+              }
             }
           }
         }
