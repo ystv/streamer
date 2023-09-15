@@ -9,6 +9,7 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	"github.com/labstack/echo/v4"
 	"github.com/mitchellh/mapstructure"
+	"github.com/patrickmn/go-cache"
 	"log"
 	"net/http"
 	"net/url"
@@ -25,9 +26,9 @@ type (
 	}
 
 	ForwarderStart struct {
-		StreamIn   string            `json:"streamIn"`
-		WebsiteOut string            `json:"websiteOut"`
-		Streams    map[string]string `json:"streams"`
+		StreamIn   string   `json:"streamIn"`
+		WebsiteOut string   `json:"websiteOut"`
+		Streams    []string `json:"streams"`
 	}
 
 	ForwarderStatus struct {
@@ -35,9 +36,9 @@ type (
 		Streams int  `json:"streams"`
 	}
 
-	RecorderStart struct {
-		StreamIn string `json:"streamIn"`
-		PathOut  string `json:"pathOut"`
+	ForwarderStatusResponse struct {
+		Website string            `json:"website"`
+		Streams map[uint64]string `json:"streams"`
 	}
 
 	Config struct {
@@ -45,53 +46,25 @@ type (
 		StreamerWebAddress    string `envconfig:"STREAMER_WEB_ADDRESS"`
 		StreamerWebsocketPath string `envconfig:"STREAMER_WEBSOCKET_PATH"`
 	}
+
+	Views struct {
+		Config Config
+		cache  *cache.Cache
+	}
 )
 
 func main() {
-	//fmt.Println("echo", os.Args)
-	//if strings.Contains(os.Args[0], "/var/folders") || strings.Contains(os.Args[0], "/tmp/go") || strings.Contains(os.Args[0], "./recorder_start") {
-	//	if len(os.Args) != 6 && len(os.Args) != 5 && len(os.Args) != 3 {
-	//		fmt.Println("echo " + string(rune(len(os.Args))))
-	//		log.Fatalf("echo Arguments error")
-	//	}
-	//	for i := 0; i < len(os.Args)-1; i++ {
-	//		os.Args[i] = os.Args[i+1]
-	//	}
-	//} else {
-	//	if len(os.Args) != 5 && len(os.Args) != 4 && len(os.Args) != 2 {
-	//		fmt.Println("echo " + string(rune(len(os.Args))))
-	//		log.Fatalf("echo Arguments error")
-	//	}
-	//}
-	//method := os.Args[0]
-	//switch method {
-	//case "start":
-	//	start(os.Args[1], os.Args[2], os.Args[3], os.Args[4])
-	//	break
-	//case "stop":
-	//	stop(os.Args[1])
-	//	break
-	//case "status":
-	//	website, err := strconv.ParseBool(os.Args[2])
-	//	if err != nil {
-	//		log.Fatalf("echo unable to parse bool: %+v", err)
-	//	}
-	//	streams, err := strconv.Atoi(os.Args[3])
-	//	if err != nil {
-	//		log.Fatalf("echo unable to parse int: %+v", err)
-	//	}
-	//	status(os.Args[1], website, streams)
-	//	break
-	//default:
-	//	log.Fatalf("echo Invalid method used: %s", method)
-	//}
-
 	_ = godotenv.Load(".env")
 
 	var config Config
 	err := envconfig.Process("", &config)
 	if err != nil {
 		log.Fatalf("failed to process env vars: %s", err)
+	}
+
+	err = os.MkdirAll("/logs", 0777)
+	if err != nil {
+		log.Fatalf("error creating /logs: %+v", err)
 	}
 
 	e := echo.New()
@@ -133,24 +106,22 @@ func main() {
 		}
 	}()
 
+	v := Views{
+		Config: config,
+		cache:  cache.New(cache.NoExpiration, 1*time.Hour),
+	}
+
 	for {
-		run(config)
+		v.run(config, interrupt)
 	}
 }
 
-func run(config Config) {
+func (v *Views) run(config Config, interrupt chan os.Signal) {
 	messageOut := make(chan []byte)
 	errorChannel := make(chan error, 1)
 	done := make(chan struct{})
-	interrupt := make(chan os.Signal, 1)
-	signal.Notify(interrupt, os.Interrupt)
-	go func() {
-		for sig := range interrupt {
-			fmt.Printf("signal: %s\n", sig)
-			os.Exit(0)
-		}
-	}()
 	u := url.URL{Scheme: "wss", Host: config.StreamerWebAddress, Path: "/" + config.StreamerWebsocketPath}
+	//u := url.URL{Scheme: "ws", Host: "localhost:8084", Path: "/" + config.StreamerWebsocketPath}
 	log.Printf("connecting to %s://%s", u.Scheme, u.Host)
 	c, resp, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
@@ -160,11 +131,9 @@ func run(config Config) {
 		log.Printf("failed to dial url: %+v", err)
 	}
 
-	//finish := false
 	defer func() {
 		if r := recover(); r != nil {
 			log.Printf("Restarting...")
-			//finish = true
 			select {
 			case <-messageOut:
 				break
@@ -200,7 +169,6 @@ func run(config Config) {
 		err = c.WriteMessage(websocket.TextMessage, []byte("forwarder"))
 		if err != nil {
 			log.Printf("failed to write name: %+v", err)
-			//finish = true
 			close(errorChannel)
 			return
 		}
@@ -209,27 +177,20 @@ func run(config Config) {
 		if err != nil {
 			log.Printf("failed to read acknowledgement: %+v", err)
 			close(errorChannel)
-			//finish = true
 			return
 		}
 
 		if string(msg) != "ACKNOWLEDGED" {
 			log.Printf("failed to read acknowledgement: %s", string(msg))
 			close(errorChannel)
-			//finish = true
 			return
 		} else {
 			log.Println("ACKNOWLEDGED")
 			log.Printf("connected to  %s://%s", u.Scheme, u.Host)
 		}
-		//for !finish {
+
 		for {
-			//if finish {
-			//	close(errorChannel)
-			//	return
-			//}
 			msgType, message, err := c.ReadMessage()
-			//fmt.Printf("Message type: %d\nMessage: %s\nError: %+v\n", msgType, message, err)
 			if err != nil {
 				log.Printf("failed to read: %+v", err)
 				close(errorChannel)
@@ -249,15 +210,8 @@ func run(config Config) {
 		}
 	}()
 
-	//ticker := time.NewTicker(time.Second)
-	//defer ticker.Stop()
 	defer close(errorChannel)
-	//for !finish {
 	for {
-		//if finish {
-		//	//ticker.Stop()
-		//	return
-		//}
 		select {
 		case <-done:
 		case <-interrupt:
@@ -289,22 +243,82 @@ func run(config Config) {
 				continue
 			}
 
+			var out ForwarderStatusResponse
 			switch t.Action {
 			case "start":
-				fmt.Println(t)
-
-				var t1 RecorderStart
+				var t1 ForwarderStart
 
 				err = mapstructure.Decode(t.Payload, &t1)
 				if err != nil {
 					log.Printf("failed to decode: %+v", err)
+					err = c.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("ERROR: failed to decode: %+v", err)))
+					if err != nil {
+						log.Printf("failed to write error response : %+v", err)
+					}
+					return
+				}
+
+				if len(t1.StreamIn) == 0 || len(t1.Streams) == 0 {
+					err = c.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("ERROR: failed to get payload for start: %+v", err)))
+					if err != nil {
+						log.Printf("failed to write error response : %+v", err)
+					}
+					return
 				}
 
 				t.Payload = t1
 
-				fmt.Println(t)
+				err = v.start(t)
+				if err != nil {
+					log.Printf("failed to start recorder: %+v", err)
+					err = c.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("ERROR: failed to start recorder: %+v", err)))
+					if err != nil {
+						log.Printf("failed to write error response : %+v", err)
+					}
+					return
+				}
 			case "status":
+				var t1 ForwarderStatus
+
+				err = mapstructure.Decode(t.Payload, &t1)
+				if err != nil {
+					log.Printf("failed to decode: %+v", err)
+					err = c.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("ERROR: failed to decode: %+v", err)))
+					if err != nil {
+						log.Printf("failed to write error response : %+v", err)
+					}
+					return
+				}
+
+				if t1.Streams == 0 {
+					err = c.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("ERROR: failed to get payload for start: %+v", err)))
+					if err != nil {
+						log.Printf("failed to write error response : %+v", err)
+					}
+					return
+				}
+
+				t.Payload = t1
+
+				out, err = v.status(t)
+				if err != nil {
+					log.Printf("failed to get status forwarder: %+v", err)
+					err = c.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("ERROR: failed to get status forwarder: %+v", err)))
+					if err != nil {
+						log.Printf("failed to write error response : %+v", err)
+					}
+					return
+				}
 			case "stop":
+				err = v.stop(t)
+				if err != nil {
+					log.Printf("failed to stop fprwarder: %+v", err)
+					err = c.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("ERROR: failed to stop forwarder: %+v", err)))
+					if err != nil {
+						log.Printf("failed to write error response : %+v", err)
+					}
+					return
+				}
 			default:
 				log.Printf("failed to get action: %s", t.Action)
 				err = c.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("failed to get action: %s", t.Action)))
@@ -314,33 +328,23 @@ func run(config Config) {
 				}
 				continue
 			}
-			//err := c.WriteMessage(websocket.TextMessage, []byte(m))
-			//if err != nil {
-			//	log.Println("write2:", err)
-			//	return
-			//}
-			//case t := <-ticker.C:
-			//	log.Printf("Ticker: %s", t.Format("2006-01-02T15:04:05"))
-			//	err := c.WriteMessage(websocket.TextMessage, []byte(t.String()))
-			//	if err != nil {
-			//		log.Println("write3:", err)
-			//		return
-			//	}
-			//case <-interrupt:
-			// Cleanly close the connection by sending a close message and then
-			// waiting (with timeout) for the server to close the connection.
-			//err := c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
-			//if err != nil {
-			//	log.Println("write close:", err)
-			//	return
-			//}
-			//select {
-			//case <-done:
-			//}
-			//return
-			//case <-errorChannel:
-			//	//finish = true
-			//	return
+
+			response := "OKAY"
+
+			if len(out.Streams) > 0 {
+				b, err := json.Marshal(out)
+				if err != nil {
+					log.Printf("failed marshaling out: %+v", err)
+					return
+				}
+				response += "±~±" + string(b) // Some arbitrary connector string that is unlikely to be used ever by anything else
+			}
+
+			err = c.WriteMessage(websocket.TextMessage, []byte(response))
+			if err != nil {
+				log.Printf("failed to write okay response : %+v", err)
+				return
+			}
 		}
 	}
 }

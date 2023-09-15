@@ -2,52 +2,50 @@ package main
 
 import (
 	"bufio"
-	_ "embed"
+	"bytes"
 	"fmt"
-	"log"
 	"os/exec"
-	"strconv"
-	"strings"
 )
 
-//go:embed forwarder_status.sh
-var statusScript string
-
-func status(unique string, website bool, streams int) {
+func (v *Views) status(transporter Transporter) (ForwarderStatusResponse, error) {
 	var start int
 
-	if website {
+	if transporter.Payload.(ForwarderStatus).Website {
 		start = 0
 	} else {
 		start = 1
 	}
 
-	m := make(map[string]string)
+	fStatusResponse := ForwarderStatusResponse{}
 
-	for i := start; i <= streams; i++ {
-		c := exec.Command("bash", "-s", "-", unique, strconv.Itoa(i), "|", "bash")
-		c.Stdin = strings.NewReader(statusScript)
+	for i := start; i <= transporter.Payload.(ForwarderStatus).Streams; i++ {
+		c := exec.Command("tail", "-n", "25", fmt.Sprintf("\"logs/%s_%d.txt\"", transporter.Unique, i))
+
+		var stdout bytes.Buffer
+		c.Stdout = &stdout
+
+		var errOut string
+
+		if err := c.Run(); err != nil {
+			errOut = fmt.Sprintf("could not run command: %+v", err)
+		}
 
 		stderr, _ := c.StderrPipe()
-		b, err := c.Output()
-		if err != nil {
-			log.Fatalf("echo %+v", err)
-		}
 		scanner := bufio.NewScanner(stderr)
 		for scanner.Scan() {
-			log.Fatalf("echo %s", scanner.Text())
+			errOut += "\n" + scanner.Text()
 		}
 
-		if err != nil {
-			log.Fatal(err.Error())
+		if len(errOut) != 0 {
+			return ForwarderStatusResponse{}, fmt.Errorf(errOut)
+		}
+
+		if i == 0 {
+			fStatusResponse.Website = stdout.String()
 		} else {
-			if i == 0 {
-				m["website~"] = "~" + string(append(b, '\u0000'))
-			} else {
-				m[strconv.Itoa(i)+"~"] = "~" + string(append(b, '\u0000'))
-			}
+			fStatusResponse.Streams[uint64(i)] = stdout.String()
 		}
 	}
 
-	fmt.Println(m)
+	return fStatusResponse, nil
 }

@@ -1,50 +1,121 @@
 package main
 
 import (
-	_ "embed"
-	"fmt"
-	"github.com/comtop1/gomux"
-	"os"
+	"github.com/patrickmn/go-cache"
+	"log"
+	"os/exec"
 	"strconv"
+	"time"
 )
 
-//go:embed forwarder_start.sh
-var startScript string
+func (v *Views) start(transporter Transporter) error {
+	streamIn := "rtmp://" + v.Config.StreamServer + transporter.Payload.(ForwarderStart).StreamIn
 
-func start(unique, streamIn, websiteOut, streamServer string) {
-	var serversKeys []string
-	for i := 3; i < len(os.Args)-1; i++ {
-		serversKeys = append(serversKeys, os.Args[i])
-	}
+	if len(transporter.Payload.(ForwarderStart).WebsiteOut) > 0 {
+		finish := make(chan bool)
 
-	sessionName := "STREAM FORWARDER - " + unique
-
-	s := gomux.NewSession(sessionName, os.Stdout)
-
-	w1 := s.AddWindow("FORWARDING - 0")
-
-	var panes []*gomux.Pane
-
-	if websiteOut != "no" {
-		panes = append(panes, w1.Pane(0))
-		panes[0].Exec("./forwarder_start.sh " + streamServer + streamIn + " " + streamServer + "live/" + websiteOut + " " + unique + " " + strconv.Itoa(0) + " | bash")
-	} else {
-		panes = append(panes, w1.Pane(0))
-		panes[0].Exec("echo No website stream")
-	}
-	j := 1
-	k := 0
-	for i := 0; i < len(serversKeys); i = i + 2 {
-		if (i%8) == 0 && i != 0 {
-			k++
-			w1 = s.AddWindow("FORWARDING - " + strconv.Itoa(k))
-			panes = append(panes, w1.Pane(0))
+		err := v.cache.Add(transporter.Unique+"_0Finish", finish, cache.NoExpiration)
+		if err != nil {
+			return err
 		}
-		panes = append(panes, w1.Pane(0).Split())
-		fmt.Println("echo", (i/2)+1)
-		panes[(i/2)+1].Exec("./forwarder_start.sh " + streamServer + streamIn + " " + serversKeys[i] + serversKeys[i+1] + " " + unique + " " + strconv.Itoa(j) + " | bash")
-		j++
+
+		go func() {
+			for {
+				v.cache.Delete(transporter.Unique + "_0")
+				switch {
+				case <-finish:
+					return
+				default:
+					c := exec.Command("ffmpeg", "-i", "\""+streamIn+"\"", "-c", "copy", "-f", "flv", "\""+v.Config.StreamServer+"live/"+transporter.Payload.(ForwarderStart).WebsiteOut+"\"", ">>", "\"/logs/"+transporter.Unique+"_0.txt\"", "2>&1")
+					err = v.cache.Add(transporter.Unique+"0", c, cache.NoExpiration)
+					if err != nil {
+						log.Println(err)
+						return
+					}
+					if err = c.Run(); err != nil {
+						log.Println("could not run command: ", err)
+					}
+					time.Sleep(500 * time.Millisecond)
+				}
+			}
+		}()
+
+		go func() {
+			for {
+				switch {
+				case <-finish:
+					cmd, ok := v.cache.Get(transporter.Unique + "_0")
+					if !ok {
+						log.Println("unable to get cmd from cache")
+					}
+					c1 := cmd.(*exec.Cmd)
+					err = c1.Process.Kill()
+					if err != nil {
+						log.Println(err)
+					}
+					v.cache.Delete(transporter.Unique + "_0")
+					break
+				default:
+					time.Sleep(1 * time.Second) // This is so it doesn't spam constantly and take the entire CPU up
+					break
+				}
+			}
+		}()
 	}
 
-	fmt.Println("echo FORWARDER STARTED!")
+	for i := 0; i < len(transporter.Payload.(ForwarderStart).Streams); i++ {
+		finish := make(chan bool)
+
+		err := v.cache.Add(transporter.Unique+"_"+strconv.Itoa(i+1)+"Finish", finish, cache.NoExpiration)
+		if err != nil {
+			return err
+		}
+
+		k := i
+		go func() {
+			j := k
+			for {
+				v.cache.Delete(transporter.Unique + "_" + strconv.Itoa(j+1))
+				switch {
+				case <-finish:
+					return
+				default:
+					c := exec.Command("ffmpeg", "-i", "\""+streamIn+"\"", "-c", "copy", "-f", "flv", "\""+transporter.Payload.(ForwarderStart).Streams[j]+"\"", ">>", "\"/logs/"+transporter.Unique+"_"+strconv.Itoa(j+1)+".txt\"", "2>&1")
+					err = v.cache.Add(transporter.Unique+"_"+strconv.Itoa(j+1), c, cache.NoExpiration)
+					if err != nil {
+						log.Println(err)
+						return
+					}
+					if err = c.Run(); err != nil {
+						log.Println("could not run command: ", err)
+					}
+					time.Sleep(500 * time.Millisecond)
+				}
+			}
+		}()
+
+		go func() {
+			for {
+				switch {
+				case <-finish:
+					cmd, ok := v.cache.Get(transporter.Unique + "_" + strconv.Itoa(k))
+					if !ok {
+						log.Println("unable to get cmd from cache")
+					}
+					c1 := cmd.(*exec.Cmd)
+					err = c1.Process.Kill()
+					if err != nil {
+						log.Println(err)
+					}
+					v.cache.Delete(transporter.Unique + "_" + strconv.Itoa(k))
+					break
+				default:
+					time.Sleep(1 * time.Second) // This is so it doesn't spam constantly and take the entire CPU up
+					break
+				}
+			}
+		}()
+	}
+
+	return nil
 }

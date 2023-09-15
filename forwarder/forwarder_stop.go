@@ -2,22 +2,20 @@ package main
 
 import (
 	"fmt"
-	"github.com/comtop1/gomux"
-	"log"
-	"os"
-	"path/filepath"
+	"strings"
 )
 
-func stop(unique string) {
-	gomux.KillSession("STREAM FORWARDER - "+unique, os.Stdout)
-	files, err := filepath.Glob("logs/" + unique + "_*")
-	if err != nil {
-		log.Fatalf("echo %+v", err)
-	}
-	for _, f := range files {
-		if err := os.Remove(f); err != nil {
-			log.Fatalf("echo %+v", err)
+func (v *Views) stop(transporter Transporter) error {
+	found := false
+	for k, item := range v.cache.Items() {
+		if strings.Contains(k, transporter.Unique) {
+			found = true
+			close(item.Object.(chan bool))
+			v.cache.Delete(k)
 		}
 	}
-	fmt.Println("echo FORWARDER STOPPED!")
+	if !found {
+		return fmt.Errorf("unable to find channels for: %s", transporter.Unique)
+	}
+	return nil
 }
