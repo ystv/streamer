@@ -102,6 +102,7 @@ func (v *Views) start(transporter Transporter) error {
 				if err != nil {
 					log.Println(err)
 				}
+				v.cache.Delete(transporter.Unique)
 				break
 			default:
 				time.Sleep(1 * time.Second) // This is so it doesn't spam constantly and take the entire CPU up

@@ -9,6 +9,7 @@ func (v *Views) stop(transporter Transporter) error {
 	if !ok {
 		return fmt.Errorf("unable to find channel: %s", transporter.Unique)
 	}
-	close(finish.(chan struct{}))
+	close(finish.(chan bool))
+	v.cache.Delete(transporter.Unique + "Finish")
 	return nil
 }
