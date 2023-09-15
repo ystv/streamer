@@ -108,16 +108,17 @@ func (v *Views) StartFunc(c echo.Context) error {
 
 		transporter.Unique = string(b)
 
-		streamsMap := make(map[string]string)
+		var streams []string
 		for _, index := range numbers {
 			server := c.FormValue("stream_server_" + strconv.Itoa(index))
 			if server[len(server)-1] != '/' {
 				server += "/"
 			}
-			streamsMap[server] = c.FormValue("stream_key_" + strconv.Itoa(index))
+			server += c.FormValue("stream_key_" + strconv.Itoa(index))
+			streams = append(streams, server)
 		}
 
-		fStart.Streams = streamsMap
+		fStart.Streams = streams
 
 		var wg sync.WaitGroup
 		wg.Add(2)
@@ -180,7 +181,7 @@ func (v *Views) StartFunc(c echo.Context) error {
 				Input:     c.FormValue("stream_selector"),
 				Recording: recording,
 				Website:   websiteStream,
-				Streams:   uint64(len(streamsMap)),
+				Streams:   uint64(len(streams)),
 			})
 			if err != nil {
 				return err

@@ -69,9 +69,9 @@ type (
 	}
 
 	ForwarderStart struct {
-		StreamIn   string            `json:"streamIn"`
-		WebsiteOut string            `json:"websiteOut"`
-		Streams    map[string]string `json:"streams"`
+		StreamIn   string   `json:"streamIn"`
+		WebsiteOut string   `json:"websiteOut"`
+		Streams    []string `json:"streams"`
 	}
 
 	ForwarderStatus struct {
