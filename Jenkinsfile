@@ -104,7 +104,7 @@ pipeline {
                       .tokenize("\n")
 
               echo "HTTP response status code: $code"
-              echo "$response"
+              echo "HTTP response: $response"
 
               if (code == 200) {
                   def streams = sh(script: "echo '$response' | jq -M '.streams'", returnStdout: true)
