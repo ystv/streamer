@@ -92,29 +92,53 @@ pipeline {
     }
 
     stage('Deploy') {
+      def String proceed = "yes"
       stages {
-        stage('Development') {
-          when {
-            expression { env.BRANCH_IS_PRIMARY }
-          }
+        stage('Checking existing') {
           steps {
-            build(job: 'Deploy Nomad Job', parameters: [
-              string(name: 'JOB_FILE', value: 'streamer-dev.nomad'),
-              text(name: 'TAG_REPLACEMENTS', value: "${registryEndpoint}/${serverImageName} ${registryEndpoint}/${forwarderImageName} ${registryEndpoint}/${recorderImageName}")
-            ])
+            script {
+              final String url = "https://streamer.dev.ystv.co.uk/activeStreams"
+              final def (String response, int code) =
+                  sh(script: "curl -s $url", returnStdout: true)
+                      .trim()
+                      .tokenize("\n")
+
+              echo "HTTP response status code: $code"
+              echo "$response"
+
+              if (code == 200) {
+                  def streams = sh(script: "echo '$response' | jq -M '.streams'", returnStdout: true)
+                  if (streams > 0) {
+                    proceed = "no"
+                  }
+              }
+            }
           }
         }
-
-        stage('Production') {
-          when {
-            // Checking if it is semantic version release.
-            expression { return env.TAG_NAME ==~ /v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)/ }
+        if (proceed == "yes") {
+          stage('Development') {
+            when {
+              expression { env.BRANCH_IS_PRIMARY }
+            }
+            steps {
+              build(job: 'Deploy Nomad Job', parameters: [
+                string(name: 'JOB_FILE', value: 'streamer-dev.nomad'),
+                text(name: 'TAG_REPLACEMENTS', value: "${registryEndpoint}/${serverImageName} ${registryEndpoint}/${forwarderImageName} ${registryEndpoint}/${recorderImageName}")
+              ])
+            }
           }
-          steps {
-            build(job: 'Deploy Nomad Job', parameters: [
-              string(name: 'JOB_FILE', value: 'streamer-prod.nomad'),
-              text(name: 'TAG_REPLACEMENTS', value: "${registryEndpoint}/${serverImageName} ${registryEndpoint}/${forwarderImageName} ${registryEndpoint}/${recorderImageName}")
-            ])
+
+          stage('Production') {
+            when {
+              // Checking if it is semantic version release.
+              expression { return env.TAG_NAME ==~ /v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)/ }
+            }
+            steps {
+              build(job: 'Deploy Nomad Job', parameters: [
+                string(name: 'JOB_FILE', value: 'streamer-prod.nomad'),
+                text(name: 'TAG_REPLACEMENTS', value: "${registryEndpoint}/${serverImageName} ${registryEndpoint}/${forwarderImageName} ${registryEndpoint}/${recorderImageName}")
+              ])
+            }
           }
         }
       }
