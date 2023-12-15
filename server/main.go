@@ -148,10 +148,8 @@ func main() {
 	fmt.Println("Server listening on port", web.cfg.ServerPort, "...")
 
 	err = http.ListenAndServe(net.JoinHostPort("", strconv.Itoa(web.cfg.ServerPort)), web.mux)
-
 	if err != nil {
-		fmt.Println(err)
-		return
+		log.Fatal(err)
 	}
 }
 
