@@ -50,10 +50,7 @@ img {
     height: 2.5em;
     justify-content: flex-start;
     line-height: 1.5;
-    padding-bottom: calc(.5em - 1px);
-    padding-left: calc(.75em - 1px);
-    padding-right: calc(.75em - 1px);
-    padding-top: calc(.5em - 1px);
+    padding: calc(.5em - 1px) calc(.75em - 1px);
     position: relative;
     vertical-align: top;
 }
@@ -73,10 +70,7 @@ img {
     color: var(--text-colour);
     cursor: pointer;
     justify-content: center;
-    padding-bottom: calc(.5em - 1px);
-    padding-left: 1em;
-    padding-right: 1em;
-    padding-top: calc(.5em - 1px);
+    padding: calc(.5em - 1px) 1em;
     text-align: center;
     white-space: nowrap
 }

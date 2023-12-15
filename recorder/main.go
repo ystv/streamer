@@ -111,7 +111,6 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 	errorChannel := make(chan error, 1)
 	done := make(chan struct{})
 	u := url.URL{Scheme: "wss", Host: config.StreamerWebAddress, Path: "/" + config.StreamerWebsocketPath}
-	//u := url.URL{Scheme: "ws", Host: "localhost:8084", Path: "/" + config.StreamerWebsocketPath}
 	log.Printf("connecting to %s://%s", u.Scheme, u.Host)
 	c, resp, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
