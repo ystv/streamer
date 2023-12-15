@@ -174,7 +174,9 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 			return
 		}
 
-		_, msg, err := c.ReadMessage()
+		var msg []byte
+
+		_, msg, err = c.ReadMessage()
 		if err != nil {
 			log.Printf("failed to read acknowledgement: %+v", err)
 			close(errorChannel)
@@ -191,7 +193,9 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 		}
 
 		for {
-			msgType, message, err := c.ReadMessage()
+			var msgType int
+			var message []byte
+			msgType, message, err = c.ReadMessage()
 			if err != nil {
 				log.Printf("failed to read: %+v", err)
 				close(errorChannel)
@@ -333,7 +337,8 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 			response := "OKAY"
 
 			if len(out.Streams) > 0 {
-				b, err := json.Marshal(out)
+				var b []byte
+				b, err = json.Marshal(out)
 				if err != nil {
 					log.Printf("failed marshaling out: %+v", err)
 					return
