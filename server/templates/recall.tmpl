@@ -253,8 +253,10 @@
                 },
             });
 
+            let error = $('#error');
+
             $('#submit_unique').click(function () {
-                $('#error').html("")
+                error.html("")
                 if ($('#unique').val().length === 0) {
                     $('#error').html("The code field cannot be empty");
                     return;
@@ -305,9 +307,14 @@
                             document.getElementById("stream_key_" + i).value = parts[1];
                             // $('#tableStatus').append('<tr><td><p class="subtitle">Stream ' + i + ' status</p><p id="' + i + '_status"></p><br></td></tr>');
                         }
-                        for (let i = 0, row; row = document.getElementById("endpointTable").rows[i]; i++) {
+
+                        let endpointTable = document.getElementById("endpointTable");
+
+                        for (let i = 0; i < endpointTable.rows.length; i++) {
                             let next = true;
-                            for (let j = 0, col; col = row.cells[j]; j++) {
+                            let row = endpointTable.rows[i];
+                            for (let j = 0; j < row.cells.length; j++) {
+                                let col = row.cells[j];
                                 let temp = col.getElementsByTagName('input');
                                 if (temp.length > 0) {
                                     let element = temp[0];
@@ -330,51 +337,61 @@
 
             let startPressed = false;
 
-            $('#start').click(function () {
+            let startButton = $('#start');
+
+            startButton.click(function () {
                 if (startPressed) {
                     console.log("Start pressed multiple times");
                     return;
                 }
                 startPressed = true;
-                $('#start').disabled = true;
-                $('#error').html("")
-                if ($('#save_path').val().length > 0 && document.getElementById('record').checked) {
-                    if ($('#save_path').val().length === 0) {
+                startButton.disabled = true;
+
+                error.html("")
+
+                let savePath = $('#save_path');
+
+                if (savePath.val().length > 0 && document.getElementById('record').checked) {
+                    if (savePath.val().length === 0) {
                         console.log("SAVE PATH");
-                        $('#error').html("The save path cannot be empty");
+                        error.html("The save path cannot be empty");
                         startPressed = false;
                         return;
                     }
-                    if (!$('#save_path').val().includes(".mkv")) {
+                    if (!savePath.val().includes(".mkv")) {
                         console.log("SAVE FILE");
-                        $('#error').html("The save path must end in \".mkv\"");
+                        error.html("The save path must end in \".mkv\"");
                         startPressed = false;
                         return;
                     }
                 }
+                let websiteStreamEndpoint = $('#website_stream_endpoint');
+
                 if (document.getElementById('website_stream').checked) {
-                    if ($('#website_stream_endpoint').val().length === 0 || !$('#website_stream_endpoint').val().includes("?pwd=")) {
+                    if (websiteStreamEndpoint.val().length === 0 || !websiteStreamEndpoint.val().includes("?pwd=")) {
                         console.log("PWD");
-                        $('#error').html("The website stream must contain \"?pwd=\"");
+                        error.html("The website stream must contain \"?pwd=\"");
                         startPressed = false;
                         return;
                     }
                 }
-                if ($('#stream_server_0').val().length === 0 || $('#stream_key_0').val().length === 0) {
+                let streamServer0 = $('#stream_server_0');
+                if (streamServer0.val().length === 0 || $('#stream_key_0').val().length === 0) {
                     console.log("ADDITIONAL");
                     $('#error').html("The stream server and stream key cannot be empty");
                     startPressed = false;
                     return;
                 }
-                if (!validURL($('#stream_server_0').val())) {
+                if (!validURL(streamServer0.val())) {
                     console.log("STREAM SERVER");
-                    $('#error').html("The stream server must contain \"rtmp://\" or \"rtmps://\" and needs to be a valid url");
+                    error.html("The stream server must contain \"rtmp://\" or \"rtmps://\" and needs to be a valid url");
                     startPressed = false;
                     return;
                 }
                 let j = 1;
                 while (true) {
-                    if ($('#stream_server_' + j).length === 0) {
+                    let streamServerJ = $('#stream_server_' + j);
+                    if (streamServerJ.length === 0) {
                         if (j < i) {
                             j++
                         } else {
@@ -382,15 +399,15 @@
                         }
                         continue;
                     }
-                    if ($('#stream_server_' + j).val().length === 0 || $('#stream_key_' + j).val().length === 0) {
+                    if (streamServerJ.val().length === 0 || $('#stream_key_' + j).val().length === 0) {
                         console.log("ADDITIONAL - " + j);
-                        $('#error').html("The stream server and stream key cannot be empty");
+                        error.html("The stream server and stream key cannot be empty");
                         startPressed = false;
                         return;
                     }
-                    if (!validURL($('#stream_server_' + j).val())) {
+                    if (!validURL(streamServerJ.val())) {
                         console.log("STREAM SERVER - " + j);
-                        $('#error').html("The stream server must contain \"rtmp://\" or \"rtmps://\" and needs to be a valid url");
+                        error.html("The stream server must contain \"rtmp://\" or \"rtmps://\" and needs to be a valid url");
                         startPressed = false;
                         return;
                     }
@@ -409,7 +426,7 @@
                     data: $('#recall_form').serialize(),
                     success: function (data) {
                         if (data.includes("An error has occurred...\n")) {
-                            $('#error').html(data);
+                            error.html(data);
                             startPressed = false;
                             return;
                         }
@@ -420,18 +437,19 @@
                         document.getElementById('started_window').hidden = false;
                         document.getElementById('started_window').style.visibility = "visible";
                         unique = data;
+                        let tableStatus = $('#tableStatus');
                         if (document.getElementById('record').checked) {
-                            $('#tableStatus').append('<tr><td><p class="subtitle">Recording status</p></td><td><p id="recording_status"></p><br></td></tr>');
+                            tableStatus.append('<tr><td><p class="subtitle">Recording status</p></td><td><p id="recording_status"></p><br></td></tr>');
                         }
                         if (document.getElementById('website_stream').checked) {
-                            $('#tableStatus').append('<tr><td><p class="subtitle">Website status</p></td><td><p id="website_status"></p><br></td></tr>');
+                            tableStatus.append('<tr><td><p class="subtitle">Website status</p></td><td><p id="website_status"></p><br></td></tr>');
                         }
-                        $('#tableStatus').append('<tr><td><p class="subtitle">Stream 1 status</p></td><td><p id="1_status"></p><br></td></tr>');
+                        tableStatus.append('<tr><td><p class="subtitle">Stream 1 status</p></td><td><p id="1_status"></p><br></td></tr>');
                         let k = 2;
                         for (let j = 1; j < i; j++) {
                             try {
                                 document.getElementById('row_' + j)
-                                $('#tableStatus').append('<tr><td><p class="subtitle">Stream ' + k + ' status</p></td><td><p id="' + k + '_status"></p><br></td></tr>');
+                                tableStatus.append('<tr><td><p class="subtitle">Stream ' + k + ' status</p></td><td><p id="' + k + '_status"></p><br></td></tr>');
                                 k++;
                             } catch (e) {
 
@@ -458,11 +476,13 @@
                         }, 5000);
                     },
                 });
-                $('#start').disabled = false;
+                startButton.disabled = false;
             });
 
-            $('#stop_button').click(function () {
-                $('#stop_button').disabled = true;
+            let stopButton = $('#stop_button');
+
+            stopButton.click(function () {
+                stopButton.disabled = true;
                 console.log("Stop pressed")
                 $.ajax({
                     url: 'stop',
@@ -481,11 +501,13 @@
                         }
                     },
                 })
-                $('#stop_button').disabled = false;
+                stopButton.disabled = false;
             });
 
-            $('#delete_button').click(function () {
-                $('#delete_button').disabled = true;
+            let deleteButton = $('#delete_button');
+
+            deleteButton.click(function () {
+                deleteButton.disabled = true;
                 console.log("Delete pressed")
                 $.ajax({
                     url: 'delete',
@@ -504,7 +526,7 @@
                         }
                     },
                 })
-                $('#delete_button').disabled = false;
+                deleteButton.disabled = false;
             })
         });
 

@@ -80,11 +80,13 @@
         let unique;
         let statusInterval;
 
+        let error = $('#error');
+
         $(document).ready(function () {
             $('#submit_unique').click(function () {
-                $('#error').html("")
+                error.html("")
                 if ($('#unique').val().length === 0) {
-                    $('#error').html("The code field cannot be empty");
+                    error.html("The code field cannot be empty");
                     return;
                 }
                 $.ajax({
@@ -96,24 +98,26 @@
                     success: function (data) {
                         let dataPart = data.split('~');
                         if (dataPart[0] !== "ACCEPTED!") {
-                            $('#error').html("Unique code not accepted");
+                            error.html("Unique code not accepted");
                             return;
                         }
                         document.getElementById('enter').hidden = true;
                         document.getElementById('enter').style.visibility = "hidden";
                         document.getElementById('resumed').hidden = false;
                         document.getElementById('resumed').style.visibility = "visible";
-                        unique = $('#unique').val();
-                        $('#unique_code').html($('#unique').val());
+                        let uniqueField = $('#unique');
+                        unique = uniqueField.val();
+                        $('#unique_code').html(uniqueField.val());
+                        let tableStatus = $('#tableStatus');
                         if (dataPart[1] === "true") {
-                            $('#tableStatus').append('<tr><td><p class="subtitle">Recording status</p><p id="recording_status"></p><br></td></tr>');
+                            tableStatus.append('<tr><td><p class="subtitle">Recording status</p><p id="recording_status"></p><br></td></tr>');
                         }
                         if (dataPart[2] === "true") {
-                            $('#tableStatus').append('<tr><td><p class="subtitle">Website status</p><p id="website_status"></p><br></td></tr>');
+                            tableStatus.append('<tr><td><p class="subtitle">Website status</p><p id="website_status"></p><br></td></tr>');
                         }
                         let streams = parseInt(dataPart[3])
                         for (let i = 1; i <= streams; i++) {
-                            $('#tableStatus').append('<tr><td><p class="subtitle">Stream ' + i + ' status</p><p id="' + i + '_status"></p><br></td></tr>');
+                            tableStatus.append('<tr><td><p class="subtitle">Stream ' + i + ' status</p><p id="' + i + '_status"></p><br></td></tr>');
                         }
                         statusInterval = setInterval(function () {
                             $.ajax({
@@ -136,8 +140,11 @@
                     },
                 })
             });
-            $('#stop_button').click(function () {
-                $('#stop_button').disabled = true;
+
+            let stopButton = $('#stop_button');
+
+            stopButton.click(function () {
+                stopButton.disabled = true;
                 console.log("Stop pressed")
                 $.ajax({
                     url: 'stop',
@@ -156,7 +163,7 @@
                         }
                     },
                 })
-                $('#stop_button').disabled = false;
+                stopButton.disabled = false;
             })
         });
     </script>

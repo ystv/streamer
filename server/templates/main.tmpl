@@ -204,35 +204,41 @@
         let unique;
         let statusInterval;
 
+        let endpointSelector = $('#endpoint_selector');
+
         let streamsCheck = function () {
             $.ajax({
                 url: 'streams',
                 type: 'post',
                 dataType: 'text',
                 contentType: 'application/x-www-form-urlencoded',
-                data: $('#endpoint_selector').serialize(),
+                data: endpointSelector.serialize(),
                 success: function (data) {
+                    let result = $('#result');
+
+                    let streamFurther = $('#stream_further_1');
+
                     if (data === "No active streams with the current selection") {
-                        $('#result').html(data);
-                        let selectobject = document.getElementById("stream_selector");
-                        for (let i = selectobject.length; i > 0; i--) {
-                            selectobject.remove(i);
+                        result.html(data);
+                        let selectObject = document.getElementById("stream_selector");
+                        for (let i = selectObject.length; i > 0; i--) {
+                            selectObject.remove(i);
                         }
                         if ($('#stream_selector').val() === 'please_select') {
-                            $('#stream_further_1').hide();
+                            streamFurther.hide();
                         } else {
-                            $('#stream_further_1').show();
+                            streamFurther.show();
                         }
                         return;
                     }
                     const myArray = data.split(" ");
-                    $('#result').html(data);
+                    result.html(data);
 
                     let index = 0;
 
-                    let selectobject = document.getElementById("stream_selector");
-                    for (let i = selectobject.length; i > 0; i--) {
-                        selectobject.remove(i);
+                    let selectObject = document.getElementById("stream_selector");
+                    for (let i = selectObject.length; i > 0; i--) {
+                        selectObject.remove(i);
                     }
 
                     let select = document.getElementById("stream_selector");
@@ -240,10 +246,10 @@
                         select.options[select.options.length] = new Option(myArray[index], myArray[index]);
                     }
 
-                    if ($('#stream_selector').val() === 'please_select') {
-                        $('#stream_further_1').hide();
+                    if (endpointSelector.val() === 'please_select') {
+                        streamFurther.hide();
                     } else {
-                        $('#stream_further_1').show();
+                        streamFurther.show();
                     }
                 },
             });
@@ -301,51 +307,58 @@
 
             let startPressed = false;
 
-            $('#start').click(function () {
+            let startButton = $('#start');
+            let error = $('#error');
+            let savePath = $('#save_path');
+
+            startButton.click(function () {
                 if (startPressed) {
                     console.log("Start pressed multiple times");
                     return;
                 }
                 startPressed = true;
-                $('#start').disabled = true;
-                $('#error').html("")
-                if ($('#save_path').val().length > 0 && document.getElementById('record').checked) {
-                    if ($('#save_path').val().length === 0) {
+                startButton.disabled = true;
+                error.html("")
+                if (savePath.val().length > 0 && document.getElementById('record').checked) {
+                    if (savePath.val().length === 0) {
                         console.log("SAVE PATH");
-                        $('#error').html("The save path cannot be empty");
+                        error.html("The save path cannot be empty");
                         startPressed = false;
                         return;
                     }
-                    if (!$('#save_path').val().includes(".mkv")) {
+                    if (!savePath.val().includes(".mkv")) {
                         console.log("SAVE FILE");
-                        $('#error').html("The save path must end in \".mkv\"");
+                        error.html("The save path must end in \".mkv\"");
                         startPressed = false;
                         return;
                     }
                 }
+                let websiteStreamEndpoint = $('#website_stream_endpoint');
                 if (document.getElementById('website_stream').checked) {
-                    if ($('#website_stream_endpoint').val().length === 0 || !$('#website_stream_endpoint').val().includes("?pwd=")) {
+                    if (websiteStreamEndpoint.val().length === 0 || !websiteStreamEndpoint.val().includes("?pwd=")) {
                         console.log("PWD");
-                        $('#error').html("The website stream must contain \"?pwd=\"");
+                        error.html("The website stream must contain \"?pwd=\"");
                         startPressed = false;
                         return;
                     }
                 }
-                if ($('#stream_server_0').val().length === 0 || $('#stream_key_0').val().length === 0) {
+                let streamServer0 = $('#stream_server_0');
+                if (streamServer0.val().length === 0 || $('#stream_key_0').val().length === 0) {
                     console.log("ADDITIONAL");
-                    $('#error').html("The stream server and stream key cannot be empty");
+                    error.html("The stream server and stream key cannot be empty");
                     startPressed = false;
                     return;
                 }
-                if (!validURL($('#stream_server_0').val())) {
+                if (!validURL(streamServer0.val())) {
                     console.log("STREAM SERVER");
-                    $('#error').html("The stream server must contain \"rtmp://\" or \"rtmps://\" and needs to be a valid url");
+                    error.html("The stream server must contain \"rtmp://\" or \"rtmps://\" and needs to be a valid url");
                     startPressed = false;
                     return;
                 }
                 let j = 1;
                 while (true) {
-                    if ($('#stream_server_' + j).length === 0) {
+                    let streamServerJ = $('#stream_server_' + j);
+                    if (streamServerJ.length === 0) {
                         if (j < i) {
                             j++
                         } else {
@@ -353,15 +366,15 @@
                         }
                         continue;
                     }
-                    if ($('#stream_server_' + j).val().length === 0 || $('#stream_key_' + j).val().length === 0) {
+                    if (streamServerJ.val().length === 0 || $('#stream_key_' + j).val().length === 0) {
                         console.log("ADDITIONAL - " + j);
-                        $('#error').html("The stream server and stream key cannot be empty");
+                        error.html("The stream server and stream key cannot be empty");
                         startPressed = false;
                         return;
                     }
-                    if (!validURL($('#stream_server_' + j).val())) {
+                    if (!validURL(streamServerJ.val())) {
                         console.log("STREAM SERVER - " + j);
-                        $('#error').html("The stream server must contain \"rtmp://\" or \"rtmps://\" and needs to be a valid url");
+                        error.html("The stream server must contain \"rtmp://\" or \"rtmps://\" and needs to be a valid url");
                         startPressed = false;
                         return;
                     }
@@ -380,7 +393,7 @@
                     data: $('#stream_outs').serialize(),
                     success: function (data) {
                         if (data.includes("An error has occurred...\n")) {
-                            $('#error').html(data);
+                            error.html(data);
                             startPressed = false;
                             return;
                         }
@@ -390,18 +403,19 @@
                         document.getElementById('started_window').hidden = false;
                         document.getElementById('started_window').style.visibility = "visible";
                         unique = data;
+                        let tableStatus = $('#tableStatus');
                         if (document.getElementById('record').checked) {
-                            $('#tableStatus').append('<tr><td><p class="subtitle">Recording status</p></td><td><p id="recording_status"></p><br></td></tr>');
+                            tableStatus.append('<tr><td><p class="subtitle">Recording status</p></td><td><p id="recording_status"></p><br></td></tr>');
                         }
                         if (document.getElementById('website_stream').checked) {
-                            $('#tableStatus').append('<tr><td><p class="subtitle">Website status</p></td><td><p id="website_status"></p><br></td></tr>');
+                            tableStatus.append('<tr><td><p class="subtitle">Website status</p></td><td><p id="website_status"></p><br></td></tr>');
                         }
-                        $('#tableStatus').append('<tr><td><p class="subtitle">Stream 1 status</p></td><td><p id="1_status"></p><br></td></tr>');
+                        tableStatus.append('<tr><td><p class="subtitle">Stream 1 status</p></td><td><p id="1_status"></p><br></td></tr>');
                         let k = 2;
                         for (let j = 1; j < i; j++) {
                             try {
                                 document.getElementById('row_' + j)
-                                $('#tableStatus').append('<tr><td><p class="subtitle">Stream ' + k + ' status</p></td><td><p id="' + k + '_status"></p><br></td></tr>');
+                                tableStatus.append('<tr><td><p class="subtitle">Stream ' + k + ' status</p></td><td><p id="' + k + '_status"></p><br></td></tr>');
                                 k++;
                             } catch (e) {
 
@@ -428,11 +442,13 @@
                         }, 5000);
                     },
                 });
-                $('#start').disabled = false;
+                startButton.disabled = false;
             });
 
-            $('#stop_button').click(function () {
-                $('#stop_button').disabled = true;
+            let stopButton = $('#stop_button');
+
+            stopButton.click(function () {
+                stopButton.disabled = true;
                 console.log("Stop pressed")
                 $.ajax({
                     url: 'stop',
