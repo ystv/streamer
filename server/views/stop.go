@@ -54,7 +54,6 @@ func (v *Views) StopFunc(c echo.Context) error {
 				defer wg.Done()
 				var client *ssh.Client
 				var session *ssh.Session
-				var err error
 				//if recorderAuth == "PEM" {
 				//	client, session, err = connectToHostPEM(recorder, recorderUsername, recorderPrivateKey, recorderPassphrase)
 				//} else if recorderAuth == "PASS" {
@@ -81,7 +80,6 @@ func (v *Views) StopFunc(c echo.Context) error {
 			defer wg.Done()
 			var client *ssh.Client
 			var session *ssh.Session
-			var err error
 			//if forwarderAuth == "PEM" {
 			//	client, session, err = connectToHostPEM(forwarder, forwarderUsername, forwarderPrivateKey, forwarderPassphrase)
 			//} else if forwarderAuth == "PASS" {

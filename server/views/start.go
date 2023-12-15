@@ -75,7 +75,6 @@ func (v *Views) StartFunc(c echo.Context) error {
 			}
 
 			if len(streams1) == 0 {
-				loop = false
 				break
 			}
 
@@ -93,7 +92,6 @@ func (v *Views) StartFunc(c echo.Context) error {
 			}
 
 			if len(stored) == 0 {
-				loop = false
 				break
 			}
 
@@ -170,7 +168,7 @@ func (v *Views) StartFunc(c echo.Context) error {
 		}()
 		wg.Wait()
 
-		if errors == false {
+		if !errors {
 			err := v.HandleTXLight(v.conf.TransmissionLight, tx.TransmissionOn)
 			if err != nil {
 				log.Println(err)

@@ -38,13 +38,11 @@ func (v *Views) start(transporter Transporter) error {
 			valid = true
 		} else {
 			split := strings.Split(temp, ".")
-			loop := true
 			i := 0
-			for loop {
+			for {
 				_, err3 := os.Stat(v.Config.RecordingLocation + path + "/" + split[0] + "_" + string(rune(i)) + ".mkv")
 				if os.IsNotExist(err3) {
 					path += split[0] + string(rune(i)) + ".mkv"
-					loop = false
 					valid = true
 					break
 				}
@@ -98,15 +96,14 @@ func (v *Views) start(transporter Transporter) error {
 					log.Println("unable to get cmd from cache")
 				}
 				c1 := cmd.(*exec.Cmd)
-				err := c1.Process.Kill()
+				err = c1.Process.Kill()
 				if err != nil {
 					log.Println(err)
 				}
 				v.cache.Delete(transporter.Unique)
-				break
+				return
 			default:
 				time.Sleep(1 * time.Second) // This is so it doesn't spam constantly and take the entire CPU up
-				break
 			}
 		}
 	}()

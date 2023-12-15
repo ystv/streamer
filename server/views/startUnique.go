@@ -96,7 +96,6 @@ func (v *Views) StartUniqueFunc(c echo.Context) error {
 				recording = true
 				var client *ssh.Client
 				var session *ssh.Session
-				var err error
 				//if recorderAuth == "PEM" {
 				//	client, session, err = connectToHostPEM(recorder, recorderUsername, recorderPrivateKey, recorderPassphrase)
 				//} else if recorderAuth == "PASS" {
@@ -122,7 +121,6 @@ func (v *Views) StartUniqueFunc(c echo.Context) error {
 			defer wg.Done()
 			var client *ssh.Client
 			var session *ssh.Session
-			var err error
 			//if forwarderAuth == "PEM" {
 			//	client, session, err = connectToHostPEM(forwarder, forwarderUsername, forwarderPrivateKey, forwarderPassphrase)
 			//} else if forwarderAuth == "PASS" {
@@ -148,13 +146,15 @@ func (v *Views) StartUniqueFunc(c echo.Context) error {
 		}()
 		wg.Wait()
 
-		if errors == false {
+		if !errors {
 			err = v.HandleTXLight(v.conf.TransmissionLight, tx.TransmissionOn)
 			if err != nil {
 				fmt.Println(err)
 			}
 
-			s, err := v.store.AddStream(&storage.Stream{
+			var s *storage.Stream
+
+			s, err = v.store.AddStream(&storage.Stream{
 				Stream:    unique,
 				Input:     c.FormValue("stream_selector"),
 				Recording: recording,

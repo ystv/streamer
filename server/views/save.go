@@ -56,7 +56,6 @@ func (v *Views) SaveFunc(c echo.Context) error {
 			}
 
 			if len(streams1) == 0 {
-				loop = false
 				break
 			}
 
@@ -78,7 +77,6 @@ func (v *Views) SaveFunc(c echo.Context) error {
 			}
 
 			if len(stored) == 0 {
-				loop = false
 				break
 			}
 

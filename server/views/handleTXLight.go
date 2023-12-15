@@ -14,7 +14,7 @@ func (v *Views) HandleTXLight(url string, function tx.FunctionTX) (err error) {
 		if err != nil && !strings.Contains(err.Error(), "unexpected EOF") {
 			return
 		}
-		break
+		return
 	case tx.AllOff:
 		if !v.ExistingStreamCheck() {
 			_, err = http.Get(url + tx.AllOff.String()) // Output is ignored as it returns a 204 status and there's a weird bug with no content
@@ -27,7 +27,7 @@ func (v *Views) HandleTXLight(url string, function tx.FunctionTX) (err error) {
 				return
 			}
 		}
-		break
+		return
 	case tx.RehearsalOn:
 		if !v.ActiveStreamCheck() {
 			_, err = http.Get(url + tx.RehearsalOn.String())
@@ -35,9 +35,9 @@ func (v *Views) HandleTXLight(url string, function tx.FunctionTX) (err error) {
 				return
 			}
 		}
-		break
+		return
 	default:
 		err = fmt.Errorf("unexpected function string: \"%s\"", function)
+		return
 	}
-	return
 }

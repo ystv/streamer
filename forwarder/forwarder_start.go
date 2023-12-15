@@ -54,10 +54,9 @@ func (v *Views) start(transporter Transporter) error {
 						log.Println(err)
 					}
 					v.cache.Delete(transporter.Unique + "_0")
-					break
+					return
 				default:
 					time.Sleep(1 * time.Second) // This is so it doesn't spam constantly and take the entire CPU up
-					break
 				}
 			}
 		}()
@@ -108,10 +107,9 @@ func (v *Views) start(transporter Transporter) error {
 						log.Println(err)
 					}
 					v.cache.Delete(transporter.Unique + "_" + strconv.Itoa(k))
-					break
+					return
 				default:
 					time.Sleep(1 * time.Second) // This is so it doesn't spam constantly and take the entire CPU up
-					break
 				}
 			}
 		}()

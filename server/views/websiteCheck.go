@@ -36,9 +36,7 @@ func (v *Views) websiteCheck(endpoint string) bool {
 		fmt.Println(err)
 	}
 	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-		}
+		_ = Body.Close()
 	}(res.Body)
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
@@ -46,7 +44,6 @@ func (v *Views) websiteCheck(endpoint string) bool {
 	}
 	if string(body) == "Accepted" {
 		return true
-	} else {
-		return false
 	}
+	return false
 }
