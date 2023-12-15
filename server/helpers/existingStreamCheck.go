@@ -1,12 +1,12 @@
-package main
+package helpers
 
 import (
 	"database/sql"
 	"fmt"
 )
 
-// existingStreamCheck checks if there are any existing streams still registered in the database
-func existingStreamCheck() bool {
+// ExistingStreamCheck checks if there are any existing streams still registered in the database
+func ExistingStreamCheck(verbose bool) bool {
 	if verbose {
 		fmt.Println("Existing Stream Check called")
 	}

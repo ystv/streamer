@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"github.com/ystv/streamer/server/helpers"
 	"log"
 	"net/http"
 	"strings"
@@ -118,8 +119,8 @@ func (web *Web) stop(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				fmt.Println(err.Error())
 			}
-			fmt.Println(existingStreamCheck())
-			if !existingStreamCheck() {
+			fmt.Println(helpers.ExistingStreamCheck(verbose))
+			if !helpers.ExistingStreamCheck(verbose) {
 				_, err := http.Get(web.cfg.TransmissionLight + "rehearsal_transmission_off") // Output is ignored as it returns a 204 status and there's a weird bug with no content
 				if err != nil && !strings.Contains(err.Error(), "unexpected EOF") {
 					fmt.Println(err.Error())
