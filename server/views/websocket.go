@@ -16,12 +16,14 @@ func (v *Views) Websocket(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	defer ws.Close()
+	defer func(ws *websocket.Conn) {
+		_ = ws.Close()
+	}(ws)
 
 	_, msg, err := ws.ReadMessage()
 	if err != nil {
 		c.Logger().Error(err)
-		ws.Close()
+		_ = ws.Close()
 		return nil
 	}
 
@@ -35,21 +37,21 @@ func (v *Views) Websocket(c echo.Context) error {
 	err = v.cache.Add(name, clientChannel, cache.NoExpiration)
 	if err != nil {
 		c.Logger().Error(err)
-		ws.Close()
+		_ = ws.Close()
 		return nil
 	}
 
 	err = v.cache.Add(name+"Internal", internalChannel, cache.NoExpiration)
 	if err != nil {
 		c.Logger().Error(err)
-		ws.Close()
+		_ = ws.Close()
 		return nil
 	}
 
 	err = ws.WriteMessage(websocket.TextMessage, []byte("ACKNOWLEDGED"))
 	if err != nil {
 		c.Logger().Error(err)
-		ws.Close()
+		_ = ws.Close()
 		return nil
 	}
 
@@ -60,7 +62,7 @@ func (v *Views) Websocket(c echo.Context) error {
 	ticker := time.NewTicker(5 * time.Second)
 	defer func() {
 		ticker.Stop()
-		ws.Close()
+		_ = ws.Close()
 	}()
 
 	for loop {

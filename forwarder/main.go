@@ -156,8 +156,10 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 		}
 	}()
 
-	//When the program closes close the connection
-	defer c.Close()
+	//When the program closes, close the connection
+	defer func(c *websocket.Conn) {
+		_ = c.Close()
+	}(c)
 	go func() {
 		defer close(done)
 		defer func() {

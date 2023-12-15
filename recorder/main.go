@@ -146,7 +146,9 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 		}
 	}()
 
-	defer c.Close()
+	defer func(c *websocket.Conn) {
+		_ = c.Close()
+	}(c)
 	go func() {
 		defer close(done)
 		defer func() {
