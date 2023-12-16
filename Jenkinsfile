@@ -112,7 +112,8 @@ pipeline {
               echo "HTTP response: $response"
 
               if (code == 200) {
-                def streams = sh(script: "echo '$response' | jq -M '.streams'", returnStdout: true)
+                String tempStreams = sh(script: "echo '$response' | jq -M '.streams'", returnStdout: true)
+                int streams = Integer.parseInt(tempStreams)
                 if (streams > 0) {
                   proceed = "no"
                 }
