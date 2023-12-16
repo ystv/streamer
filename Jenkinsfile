@@ -102,10 +102,11 @@ pipeline {
           steps {
             script {
               final String url = "https://streamer.dev.ystv.co.uk/activeStreams"
-              final def (String response, int code) =
+              final def (String response, String tempCode) =
                   sh(script: "curl -s -w '~~~%{response_code}' $url", returnStdout: true)
                       .trim()
                       .tokenize("~~~")
+              int code = Integer.parseInt(tempCode)
 
               echo "HTTP response status code: $code"
               if (response.contains("\"stream\":")) {
