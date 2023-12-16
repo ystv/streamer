@@ -106,10 +106,6 @@ pipeline {
                   sh(script: "curl -s -w '\\n%{response_code}' $url", returnStdout: true)
                       .trim()
                       .tokenize("\n")
-              final def (String response, int code) =
-                  sh(script: "curl -s $url", returnStdout: true)
-                      .trim()
-                      .tokenize("\n")
 
               echo "HTTP response status code: $code"
               if (response.contains("\"stream\":")) {
