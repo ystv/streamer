@@ -109,17 +109,13 @@ pipeline {
               int code = Integer.parseInt(tempCode)
 
               echo "HTTP response status code: $code"
-              if (response.contains("\"stream\":")) {
-                echo "HTTP response: $response"
+              echo "HTTP response: $response"
 
-                if (code == 200) {
-                  def streams = sh(script: "echo '$response' | jq -M '.streams'", returnStdout: true)
-                  if (streams > 0) {
-                    proceed = "no"
-                  }
+              if (code == 200) {
+                def streams = sh(script: "echo '$response' | jq -M '.streams'", returnStdout: true)
+                if (streams > 0) {
+                  proceed = "no"
                 }
-              } else {
-                echo "HTTP response not JSON, proceeding..."
               }
             }
           }
