@@ -103,18 +103,26 @@ pipeline {
             script {
               final String url = "https://streamer.dev.ystv.co.uk/activeStreams"
               final def (String response, int code) =
+                  sh(script: "curl -s -w '\\n%{response_code}' $url", returnStdout: true)
+                      .trim()
+                      .tokenize("\n")
+              final def (String response, int code) =
                   sh(script: "curl -s $url", returnStdout: true)
                       .trim()
                       .tokenize("\n")
 
               echo "HTTP response status code: $code"
-              echo "HTTP response: $response"
+              if (response.contains("\"stream\":")) {
+                echo "HTTP response: $response"
 
-              if (code == 200) {
+                if (code == 200) {
                   def streams = sh(script: "echo '$response' | jq -M '.streams'", returnStdout: true)
                   if (streams > 0) {
                     proceed = "no"
                   }
+                }
+              } else {
+                echo "HTTP response not JSON, proceeding..."
               }
             }
           }
