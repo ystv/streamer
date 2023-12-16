@@ -103,7 +103,7 @@ pipeline {
             script {
               final String url = "https://streamer.dev.ystv.co.uk/activeStreams"
               final def (String response, int code) =
-                  sh(script: "curl -s -w '\~~~%{response_code}' $url", returnStdout: true)
+                  sh(script: "curl -s -w '~~~%{response_code}' $url", returnStdout: true)
                       .trim()
                       .tokenize("~~~")
 
