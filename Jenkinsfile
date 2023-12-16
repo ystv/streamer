@@ -115,7 +115,10 @@ pipeline {
                 tempStreams = sh(script: "echo '$response' | jq -M '.streams'", returnStdout: true).trim()
                 int streams = Integer.parseInt(tempStreams)
                 if (streams > 0) {
+                  echo "Preexisting active streams: $streams, not deploying"
                   proceed = "no"
+                } else {
+                  echo "No preexisting active streams, deploying"
                 }
               }
             }
