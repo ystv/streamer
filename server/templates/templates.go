@@ -4,79 +4,70 @@ import (
 	"embed"
 	"html/template"
 	"io"
+	"log"
 	"time"
 )
 
 //go:embed *.tmpl
-var tpls embed.FS
+var tmpls embed.FS
 
-type (
-	Templater struct {
-		dashboard *template.Template
-	}
-	BaseParams struct {
-		SystemTime time.Time
-	}
-	PageParams struct {
-		Base BaseParams
-	}
+type Templater struct{}
+
+type Template string
+
+const (
+	FacebookHelpTemplate Template = "facebookHelp.tmpl"
+	ListTemplate         Template = "list.tmpl"
+	MainTemplate         Template = "main.tmpl"
+	RecallTemplate       Template = "recall.tmpl"
+	ResumeTemplate       Template = "resume.tmpl"
+	SaveTemplate         Template = "save.tmpl"
+	YouTubeHelpTemplate  Template = "youtubeHelp.tmpl"
+	ErrorTemplate        Template = "error.tmpl"
+	NotFound404Template  Template = "404NotFound.tmpl"
 )
 
-var funcs = template.FuncMap{
-	"cleantime": cleanTime,
+func (t Template) String() string {
+	return string(t)
 }
 
-func cleanTime(t time.Time) string {
-	return t.Format(time.RFC1123Z)
+func NewTemplate() *Templater {
+	return &Templater{}
 }
 
-func parse(file string) *template.Template {
-	return template.Must(
-		template.New("base.tmpl").Funcs(funcs).ParseFS(tpls, "base.tmpl", file))
-}
+func (t *Templater) RenderTemplate(w io.Writer, data interface{}, mainTmpl Template) error {
+	var err error
 
-func NewMain() *Templater {
-	return &Templater{
-		dashboard: parse("main.tmpl"),
+	t1 := template.New("_base.tmpl")
+
+	t1.Funcs(t.getFuncMaps())
+
+	t1, err = t1.ParseFS(tmpls, "_base.tmpl", mainTmpl.String())
+
+	if err != nil {
+		log.Printf("failed to get templates for template(RenderTemplate): %+v", err)
+		return err
 	}
+
+	return t1.Execute(w, data)
 }
 
-func NewList() *Templater {
-	return &Templater{
-		dashboard: parse("list.tmpl"),
+func (t *Templater) getFuncMaps() template.FuncMap {
+	return template.FuncMap{
+		"thisYear": func() int {
+			return time.Now().Year()
+		},
+		"add": func(a, b int) int {
+			return a + b
+		},
+		"inc": func(a int) int {
+			return a + 1
+		},
+		"dec": func(a int) int {
+			return a - 1
+		},
+		"even": func(a int) bool {
+			return a%2 == 0
+		},
 	}
-}
-
-func NewRecall() *Templater {
-	return &Templater{
-		dashboard: parse("recall.tmpl"),
-	}
-}
-
-func NewResume() *Templater {
-	return &Templater{
-		dashboard: parse("resume.tmpl"),
-	}
-}
-
-func NewSave() *Templater {
-	return &Templater{
-		dashboard: parse("save.tmpl"),
-	}
-}
-
-func NewFacebookHelp() *Templater {
-	return &Templater{
-		dashboard: parse("facebookHelp.tmpl"),
-	}
-}
-
-func NewYouTubeHelp() *Templater {
-	return &Templater{
-		dashboard: parse("youtubeHelp.tmpl"),
-	}
-}
-
-func (t *Templater) Page(w io.Writer, p PageParams) error {
-	return t.dashboard.Execute(w, p)
 }
