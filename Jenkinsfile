@@ -2,6 +2,7 @@ String registryEndpoint = 'registry.comp.ystv.co.uk'
 
 def branch = env.BRANCH_NAME.replaceAll("/", "_")
 def image
+String proceed = "yes"
 String serverImageName = "ystv/streamer/server:${branch}-${env.BUILD_ID}"
 String forwarderImageName = "ystv/streamer/forwarder:${branch}-${env.BUILD_ID}"
 String recorderImageName = "ystv/streamer/recorder:${branch}-${env.BUILD_ID}"
@@ -93,7 +94,6 @@ pipeline {
 
     stage('Deploy') {
       stages {
-      String proceed = "yes"
         stage('Checking existing') {
           steps {
             script {
