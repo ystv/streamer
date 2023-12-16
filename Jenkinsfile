@@ -17,7 +17,7 @@ pipeline {
 
   stages {
     stage('Build images') {
-      stages {
+      parallel {
         stage('Build Server') {
           steps {
             script {
@@ -55,7 +55,7 @@ pipeline {
     }
 
     stage('Push images to registry') {
-      stages {
+      parallel {
         stage('Push Server image to registry') {
           steps {
             script {
@@ -92,8 +92,8 @@ pipeline {
     }
 
     stage('Deploy') {
-      def String proceed = "yes"
       stages {
+      String proceed = "yes"
         stage('Checking existing') {
           steps {
             script {
@@ -118,7 +118,7 @@ pipeline {
         if (proceed == "yes") {
           stage('Development') {
             when {
-              expression { env.BRANCH_IS_PRIMARY }
+              expression { env.BRANCH_IS_PRIMARY && proceed == "yes" }
             }
             steps {
               build(job: 'Deploy Nomad Job', parameters: [
