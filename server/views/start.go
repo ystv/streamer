@@ -2,12 +2,6 @@ package views
 
 import (
 	"fmt"
-	"github.com/labstack/echo/v4"
-
-	"github.com/ystv/streamer/server/helper/transporter/action"
-	"github.com/ystv/streamer/server/helper/transporter/server"
-	"github.com/ystv/streamer/server/helper/tx"
-	"github.com/ystv/streamer/server/storage"
 	"log"
 	"math"
 	"net/http"
@@ -15,6 +9,13 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/labstack/echo/v4"
+
+	"github.com/ystv/streamer/server/helper/transporter/action"
+	"github.com/ystv/streamer/server/helper/transporter/server"
+	"github.com/ystv/streamer/server/helper/tx"
+	"github.com/ystv/streamer/server/storage"
 )
 
 // StartFunc is the core of the program, where it takes the values set by the user in the webpage and processes the data and sends it to the recorder and the forwarder

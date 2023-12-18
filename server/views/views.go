@@ -2,13 +2,14 @@ package views
 
 import (
 	"encoding/xml"
+	"math/rand"
+	"time"
+
 	"github.com/patrickmn/go-cache"
 
 	"github.com/ystv/streamer/server/helper/transporter/action"
 	"github.com/ystv/streamer/server/store"
 	"github.com/ystv/streamer/server/templates"
-	"math/rand"
-	"time"
 )
 
 type (
