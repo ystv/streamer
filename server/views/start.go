@@ -3,6 +3,9 @@ package views
 import (
 	"fmt"
 	"github.com/labstack/echo/v4"
+
+	"github.com/ystv/streamer/server/helper/transporter/action"
+	"github.com/ystv/streamer/server/helper/transporter/server"
 	"github.com/ystv/streamer/server/helper/tx"
 	"github.com/ystv/streamer/server/storage"
 	"log"
@@ -22,7 +25,7 @@ func (v *Views) StartFunc(c echo.Context) error {
 		}
 
 		transporter := Transporter{
-			Action: "start",
+			Action: action.Start,
 		}
 
 		fStart := ForwarderStart{
