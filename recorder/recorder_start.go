@@ -73,7 +73,7 @@ func (v *Views) start(transporter Transporter) error {
 				return
 			default:
 				c := exec.Command("ffmpeg", "-i", "\""+streamIn+"\"", "-c", "copy", "\""+path+"_"+strconv.FormatUint(i, 10)+".mkv\"", ">>", "\"/logs/"+transporter.Unique+".txt\"", "2>&1")
-				err := v.cache.Add(transporter.Unique, c, cache.NoExpiration)
+				err = v.cache.Add(transporter.Unique, c, cache.NoExpiration)
 				if err != nil {
 					log.Println(err)
 					return

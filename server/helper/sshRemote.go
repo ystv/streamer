@@ -24,7 +24,7 @@ func ConnectToHostPassword(host, username, password string, verbose bool) (*ssh.
 
 	session, err := client.NewSession()
 	if err != nil {
-		err := client.Close()
+		err = client.Close()
 		if err != nil {
 			return nil, nil, err
 		}

@@ -70,7 +70,8 @@ func main() {
 	e := echo.New()
 	e.HideBanner = true
 	e.GET("/api/health", func(c echo.Context) error {
-		marshal, err := json.Marshal(struct {
+		var marshal []byte
+		marshal, err = json.Marshal(struct {
 			Status int `json:"status"`
 		}{
 			Status: http.StatusOK,
@@ -187,10 +188,9 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 			log.Printf("failed to read acknowledgement: %s", string(msg))
 			close(errorChannel)
 			return
-		} else {
-			log.Println("ACKNOWLEDGED")
-			log.Printf("connected to  %s://%s", u.Scheme, u.Host)
 		}
+		log.Println("ACKNOWLEDGED")
+		log.Printf("connected to  %s://%s", u.Scheme, u.Host)
 
 		for {
 			var msgType int
