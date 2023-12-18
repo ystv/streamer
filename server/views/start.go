@@ -149,7 +149,7 @@ func (v *Views) StartFunc(c echo.Context) error {
 			defer wg.Done()
 			forwarderTransporter := transporter
 			forwarderTransporter.Payload = fStart
-			response, err := v.wsHelper("recorder", forwarderTransporter)
+			response, err := v.wsHelper("forwarder", forwarderTransporter)
 			if err != nil {
 				log.Println(err, "Error sending to Forwarder for start")
 				errors = true
