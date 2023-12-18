@@ -1,4 +1,4 @@
-module github.com/ystv/streamer/orwarder
+module github.com/ystv/streamer/forwarder
 
 go 1.21
 
