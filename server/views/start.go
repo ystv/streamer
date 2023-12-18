@@ -127,7 +127,7 @@ func (v *Views) StartFunc(c echo.Context) error {
 				recording = true
 				recorderTransporter := transporter
 				recorderTransporter.Payload = rStart
-				response, err := v.wsHelper("recorder", recorderTransporter)
+				response, err := v.wsHelper(server.Recorder, recorderTransporter)
 				if err != nil {
 					log.Println(err, "Error sending to Recorder for start")
 					errors = true
@@ -149,7 +149,7 @@ func (v *Views) StartFunc(c echo.Context) error {
 			defer wg.Done()
 			forwarderTransporter := transporter
 			forwarderTransporter.Payload = fStart
-			response, err := v.wsHelper("forwarder", forwarderTransporter)
+			response, err := v.wsHelper(server.Forwarder, forwarderTransporter)
 			if err != nil {
 				log.Println(err, "Error sending to Forwarder for start")
 				errors = true
