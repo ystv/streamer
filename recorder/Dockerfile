@@ -3,6 +3,7 @@ FROM golang:1.21.1-alpine3.18 AS build
 LABEL site="ystv-streamer-recorder"
 
 VOLUME /logs
+VOLUME /tank/pending_edits/
 
 WORKDIR /src/
 
