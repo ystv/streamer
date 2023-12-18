@@ -2,33 +2,24 @@ package views
 
 import (
 	"fmt"
-	"github.com/labstack/echo/v4"
-	"github.com/ystv/streamer/server/helper"
-	"github.com/ystv/streamer/server/helper/tx"
-	"github.com/ystv/streamer/server/storage"
-	"golang.org/x/crypto/ssh"
+	"log"
 	"math"
 	"net/http"
 	"sort"
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/labstack/echo/v4"
+
+	"github.com/ystv/streamer/server/helper/transporter/action"
+	"github.com/ystv/streamer/server/helper/transporter/server"
+	"github.com/ystv/streamer/server/helper/tx"
+	"github.com/ystv/streamer/server/storage"
 )
 
 // StartUniqueFunc is the core of the program, where it takes the values set by the user in the webpage and processes the data and sends it to the recorder and the forwarder with a specified unique key
 func (v *Views) StartUniqueFunc(c echo.Context) error {
-	/*if !authenticate(w, r) {
-		err := godotenv.Load()
-		if err != nil {
-			fmt.Printf("error loading .env file: %s", err)
-		}
-
-		jwtAuthentication := os.Getenv("JWT_AUTHENTICATION")
-
-		http.Redirect(w, r, jwtAuthentication, http.StatusTemporaryRedirect)
-		return
-	}*/
-	//errors := false
 	if c.Request().Method == "POST" {
 		if v.conf.Verbose {
 			fmt.Println("StartUnique POST called")
@@ -39,20 +30,43 @@ func (v *Views) StartUniqueFunc(c echo.Context) error {
 			return fmt.Errorf("unique key invalid")
 		}
 
+		stored, err := v.store.FindStored(unique)
+		if err != nil {
+			return fmt.Errorf("unable to find unique code for startUnique: %s, %w", unique, err)
+		}
+
+		if stored == nil {
+			return fmt.Errorf("failed to get stored as data is empty")
+		}
+
+		transporter := Transporter{
+			Action: action.Start,
+			Unique: unique,
+		}
+
+		fStart := ForwarderStart{
+			StreamIn: c.FormValue("stream_selector"),
+		}
+
+		rStart := RecorderStart{
+			StreamIn: c.FormValue("stream_selector"),
+			PathOut:  c.FormValue("save_path"),
+		}
+
 		recording := false
 		websiteStream := false
-		var streams uint64
-		var forwarderStart string
+
 		if c.FormValue("website_stream") == "on" {
 			websiteStream = true
 			if v.websiteCheck(c.FormValue("website_stream_endpoint")) {
-				forwarderStart = "./forwarder_start " + c.FormValue("stream_selector") + " " + c.FormValue("website_stream_endpoint") + " "
+				fStart.WebsiteOut = c.FormValue("website_stream_endpoint")
 			} else {
-				return fmt.Errorf("eebsite key check has failed")
+				return fmt.Errorf("website key check has failed")
 			}
-		} else {
-			forwarderStart = "./forwarder_start \"" + c.FormValue("stream_selector") + "\" no "
 		}
+
+		// This section finds the number of the stream from the form
+		// You can miss values out and some rearranging will have to be done
 		largest := 0
 		var numbers []int
 		for s := range c.Request().PostForm {
@@ -65,27 +79,17 @@ func (v *Views) StartUniqueFunc(c echo.Context) error {
 		}
 		sort.Ints(numbers)
 
-		stored, err := v.store.FindStored(unique)
-		if err != nil {
-			return err
-		}
-
-		if stored == nil {
-			return fmt.Errorf("failed to get stored as data is empty")
-		}
-
-		forwarderStart += unique + " "
+		var streams []string
 		for _, index := range numbers {
-			server := c.FormValue("stream_server_" + strconv.Itoa(index))
-			if server[len(server)-1] != '/' {
-				server += "/"
+			streamServer := c.FormValue("stream_server_" + strconv.Itoa(index))
+			if streamServer[len(streamServer)-1] != '/' {
+				streamServer += "/"
 			}
-			forwarderStart += "\"" + server + "\" \"" + c.FormValue("stream_key_"+strconv.Itoa(index)) + "\" "
-			streams++
+			streamServer += c.FormValue("stream_key_" + strconv.Itoa(index))
+			streams = append(streams, streamServer)
 		}
-		forwarderStart += "| bash"
 
-		recorderStart := "./recorder_start \"" + c.FormValue("stream_selector") + "\" \"" + c.FormValue("save_path") + "\" " + unique + " | bash"
+		fStart.Streams = streams
 
 		var wg sync.WaitGroup
 		wg.Add(2)
@@ -94,52 +98,47 @@ func (v *Views) StartUniqueFunc(c echo.Context) error {
 			defer wg.Done()
 			if c.FormValue("record") == "on" {
 				recording = true
-				var client *ssh.Client
-				var session *ssh.Session
-				//if recorderAuth == "PEM" {
-				//	client, session, err = connectToHostPEM(recorder, recorderUsername, recorderPrivateKey, recorderPassphrase)
-				//} else if recorderAuth == "PASS" {
-				client, session, err = helper.ConnectToHostPassword(v.conf.Recorder, v.conf.RecorderUsername, v.conf.RecorderPassword, v.conf.Verbose)
-				//}
+				recorderTransporter := transporter
+				recorderTransporter.Payload = rStart
+
+				var response string
+				response, err = v.wsHelper(server.Recorder, recorderTransporter)
 				if err != nil {
-					fmt.Println(err, "Error connecting to Recorder for start")
+					log.Println(err, "Error sending to Recorder for start")
+					errors = true
 					return
 				}
-				_, err = session.CombinedOutput(recorderStart)
-				if err != nil {
-					fmt.Println(err, "Error executing on Recorder for start")
+				if strings.Contains(response, "ERROR") {
+					log.Printf("Error sending to Recorder for start: %s", response)
+					errors = true
 					return
 				}
-				err = client.Close()
-				if err != nil {
-					fmt.Println(err)
+				if !strings.Contains(response, "OKAY") {
+					log.Printf("invalid response from Recorder for start: %s", response)
+					errors = true
 					return
 				}
 			}
 		}()
 		go func() {
 			defer wg.Done()
-			var client *ssh.Client
-			var session *ssh.Session
-			//if forwarderAuth == "PEM" {
-			//	client, session, err = connectToHostPEM(forwarder, forwarderUsername, forwarderPrivateKey, forwarderPassphrase)
-			//} else if forwarderAuth == "PASS" {
-			client, session, err = helper.ConnectToHostPassword(v.conf.Forwarder, v.conf.ForwarderUsername, v.conf.ForwarderPassword, v.conf.Verbose)
-			//}
+			forwarderTransporter := transporter
+			forwarderTransporter.Payload = fStart
+
+			var response string
+			response, err = v.wsHelper(server.Forwarder, forwarderTransporter)
 			if err != nil {
-				fmt.Println(err, "Error connecting to Forwarder for start")
+				log.Println(err, "Error sending to Forwarder for start")
 				errors = true
 				return
 			}
-			_, err = session.CombinedOutput(forwarderStart)
-			if err != nil {
-				fmt.Println(err, "Error executing on Forwarder for start")
+			if strings.Contains(response, "ERROR") {
+				log.Printf("Error sending to Forwarder for start: %s", response)
 				errors = true
 				return
 			}
-			err = client.Close()
-			if err != nil {
-				fmt.Println(err)
+			if !strings.Contains(response, "OKAY") {
+				log.Printf("invalid response from Forwarder for start: %s", response)
 				errors = true
 				return
 			}
@@ -149,24 +148,23 @@ func (v *Views) StartUniqueFunc(c echo.Context) error {
 		if !errors {
 			err = v.HandleTXLight(v.conf.TransmissionLight, tx.TransmissionOn)
 			if err != nil {
-				fmt.Println(err)
+				log.Println(err)
 			}
 
 			var s *storage.Stream
-
 			s, err = v.store.AddStream(&storage.Stream{
 				Stream:    unique,
 				Input:     c.FormValue("stream_selector"),
 				Recording: recording,
 				Website:   websiteStream,
-				Streams:   streams,
+				Streams:   uint64(len(streams)),
 			})
 			if err != nil {
 				return err
 			}
 
 			if s == nil {
-				return fmt.Errorf("failed to add stream as data is empty")
+				return fmt.Errorf("failed to add stream, data is empty")
 			}
 
 			return c.String(http.StatusOK, unique)
