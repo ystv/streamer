@@ -112,12 +112,12 @@ func (v *Views) StartFunc(c echo.Context) error {
 
 		var streams []string
 		for _, index := range numbers {
-			server := c.FormValue("stream_server_" + strconv.Itoa(index))
-			if server[len(server)-1] != '/' {
-				server += "/"
+			streamServer := c.FormValue("stream_server_" + strconv.Itoa(index))
+			if streamServer[len(streamServer)-1] != '/' {
+				streamServer += "/"
 			}
-			server += c.FormValue("stream_key_" + strconv.Itoa(index))
-			streams = append(streams, server)
+			streamServer += c.FormValue("stream_key_" + strconv.Itoa(index))
+			streams = append(streams, streamServer)
 		}
 
 		fStart.Streams = streams
