@@ -10,6 +10,6 @@ var (
 	Error        WSMessage = "ERROR"
 )
 
-func (r WSMessage) String() string {
-	return string(r)
+func (w WSMessage) String() string {
+	return string(w)
 }
