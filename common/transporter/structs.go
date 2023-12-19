@@ -1,6 +1,9 @@
 package transporter
 
-import "github.com/ystv/streamer/common/transporter/action"
+import (
+	"github.com/ystv/streamer/common/transporter/action"
+	"github.com/ystv/streamer/common/wsMessages"
+)
 
 type (
 	Transporter struct {
@@ -28,6 +31,11 @@ type (
 	RecorderStart struct {
 		StreamIn string `json:"streamIn"`
 		PathOut  string `json:"pathOut"`
+	}
+
+	ResponseTransporter struct {
+		Status  wsMessages.WSMessage `json:"status"`
+		Payload interface{}          `json:"payload"`
 	}
 )
 
