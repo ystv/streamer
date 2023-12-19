@@ -70,18 +70,10 @@ type (
 	}
 )
 
-	ForwarderStatusResponse struct {
-		Website string            `json:"website"`
-		Streams map[uint64]string `json:"streams"`
-	}
-
-	RecorderStart struct {
-		StreamIn string `json:"streamIn"`
-		PathOut  string `json:"pathOut"`
-	}
+const (
+	charset                   = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	internalChannelNameAppend = "Internal"
 )
-
-const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
 var seededRand = rand.New(rand.NewSource(time.Now().UnixNano()))
 
