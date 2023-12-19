@@ -4,8 +4,8 @@ type WSMessage string
 
 var (
 	Acknowledged WSMessage = "ACKNOWLEDGED"
-	Ping         WSMessage = "ping"
-	Pong         WSMessage = "pong"
+	Ping         WSMessage = "PING"
+	Pong         WSMessage = "PONG"
 	Okay         WSMessage = "OKAY"
 	Error        WSMessage = "ERROR"
 )
