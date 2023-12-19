@@ -7,7 +7,6 @@ import (
 
 	"github.com/patrickmn/go-cache"
 
-	"github.com/ystv/streamer/server/helper/transporter/action"
 	"github.com/ystv/streamer/server/store"
 	"github.com/ystv/streamer/server/templates"
 )
@@ -64,23 +63,7 @@ type (
 		XMLName xml.Name `xml:"stream"`
 		Name    string   `xml:"name"`
 	}
-
-	Transporter struct {
-		Action  action.Action `json:"action"`
-		Unique  string        `json:"unique"`
-		Payload interface{}   `json:"payload"`
-	}
-
-	ForwarderStart struct {
-		StreamIn   string   `json:"streamIn"`
-		WebsiteOut string   `json:"websiteOut"`
-		Streams    []string `json:"streams"`
-	}
-
-	ForwarderStatus struct {
-		Website bool `json:"website"`
-		Streams int  `json:"streams"`
-	}
+)
 
 	ForwarderStatusResponse struct {
 		Website string            `json:"website"`
