@@ -32,4 +32,4 @@ type (
 )
 
 // ResponseSeparator is a random string separator between the response status and body
-var ResponseSeparator = "+~+"
+const ResponseSeparator = "+~+"
