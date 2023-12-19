@@ -38,27 +38,32 @@ type (
 		template *templates.Templater
 	}
 
+	// RTMP struct is the parent rtmp xml body
 	RTMP struct {
 		XMLName xml.Name `xml:"rtmp"`
 		Server  Server   `xml:"server"`
 	}
 
+	// Server holds all the applications that will accept streams
 	Server struct {
 		XMLName      xml.Name      `xml:"server"`
 		Applications []Application `xml:"application"`
 	}
 
+	// Application is the endpoint section that streams can go to
 	Application struct {
 		XMLName xml.Name `xml:"application"`
 		Name    string   `xml:"name"`
 		Live    Live     `xml:"live"`
 	}
 
+	// Live holds all the stream elements
 	Live struct {
 		XMLName xml.Name `xml:"live"`
 		Streams []Stream `xml:"stream"`
 	}
 
+	// Stream is the individual stream element
 	Stream struct {
 		XMLName xml.Name `xml:"stream"`
 		Name    string   `xml:"name"`
