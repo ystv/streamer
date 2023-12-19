@@ -30,3 +30,6 @@ type (
 		PathOut  string `json:"pathOut"`
 	}
 )
+
+// ResponseSeparator is a random string separator between the response status and body
+var ResponseSeparator = "+~+"
