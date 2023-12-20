@@ -41,7 +41,7 @@ func (v *Views) Websocket(c echo.Context) error {
 		return nil
 	}
 
-	err = v.cache.Add(name+"Internal", internalChannel, cache.NoExpiration)
+	err = v.cache.Add(name+internalChannelNameAppend, internalChannel, cache.NoExpiration)
 	if err != nil {
 		c.Logger().Error(err)
 		_ = ws.Close()
@@ -74,7 +74,7 @@ func (v *Views) Websocket(c echo.Context) error {
 				close(internalChannel)
 				close(clientChannel)
 				v.cache.Delete(name)
-				v.cache.Delete(name + "Internal")
+				v.cache.Delete(name + internalChannelNameAppend)
 				loop = false
 			}
 
@@ -85,7 +85,7 @@ func (v *Views) Websocket(c echo.Context) error {
 				close(internalChannel)
 				close(clientChannel)
 				v.cache.Delete(name)
-				v.cache.Delete(name + "Internal")
+				v.cache.Delete(name + internalChannelNameAppend)
 				loop = false
 			}
 			internalChannel <- msg
@@ -96,7 +96,7 @@ func (v *Views) Websocket(c echo.Context) error {
 				log.Printf("failed to write ping for %s: %+v", name, err)
 				close(clientChannel)
 				v.cache.Delete(name)
-				v.cache.Delete(name + "Internal")
+				v.cache.Delete(name + internalChannelNameAppend)
 				loop = false
 			}
 			msgType, msg, err := ws.ReadMessage()
@@ -104,7 +104,7 @@ func (v *Views) Websocket(c echo.Context) error {
 				log.Printf("failed to read pong for %s: %+v", name, err)
 				close(clientChannel)
 				v.cache.Delete(name)
-				v.cache.Delete(name + "Internal")
+				v.cache.Delete(name + internalChannelNameAppend)
 				loop = false
 			}
 		}
