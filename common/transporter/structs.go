@@ -38,6 +38,3 @@ type (
 		Payload interface{}          `json:"payload"`
 	}
 )
-
-// ResponseSeparator is a random string separator between the response status and body
-const ResponseSeparator = "+~+"
