@@ -31,10 +31,11 @@ type (
 	}
 
 	Config struct {
-		StreamServer          string `envconfig:"STREAM_SERVER"`
-		RecordingLocation     string `envconfig:"RECORDING_LOCATION"`
-		StreamerWebAddress    string `envconfig:"STREAMER_WEB_ADDRESS"`
-		StreamerWebsocketPath string `envconfig:"STREAMER_WEBSOCKET_PATH"`
+		StreamServer            string `envconfig:"STREAM_SERVER"`
+		RecordingLocation       string `envconfig:"RECORDING_LOCATION"`
+		StreamerWebAddress      string `envconfig:"STREAMER_WEB_ADDRESS"`
+		StreamerWebsocketPath   string `envconfig:"STREAMER_WEBSOCKET_PATH"`
+		StreamerWebsocketScheme string `envconfig:"STREAMER_WEBSOCKET_SCHEME"`
 	}
 
 	Views struct {
@@ -111,7 +112,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 	messageOut := make(chan []byte)
 	errorChannel := make(chan error, 1)
 	done := make(chan struct{})
-	u := url.URL{Scheme: "wss", Host: config.StreamerWebAddress, Path: "/" + config.StreamerWebsocketPath}
+	u := url.URL{Scheme: config.StreamerWebsocketScheme, Host: config.StreamerWebAddress, Path: "/" + config.StreamerWebsocketPath}
 	log.Printf("connecting to %s://%s", u.Scheme, u.Host)
 	c, resp, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
