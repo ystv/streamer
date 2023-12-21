@@ -40,6 +40,8 @@ type (
 	}
 )
 
+const finishChannelNameAppend = "Finish"
+
 func main() {
 	_ = godotenv.Load(".env")
 

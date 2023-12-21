@@ -59,7 +59,7 @@ func (v *Views) start(transporter Transporter) error {
 
 	finish := make(chan bool)
 
-	err := v.cache.Add(transporter.Unique+"Finish", finish, cache.NoExpiration)
+	err := v.cache.Add(fmt.Sprintf("%s_%s", transporter.Unique, finishChannelNameAppend), finish, cache.NoExpiration)
 	if err != nil {
 		return err
 	}
