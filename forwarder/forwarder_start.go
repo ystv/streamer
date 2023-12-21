@@ -100,6 +100,7 @@ func (v *Views) start(transporter Transporter) error {
 					cmd, ok := v.cache.Get(transporter.Unique + "_" + strconv.Itoa(k))
 					if !ok {
 						log.Println("unable to get cmd from cache")
+						break
 					}
 					c1 := cmd.(*exec.Cmd)
 					err = c1.Process.Kill()
