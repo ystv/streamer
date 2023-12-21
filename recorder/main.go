@@ -171,12 +171,12 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 			return
 		}
 
-		if string(msg) != "ACKNOWLEDGED" {
+		if string(msg) != specialWSMessage.Acknowledged.String() {
 			log.Printf("failed to read acknowledgement: %s", string(msg))
 			close(errorChannel)
 			return
 		}
-		log.Println("ACKNOWLEDGED")
+		log.Println(specialWSMessage.Acknowledged)
 		log.Printf("connected to  %s://%s", u.Scheme, u.Host)
 
 		for {
