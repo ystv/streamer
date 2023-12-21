@@ -2,11 +2,15 @@ package views
 
 import (
 	"fmt"
+	"log"
+	"time"
+
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
 	"github.com/patrickmn/go-cache"
-	"log"
-	"time"
+
+	"github.com/ystv/streamer/common/transporter/server"
+	specialWSMessage "github.com/ystv/streamer/common/wsMessages/special"
 )
 
 var wsUpgrade = websocket.Upgrader{}
@@ -29,6 +33,12 @@ func (v *Views) Websocket(c echo.Context) error {
 
 	name := string(msg)
 
+	if name != server.Forwarder.String() && name != server.Recorder.String() {
+		log.Printf("failed connecting %s, invalid name", name)
+		_ = ws.Close()
+		return nil
+	}
+
 	log.Println("connecting", name)
 
 	clientChannel := make(chan []byte)
@@ -48,7 +58,7 @@ func (v *Views) Websocket(c echo.Context) error {
 		return nil
 	}
 
-	err = ws.WriteMessage(websocket.TextMessage, []byte("ACKNOWLEDGED"))
+	err = ws.WriteMessage(websocket.TextMessage, []byte(specialWSMessage.Acknowledged))
 	if err != nil {
 		c.Logger().Error(err)
 		_ = ws.Close()
@@ -91,7 +101,7 @@ func (v *Views) Websocket(c echo.Context) error {
 			internalChannel <- msg
 			log.Printf("Message received from \"%s\": %s", name, msg)
 		case <-ticker.C:
-			err = ws.WriteMessage(websocket.TextMessage, []byte("ping"))
+			err = ws.WriteMessage(websocket.TextMessage, []byte(specialWSMessage.Ping))
 			if err != nil {
 				log.Printf("failed to write ping for %s: %+v", name, err)
 				close(clientChannel)
@@ -99,8 +109,9 @@ func (v *Views) Websocket(c echo.Context) error {
 				v.cache.Delete(name + internalChannelNameAppend)
 				loop = false
 			}
-			msgType, msg, err := ws.ReadMessage()
-			if err != nil || msgType != websocket.TextMessage || string(msg) != "pong" {
+			var msgType int
+			msgType, msg, err = ws.ReadMessage()
+			if err != nil || msgType != websocket.TextMessage || string(msg) != specialWSMessage.Pong.String() {
 				log.Printf("failed to read pong for %s: %+v", name, err)
 				close(clientChannel)
 				v.cache.Delete(name)
