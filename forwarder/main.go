@@ -4,43 +4,26 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
+	"net/http"
+	"net/url"
+	"os"
+	"os/signal"
+	"sync/atomic"
+	"time"
+
 	"github.com/gorilla/websocket"
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/labstack/echo/v4"
 	"github.com/mitchellh/mapstructure"
 	"github.com/patrickmn/go-cache"
-	"log"
-	"net/http"
-	"net/url"
-	"os"
-	"os/signal"
-	"time"
+
+	commonTransporter "github.com/ystv/streamer/common/transporter"
+	"github.com/ystv/streamer/common/wsMessages"
 )
 
 type (
-	Transporter struct {
-		Action  string      `json:"action"`
-		Unique  string      `json:"unique"`
-		Payload interface{} `json:"payload"`
-	}
-
-	ForwarderStart struct {
-		StreamIn   string   `json:"streamIn"`
-		WebsiteOut string   `json:"websiteOut"`
-		Streams    []string `json:"streams"`
-	}
-
-	ForwarderStatus struct {
-		Website bool `json:"website"`
-		Streams int  `json:"streams"`
-	}
-
-	ForwarderStatusResponse struct {
-		Website string            `json:"website"`
-		Streams map[uint64]string `json:"streams"`
-	}
-
 	Config struct {
 		StreamServer          string `envconfig:"STREAM_SERVER"`
 		StreamerWebAddress    string `envconfig:"STREAMER_WEB_ADDRESS"`
