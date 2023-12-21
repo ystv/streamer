@@ -6,10 +6,11 @@ require (
 	github.com/gorilla/websocket v1.5.1
 	github.com/joho/godotenv v1.5.1
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/labstack/echo/v4 v4.11.3
-	github.com/labstack/gommon v0.4.1
+	github.com/labstack/echo/v4 v4.11.4
+	github.com/labstack/gommon v0.4.2
 	github.com/patrickmn/go-cache v2.1.0+incompatible
-	golang.org/x/crypto v0.16.0
+	github.com/ystv/streamer/common v0.0.0-20231220005158-110620c6bc17
+	golang.org/x/crypto v0.17.0
 	google.golang.org/protobuf v1.31.0
 )
 
