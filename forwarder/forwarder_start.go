@@ -14,7 +14,7 @@ func (v *Views) start(transporter Transporter) error {
 	if len(transporter.Payload.(ForwarderStart).WebsiteOut) > 0 {
 		finish := make(chan bool)
 
-		err := v.cache.Add(transporter.Unique+"_0Finish", finish, cache.NoExpiration)
+		err := v.cache.Add(fmt.Sprintf("%s_0_%s", transporter.Unique, finishChannelNameAppend), finish, cache.NoExpiration)
 		if err != nil {
 			return err
 		}
@@ -65,7 +65,7 @@ func (v *Views) start(transporter Transporter) error {
 	for i := 0; i < len(transporter.Payload.(ForwarderStart).Streams); i++ {
 		finish := make(chan bool)
 
-		err := v.cache.Add(transporter.Unique+"_"+strconv.Itoa(i+1)+"Finish", finish, cache.NoExpiration)
+		err := v.cache.Add(fmt.Sprintf("%s_%d_%s", transporter.Unique, i+1, finishChannelNameAppend), finish, cache.NoExpiration)
 		if err != nil {
 			return err
 		}
