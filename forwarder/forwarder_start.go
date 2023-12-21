@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/patrickmn/go-cache"
+	"fmt"
 	"log"
 	"os/exec"
 	"strconv"
@@ -21,12 +21,12 @@ func (v *Views) start(transporter Transporter) error {
 
 		go func() {
 			for {
-				v.cache.Delete(transporter.Unique + "_0")
+				v.cache.Delete(fmt.Sprintf("%s_0", transporter.Unique))
 				switch {
 				case <-finish:
 					return
 				default:
-					c := exec.Command("ffmpeg", "-i", "\""+streamIn+"\"", "-c", "copy", "-f", "flv", "\""+v.Config.StreamServer+"live/"+transporter.Payload.(ForwarderStart).WebsiteOut+"\"", ">>", "\"/logs/"+transporter.Unique+"_0.txt\"", "2>&1")
+					c := exec.Command("ffmpeg", "-i", fmt.Sprintf("\"%s\"", streamIn), "-c", "copy", "-f", "flv", fmt.Sprintf("\"%slive/%s\"", v.Config.StreamServer, transporter.Payload.(commonTransporter.ForwarderStart).WebsiteOut), ">>", fmt.Sprintf("\"/logs/%s_0.txt\"", transporter.Unique), "2>&1")
 					err = v.cache.Add(transporter.Unique+"0", c, cache.NoExpiration)
 					if err != nil {
 						log.Println(err)
@@ -44,7 +44,7 @@ func (v *Views) start(transporter Transporter) error {
 			for {
 				switch {
 				case <-finish:
-					cmd, ok := v.cache.Get(transporter.Unique + "_0")
+					cmd, ok := v.cache.Get(fmt.Sprintf("%s_0", transporter.Unique))
 					if !ok {
 						log.Println("unable to get cmd from cache")
 					}
@@ -53,7 +53,7 @@ func (v *Views) start(transporter Transporter) error {
 					if err != nil {
 						log.Println(err)
 					}
-					v.cache.Delete(transporter.Unique + "_0")
+					v.cache.Delete(fmt.Sprintf("%s_0", transporter.Unique))
 					return
 				default:
 					time.Sleep(1 * time.Second) // This is so it doesn't spam constantly and take the entire CPU up
@@ -74,13 +74,13 @@ func (v *Views) start(transporter Transporter) error {
 		go func() {
 			j := k
 			for {
-				v.cache.Delete(transporter.Unique + "_" + strconv.Itoa(j+1))
+				v.cache.Delete(fmt.Sprintf("%s_%d", transporter.Unique, j+1))
 				switch {
 				case <-finish:
 					return
 				default:
-					c := exec.Command("ffmpeg", "-i", "\""+streamIn+"\"", "-c", "copy", "-f", "flv", "\""+transporter.Payload.(ForwarderStart).Streams[j]+"\"", ">>", "\"/logs/"+transporter.Unique+"_"+strconv.Itoa(j+1)+".txt\"", "2>&1")
-					err = v.cache.Add(transporter.Unique+"_"+strconv.Itoa(j+1), c, cache.NoExpiration)
+					c := exec.Command("ffmpeg", "-i", fmt.Sprintf("\"%s\"", streamIn), "-c", "copy", "-f", "flv", fmt.Sprintf("\"%s\"", transporter.Payload.(commonTransporter.ForwarderStart).Streams[j]), ">>", fmt.Sprintf("\"/logs/%s_%d.txt\"", transporter.Unique, j+1), "2>&1")
+					err = v.cache.Add(fmt.Sprintf("%s_%d", transporter.Unique, j+1), c, cache.NoExpiration)
 					if err != nil {
 						log.Println(err)
 						return
@@ -97,7 +97,7 @@ func (v *Views) start(transporter Transporter) error {
 			for {
 				switch {
 				case <-finish:
-					cmd, ok := v.cache.Get(transporter.Unique + "_" + strconv.Itoa(k))
+					cmd, ok := v.cache.Get(fmt.Sprintf("%s_%d", transporter.Unique, k))
 					if !ok {
 						log.Println("unable to get cmd from cache")
 						break
@@ -107,7 +107,7 @@ func (v *Views) start(transporter Transporter) error {
 					if err != nil {
 						log.Println(err)
 					}
-					v.cache.Delete(transporter.Unique + "_" + strconv.Itoa(k))
+					v.cache.Delete(fmt.Sprintf("%s_%d", transporter.Unique, k))
 					return
 				default:
 					time.Sleep(1 * time.Second) // This is so it doesn't spam constantly and take the entire CPU up
