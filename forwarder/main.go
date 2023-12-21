@@ -20,6 +20,7 @@ import (
 	"github.com/patrickmn/go-cache"
 
 	commonTransporter "github.com/ystv/streamer/common/transporter"
+	"github.com/ystv/streamer/common/transporter/server"
 	"github.com/ystv/streamer/common/wsMessages"
 )
 
@@ -154,7 +155,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 				close(errorChannel)
 			}
 		}()
-		err = c.WriteMessage(websocket.TextMessage, []byte("forwarder"))
+		err = c.WriteMessage(websocket.TextMessage, []byte(server.Forwarder))
 		if err != nil {
 			log.Printf("failed to write name: %+v", err)
 			close(errorChannel)

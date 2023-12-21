@@ -156,7 +156,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 				close(errorChannel)
 			}
 		}()
-		err = c.WriteMessage(websocket.TextMessage, []byte("recorder"))
+		err = c.WriteMessage(websocket.TextMessage, []byte(server.Recorder))
 		if err != nil {
 			log.Printf("failed to write name: %+v", err)
 			close(errorChannel)
@@ -188,8 +188,9 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 				close(errorChannel)
 				return
 			}
-			if msgType == websocket.TextMessage && string(message) == "ping" {
-				err = c.WriteMessage(websocket.TextMessage, []byte("pong"))
+			if msgType == websocket.TextMessage && string(message) == specialWSMessage.Ping.String() {
+				pinging.Store(true)
+				err = c.WriteMessage(websocket.TextMessage, []byte(specialWSMessage.Pong))
 				if err != nil {
 					log.Printf("failed to write pong: %+v", err)
 					close(errorChannel)
