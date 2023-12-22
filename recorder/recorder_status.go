@@ -10,7 +10,7 @@ import (
 )
 
 func (v *Views) status(transporter commonTransporter.Transporter) (string, error) {
-	c := exec.Command("tail", "-n", "26", fmt.Sprintf("\"logs/%s.txt\"", transporter.Unique))
+	c := exec.Command("tail", "-n", "19", fmt.Sprintf("\"logs/%s.txt\"", transporter.Unique))
 
 	var stdout bytes.Buffer
 	c.Stdout = &stdout
