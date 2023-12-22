@@ -221,20 +221,16 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 
 			err = json.Unmarshal(m, &t)
 			if err != nil {
-				log.Printf("failed to unmarshal data: %+v", err)
-				err = c.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("ERROR: failed to unmarshal data: %+v", err)))
-				if err != nil {
-					log.Printf("failed to write error response : %+v", err)
+				kill := v.errorResponse(fmt.Errorf("failed to unmarshal data: %w", err), c)
+				if kill {
 					return
 				}
 				continue
 			}
 
 			if len(t.Unique) != 10 {
-				log.Printf("failed to get unique, length is not equal to 10: %d", len(t.Unique))
-				err = c.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("ERROR: failed to get unique, length is not equal to 10: %d", len(t.Unique))))
-				if err != nil {
-					log.Printf("failed to write error response : %+v", err)
+				kill := v.errorResponse(fmt.Errorf("failed to get unique, length is not equal to 10: %d", len(t.Unique)), c)
+				if kill {
 					return
 				}
 				continue
@@ -247,58 +243,52 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 
 				err = mapstructure.Decode(t.Payload, &t1)
 				if err != nil {
-					log.Printf("failed to decode: %+v", err)
-					err = c.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("ERROR: failed to decode: %+v", err)))
-					if err != nil {
-						log.Printf("failed to write error response : %+v", err)
+					kill := v.errorResponse(fmt.Errorf("failed to decode: %w", err), c)
+					if kill {
+						return
 					}
-					return
+					continue
 				}
 
 				if len(t1.StreamIn) == 0 || len(t1.PathOut) == 0 {
-					err = c.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("ERROR: failed to get payload for start: %+v", err)))
-					if err != nil {
-						log.Printf("failed to write error response : %+v", err)
+					kill := v.errorResponse(fmt.Errorf("failed to get payload for start: %+v", t1), c)
+					if kill {
+						return
 					}
-					return
+					continue
 				}
 
 				t.Payload = t1
 
 				err = v.start(t)
 				if err != nil {
-					log.Printf("failed to start recorder: %+v", err)
-					err = c.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("ERROR: failed to start recorder: %+v", err)))
-					if err != nil {
-						log.Printf("failed to write error response : %+v", err)
+					kill := v.errorResponse(fmt.Errorf("failed to start recorder: %w", err), c)
+					if kill {
+						return
 					}
-					return
+					continue
 				}
 			case "status":
 				out, err = v.status(t)
 				if err != nil {
-					log.Printf("failed to get status recorder: %+v", err)
-					err = c.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("ERROR: failed to get status recorder: %+v", err)))
-					if err != nil {
-						log.Printf("failed to write error response : %+v", err)
+					kill := v.errorResponse(fmt.Errorf("failed to get status recorder: %w", err), c)
+					if kill {
+						return
 					}
-					return
+					continue
 				}
 			case "stop":
 				err = v.stop(t)
 				if err != nil {
-					log.Printf("failed to stop recorder: %+v", err)
-					err = c.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("ERROR: failed to stop recorder: %+v", err)))
-					if err != nil {
-						log.Printf("failed to write error response : %+v", err)
+					kill := v.errorResponse(fmt.Errorf("failed to stop recorder: %w", err), c)
+					if kill {
+						return
 					}
-					return
+					continue
 				}
 			default:
-				log.Printf("failed to get action: %s", t.Action)
-				err = c.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("failed to get action: %s", t.Action)))
-				if err != nil {
-					log.Printf("failed to write error response : %+v", err)
+				kill := v.errorResponse(fmt.Errorf("failed to get action: %s", t.Action), c)
+				if kill {
 					return
 				}
 				continue
