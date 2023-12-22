@@ -315,19 +315,22 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 				continue
 			}
 
-			response := "OKAY"
+			response := commonTransporter.ResponseTransporter{Status: wsMessages.Okay}
 
 			if len(out.Streams) > 0 {
-				var b []byte
-				b, err = json.Marshal(out)
-				if err != nil {
-					log.Printf("failed marshaling out: %+v", err)
-					return
-				}
-				response += "±~±" + string(b) // Some arbitrary connector string that is unlikely to be used ever by anything else
+				response.Payload = out
 			}
 
-			err = c.WriteMessage(websocket.TextMessage, []byte(response))
+			var resBytes []byte
+			resBytes, err = json.Marshal(response)
+			if err != nil {
+				log.Printf("failed to marshal response: %+v", err)
+			}
+
+			for pinging.Load() {
+				time.Sleep(10 * time.Millisecond)
+			}
+			err = c.WriteMessage(websocket.TextMessage, resBytes)
 			if err != nil {
 				log.Printf("failed to write okay response : %+v", err)
 				return
