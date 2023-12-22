@@ -7,6 +7,9 @@ import (
 	"os/exec"
 	"strings"
 	"time"
+
+	"github.com/patrickmn/go-cache"
+
 	commonTransporter "github.com/ystv/streamer/common/transporter"
 )
 
