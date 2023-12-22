@@ -2,13 +2,15 @@ package views
 
 import (
 	"fmt"
+	commonTransporter "github.com/ystv/streamer/common/transporter"
+	"github.com/ystv/streamer/common/transporter/action"
+	"github.com/ystv/streamer/common/transporter/server"
+	"github.com/ystv/streamer/common/wsMessages"
+	"log"
 	"net/http"
 	"sync"
 
 	"github.com/labstack/echo/v4"
-	"golang.org/x/crypto/ssh"
-
-	"github.com/ystv/streamer/server/helper"
 	"github.com/ystv/streamer/server/helper/tx"
 )
 
@@ -31,13 +33,23 @@ func (v *Views) StopFunc(c echo.Context) error {
 			fmt.Println("Stop POST called")
 		}
 
-		stream, err := v.store.FindStream(c.FormValue("unique"))
+		unique := c.FormValue("unique_code")
+		if len(unique) != 10 {
+			return fmt.Errorf("unique key invalid")
+		}
+
+		stream, err := v.store.FindStream(unique)
 		if err != nil {
 			return err
 		}
 
 		if stream == nil {
 			return fmt.Errorf("no data in stream stop")
+		}
+
+		transporter := commonTransporter.Transporter{
+			Action: action.Stop,
+			Unique: unique,
 		}
 
 		var wg sync.WaitGroup
@@ -55,59 +67,96 @@ func (v *Views) StopFunc(c echo.Context) error {
 			wg.Add(2)
 			go func() {
 				defer wg.Done()
-				var client *ssh.Client
-				var session *ssh.Session
+				//var client *ssh.Client
+				//var session *ssh.Session
 				//if recorderAuth == "PEM" {
 				//	client, session, err = connectToHostPEM(recorder, recorderUsername, recorderPrivateKey, recorderPassphrase)
 				//} else if recorderAuth == "PASS" {
-				client, session, err = helper.ConnectToHostPassword(v.conf.Recorder, v.conf.RecorderUsername, v.conf.RecorderPassword, v.conf.Verbose)
+				//client, session, err = helper.ConnectToHostPassword(v.conf.Recorder, v.conf.RecorderUsername, v.conf.RecorderPassword, v.conf.Verbose)
 				//}
+				//if err != nil {
+				//	fmt.Println("Error connecting to Recorder for stop")
+				//	fmt.Println(err)
+				//}
+				//_, err = session.CombinedOutput("./recorder_stop " + c.FormValue("unique") + " | bash")
+				//if err != nil {
+				//	fmt.Println("Error executing on Recorder for stop")
+				//	fmt.Println(err)
+				//}
+				//err = client.Close()
+				//if err != nil {
+				//	fmt.Println(err)
+				//}
+
+				recorderTransporter := transporter
+
+				var response commonTransporter.ResponseTransporter
+				response, err = v.wsHelper(server.Recorder, recorderTransporter)
 				if err != nil {
-					fmt.Println("Error connecting to Recorder for stop")
-					fmt.Println(err)
+					log.Println(err, "Error sending to Recorder for stop")
+					return
 				}
-				_, err = session.CombinedOutput("./recorder_stop " + c.FormValue("unique") + " | bash")
-				if err != nil {
-					fmt.Println("Error executing on Recorder for stop")
-					fmt.Println(err)
+				if response.Status == wsMessages.Error {
+					log.Printf("Error sending to Recorder for stop: %s", response)
+					return
 				}
-				err = client.Close()
-				if err != nil {
-					fmt.Println(err)
+				if response.Status != wsMessages.Okay {
+					log.Printf("invalid response from Recorder for stop: %s", response)
+					return
 				}
+
+				fmt.Println("Recorder stop success")
 			}()
 		} else {
 			wg.Add(1)
 		}
 		go func() {
 			defer wg.Done()
-			var client *ssh.Client
-			var session *ssh.Session
+			forwarderTransporter := transporter
+
+			var response commonTransporter.ResponseTransporter
+			response, err = v.wsHelper(server.Forwarder, forwarderTransporter)
+			if err != nil {
+				log.Println(err, "Error sending to Forwarder for stop")
+				return
+			}
+			if response.Status == wsMessages.Error {
+				log.Printf("Error sending to Forwarder for stop: %s", response)
+				return
+			}
+			if response.Status != wsMessages.Okay {
+				log.Printf("invalid response from Forwarder for stop: %s", response)
+				return
+			}
+
+			fmt.Println("Forwarder stop success")
+			//var client *ssh.Client
+			//var session *ssh.Session
 			//if forwarderAuth == "PEM" {
 			//	client, session, err = connectToHostPEM(forwarder, forwarderUsername, forwarderPrivateKey, forwarderPassphrase)
 			//} else if forwarderAuth == "PASS" {
-			client, session, err = helper.ConnectToHostPassword(v.conf.Forwarder, v.conf.ForwarderUsername, v.conf.ForwarderPassword, v.conf.Verbose)
+			//client, session, err = helper.ConnectToHostPassword(v.conf.Forwarder, v.conf.ForwarderUsername, v.conf.ForwarderPassword, v.conf.Verbose)
 			//}
-			if err != nil {
-				fmt.Println("Error connecting to Forwarder for stop")
-				fmt.Println(err)
-			}
-			_, err = session.CombinedOutput("./forwarder_stop " + c.FormValue("unique") + " | bash")
-			if err != nil {
-				fmt.Println("Error executing on Forwarder for stop")
-				fmt.Println(err)
-			}
-			err = client.Close()
-			if err != nil {
-				fmt.Println(err)
-			}
+			//if err != nil {
+			//	fmt.Println("Error connecting to Forwarder for stop")
+			//	fmt.Println(err)
+			//}
+			//_, err = session.CombinedOutput("./forwarder_stop " + c.FormValue("unique") + " | bash")
+			//if err != nil {
+			//	fmt.Println("Error executing on Forwarder for stop")
+			//	fmt.Println(err)
+			//}
+			//err = client.Close()
+			//if err != nil {
+			//	fmt.Println(err)
+			//}
 
 			fmt.Println("Forwarder stop success")
 		}()
 		wg.Wait()
 		fmt.Println("STOPPED!")
 
-		err = v.store.DeleteStream(c.FormValue("unique"))
+		err = v.store.DeleteStream(unique)
 		if err != nil {
 			return err
 		}
