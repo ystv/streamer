@@ -10,12 +10,10 @@ import (
 )
 
 func (v *Views) status(transporter commonTransporter.Transporter) (commonTransporter.ForwarderStatusResponse, error) {
-	var start int
+	start := 1
 
 	if transporter.Payload.(commonTransporter.ForwarderStatus).Website {
 		start = 0
-	} else {
-		start = 1
 	}
 
 	fStatusResponse := commonTransporter.ForwarderStatusResponse{}
