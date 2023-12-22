@@ -2,7 +2,10 @@ package views
 
 import (
 	"fmt"
+
 	"github.com/labstack/echo/v4"
+
+	"github.com/ystv/streamer/common/transporter/server"
 	"github.com/ystv/streamer/server/templates"
 )
 
@@ -23,8 +26,8 @@ func (v *Views) HomeFunc(c echo.Context) error {
 		fmt.Println("Home called")
 	}
 
-	_, rec := v.cache.Get("recorder")
-	_, fow := v.cache.Get("forwarder")
+	_, rec := v.cache.Get(server.Recorder.String())
+	_, fow := v.cache.Get(server.Forwarder.String())
 
 	var err error
 

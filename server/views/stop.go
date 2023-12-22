@@ -41,8 +41,8 @@ func (v *Views) StopFunc(c echo.Context) error {
 		}
 
 		var wg sync.WaitGroup
-		_, rec := v.cache.Get("recorder")
-		_, fow := v.cache.Get("forwarder")
+		_, rec := v.cache.Get(server.Recorder.String())
+		_, fow := v.cache.Get(server.Forwarder.String())
 
 		if (!rec && stream.Recording) && !fow {
 			err = fmt.Errorf("no recorder or forwarder available")
