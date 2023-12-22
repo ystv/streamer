@@ -2,12 +2,14 @@ package views
 
 import (
 	"fmt"
-	"github.com/labstack/echo/v4"
-	"github.com/ystv/streamer/server/helper"
-	"github.com/ystv/streamer/server/helper/tx"
-	"golang.org/x/crypto/ssh"
 	"net/http"
 	"sync"
+
+	"github.com/labstack/echo/v4"
+	"golang.org/x/crypto/ssh"
+
+	"github.com/ystv/streamer/server/helper"
+	"github.com/ystv/streamer/server/helper/tx"
 )
 
 // StopFunc is used when the stream is finished,
