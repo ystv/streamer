@@ -129,7 +129,8 @@ func (v *Views) StatusFunc(c echo.Context) error {
 				fmt.Println("Forwarder status success")
 			}()
 			wg.Wait()
-			jsonStr, err := json.Marshal(m)
+			var jsonStr []byte
+			jsonStr, err = json.Marshal(m)
 			if err != nil {
 				return err
 			}
