@@ -2,11 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/patrickmn/go-cache"
 	"log"
 	"os"
 	"os/exec"
-	"strconv"
 	"strings"
 	"time"
 	commonTransporter "github.com/ystv/streamer/common/transporter"
@@ -37,24 +35,6 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 		_, err1 := os.Stat(v.Config.RecordingLocation + path)
 		if os.IsNotExist(err1) {
 			return fmt.Errorf("unable to get path: %w", err1)
-		}
-		temp := array[len(array)-1]
-		_, err2 := os.Stat(v.Config.RecordingLocation + path + "/" + temp)
-		if os.IsNotExist(err2) {
-			path += array[len(array)-1]
-			valid = true
-		} else {
-			split := strings.Split(temp, ".")
-			i := 0
-			for {
-				_, err3 := os.Stat(v.Config.RecordingLocation + path + "/" + split[0] + "_" + string(rune(i)) + ".mkv")
-				if os.IsNotExist(err3) {
-					path += split[0] + string(rune(i)) + ".mkv"
-					valid = true
-					break
-				}
-				i++
-			}
 		}
 	}
 	if !valid {
