@@ -42,6 +42,8 @@ type (
 
 const finishChannelNameAppend = "Finish"
 
+var Version = "unknown"
+
 func main() {
 	_ = godotenv.Load(".env")
 
@@ -102,6 +104,7 @@ func main() {
 	}
 
 	for {
+		log.Printf("streamer recorder version: %s\n", Version)
 		v.run(config, interrupt)
 	}
 }

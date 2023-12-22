@@ -12,7 +12,7 @@ PROTO_GENERATED=storage/storage.pb.go
 	$(PROTOC) -I=storage/ --go_opt=paths=source_relative --go_out=storage/ $<
 
 build: $(PROTO_GENERATED)
-	$(GO_BUILD) -o /bin/$(SERVER_BINARY_NAME) -v .
+	$(GO_BUILD) -ldflags="$(LDFLAGS)" -o /bin/$(SERVER_BINARY_NAME) -v .
 .PHONY: build
 
 clean:

@@ -2,6 +2,8 @@ FROM golang:1.21.1-alpine3.18 AS build
 
 LABEL site="ystv-streamer-forwarder"
 
+ARG STREAMER_VERSION_ARG
+
 VOLUME /logs
 
 WORKDIR /src/
@@ -13,7 +15,12 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /bin/forwarder
+# Set build variables
+RUN echo -n "-X 'main.Version=$STREAMER_VERSION_ARG" > ./ldflags && \
+    tr -d \\n < ./ldflags > ./temp && mv ./temp ./ldflags && \
+    echo -n "'" >> ./ldflags
+
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="$(cat ./ldflags)" -o /bin/forwarder
 
 EXPOSE 1323
 

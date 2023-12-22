@@ -27,6 +27,7 @@ type (
 
 var (
 	verbose bool
+	Version = "unknown"
 )
 
 //go:embed public/*
@@ -91,6 +92,8 @@ func main() {
 	r.middleware()
 
 	r.loadRoutes()
+
+	log.Printf("streamer server version: %s\n", Version)
 
 	r.router.Logger.Error(r.router.Start(r.config.ServerAddress))
 	log.Fatalf("failed to start router on address %s", r.config.ServerAddress)

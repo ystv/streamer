@@ -24,7 +24,7 @@ pipeline {
             script {
               dir("server") {
                 docker.withRegistry('https://' + registryEndpoint, 'docker-registry') {
-                  serverImage = docker.build(serverImageName, "--no-cache .")
+                  serverImage = docker.build(serverImageName, "--build-arg STREAMER_VERSION_ARG=${env.BRANCH_NAME}-${env.BUILD_ID} --no-cache .")
                 }
               }
             }
@@ -35,7 +35,7 @@ pipeline {
             script {
               dir("forwarder") {
                 docker.withRegistry('https://' + registryEndpoint, 'docker-registry') {
-                  forwarderImage = docker.build(forwarderImageName, "--no-cache .")
+                  forwarderImage = docker.build(forwarderImageName, "--build-arg STREAMER_VERSION_ARG=${env.BRANCH_NAME}-${env.BUILD_ID} --no-cache .")
                 }
               }
             }
@@ -46,7 +46,7 @@ pipeline {
             script {
               dir("recorder") {
                 docker.withRegistry('https://' + registryEndpoint, 'docker-registry') {
-                  recorderImage = docker.build(recorderImageName, "--no-cache .")
+                  recorderImage = docker.build(recorderImageName, "--build-arg STREAMER_VERSION_ARG=${env.BRANCH_NAME}-${env.BUILD_ID} --no-cache .")
                 }
               }
             }
