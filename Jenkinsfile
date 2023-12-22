@@ -96,37 +96,41 @@ pipeline {
       }
     }
 
-    stage('Deploy') {
-      stages {
-        stage('Checking existing') {
-          steps {
-            script {
-              final String url = "https://streamer.dev.ystv.co.uk/activeStreams"
-              final def (String response, String tempCode) =
-                  sh(script: "curl -s -w '~~~%{response_code}' $url", returnStdout: true)
-                      .trim()
-                      .tokenize("~~~")
-              int code = Integer.parseInt(tempCode)
+    stage('Checking existing streams') {
+      steps {
+        script {
+          final String url = "https://streamer.dev.ystv.co.uk/activeStreams"
+          final def (String response, String tempCode) =
+              sh(script: "curl -s -w '~~~%{response_code}' $url", returnStdout: true)
+                  .trim()
+                  .tokenize("~~~")
+          int code = Integer.parseInt(tempCode)
 
-              echo "HTTP response status code: $code"
-              echo "HTTP response: $response"
+          echo "HTTP response status code: $code"
+          echo "HTTP response: $response"
 
-              if (code == 200) {
-                tempStreams = sh(script: "echo '$response' | jq -M '.streams'", returnStdout: true).trim()
-                int streams = Integer.parseInt(tempStreams)
-                if (streams > 0) {
-                  echo "Preexisting active streams: $streams, not deploying"
-                  proceed = "no"
-                } else {
-                  echo "No preexisting active streams, deploying"
-                }
-              }
+          if (code == 200) {
+            tempStreams = sh(script: "echo '$response' | jq -M '.streams'", returnStdout: true).trim()
+            int streams = Integer.parseInt(tempStreams)
+            if (streams > 0) {
+              echo "Preexisting active streams: $streams, not deploying"
+              proceed = "no"
+            } else {
+              echo "No preexisting active streams, deploying"
             }
           }
         }
+      }
+    }
+
+    stage('Deploy') {
+      when {
+        expression { proceed == "yes" }
+      }
+      stages {
         stage('Development') {
           when {
-            expression { env.BRANCH_IS_PRIMARY && proceed == "yes" }
+            expression { env.BRANCH_IS_PRIMARY }
           }
           steps {
             build(job: 'Deploy Nomad Job', parameters: [
@@ -139,7 +143,7 @@ pipeline {
         stage('Production') {
           when {
             // Checking if it is semantic version release.
-            expression { return env.TAG_NAME ==~ /v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)/ && proceed == "yes" }
+            expression { return env.TAG_NAME ==~ /v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)/ }
           }
           steps {
             build(job: 'Deploy Nomad Job', parameters: [
