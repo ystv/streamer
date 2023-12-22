@@ -205,7 +205,7 @@
                     error.html("The save path cannot be empty");
                     return;
                 }
-                if (!savePath.val().includes(".mkv")) {
+                if (!savePath.val().endsWith(".mkv")) {
                     console.log("SAVE FILE");
                     error.html("The save path must end in \".mkv\"");
                     return;
