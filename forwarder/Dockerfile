@@ -1,4 +1,4 @@
-FROM golang:1.21.1-alpine3.18 AS build
+FROM golang:1.21.5-alpine3.19 AS build
 
 LABEL site="ystv-streamer-forwarder"
 
