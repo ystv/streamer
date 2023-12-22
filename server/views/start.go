@@ -12,8 +12,10 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"github.com/ystv/streamer/server/helper/transporter/action"
-	"github.com/ystv/streamer/server/helper/transporter/server"
+	commonTransporter "github.com/ystv/streamer/common/transporter"
+	"github.com/ystv/streamer/common/transporter/action"
+	"github.com/ystv/streamer/common/transporter/server"
+	"github.com/ystv/streamer/common/wsMessages"
 	"github.com/ystv/streamer/server/helper/tx"
 	"github.com/ystv/streamer/server/storage"
 )
@@ -25,15 +27,15 @@ func (v *Views) StartFunc(c echo.Context) error {
 			fmt.Println("Start POST called")
 		}
 
-		transporter := Transporter{
+		transporter := commonTransporter.Transporter{
 			Action: action.Start,
 		}
 
-		fStart := ForwarderStart{
+		fStart := commonTransporter.ForwarderStart{
 			StreamIn: c.FormValue("stream_selector"),
 		}
 
-		rStart := RecorderStart{
+		rStart := commonTransporter.RecorderStart{
 			StreamIn: c.FormValue("stream_selector"),
 			PathOut:  c.FormValue("save_path"),
 		}
@@ -137,13 +139,13 @@ func (v *Views) StartFunc(c echo.Context) error {
 					errors = true
 					return
 				}
-				if strings.Contains(response, "ERROR") {
-					log.Printf("Error sending to Recorder for start: %s", response)
+				if response.Status == wsMessages.Error {
+					log.Printf("Error sending to Recorder for start: %s", response.Payload)
 					errors = true
 					return
 				}
-				if !strings.Contains(response, "OKAY") {
-					log.Printf("invalid response from Recorder for start: %s", response)
+				if response.Status != wsMessages.Okay {
+					log.Printf("invalid response from Recorder for start: %s", response.Status)
 					errors = true
 					return
 				}
@@ -159,12 +161,12 @@ func (v *Views) StartFunc(c echo.Context) error {
 				errors = true
 				return
 			}
-			if strings.Contains(response, "ERROR") {
+			if response.Status == wsMessages.Error {
 				log.Printf("Error sending to Forwarder for start: %s", response)
 				errors = true
 				return
 			}
-			if !strings.Contains(response, "OKAY") {
+			if response.Status != wsMessages.Okay {
 				log.Printf("invalid response from Forwarder for start: %s", response)
 				errors = true
 				return

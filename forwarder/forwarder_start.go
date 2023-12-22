@@ -4,14 +4,17 @@ import (
 	"fmt"
 	"log"
 	"os/exec"
-	"strconv"
 	"time"
+
+	"github.com/patrickmn/go-cache"
+
+	commonTransporter "github.com/ystv/streamer/common/transporter"
 )
 
-func (v *Views) start(transporter Transporter) error {
-	streamIn := "rtmp://" + v.Config.StreamServer + transporter.Payload.(ForwarderStart).StreamIn
+func (v *Views) start(transporter commonTransporter.Transporter) error {
+	streamIn := fmt.Sprintf("rtmp://%s%s", v.Config.StreamServer, transporter.Payload.(commonTransporter.ForwarderStart).StreamIn)
 
-	if len(transporter.Payload.(ForwarderStart).WebsiteOut) > 0 {
+	if len(transporter.Payload.(commonTransporter.ForwarderStart).WebsiteOut) > 0 {
 		finish := make(chan bool)
 
 		err := v.cache.Add(fmt.Sprintf("%s_0_%s", transporter.Unique, finishChannelNameAppend), finish, cache.NoExpiration)
@@ -62,7 +65,7 @@ func (v *Views) start(transporter Transporter) error {
 		}()
 	}
 
-	for i := 0; i < len(transporter.Payload.(ForwarderStart).Streams); i++ {
+	for i := 0; i < len(transporter.Payload.(commonTransporter.ForwarderStart).Streams); i++ {
 		finish := make(chan bool)
 
 		err := v.cache.Add(fmt.Sprintf("%s_%d_%s", transporter.Unique, i+1, finishChannelNameAppend), finish, cache.NoExpiration)

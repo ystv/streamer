@@ -3,9 +3,11 @@ package main
 import (
 	"fmt"
 	"strings"
+
+	commonTransporter "github.com/ystv/streamer/common/transporter"
 )
 
-func (v *Views) stop(transporter Transporter) error {
+func (v *Views) stop(transporter commonTransporter.Transporter) error {
 	found := false
 	for k, item := range v.cache.Items() {
 		if strings.Contains(k, transporter.Unique) && strings.Contains(k, finishChannelNameAppend) {

@@ -5,20 +5,22 @@ import (
 	"bytes"
 	"fmt"
 	"os/exec"
+
+	commonTransporter "github.com/ystv/streamer/common/transporter"
 )
 
-func (v *Views) status(transporter Transporter) (ForwarderStatusResponse, error) {
+func (v *Views) status(transporter commonTransporter.Transporter) (commonTransporter.ForwarderStatusResponse, error) {
 	var start int
 
-	if transporter.Payload.(ForwarderStatus).Website {
+	if transporter.Payload.(commonTransporter.ForwarderStatus).Website {
 		start = 0
 	} else {
 		start = 1
 	}
 
-	fStatusResponse := ForwarderStatusResponse{}
+	fStatusResponse := commonTransporter.ForwarderStatusResponse{}
 
-	for i := start; i <= transporter.Payload.(ForwarderStatus).Streams; i++ {
+	for i := start; i <= transporter.Payload.(commonTransporter.ForwarderStatus).Streams; i++ {
 		c := exec.Command("tail", "-n", "25", fmt.Sprintf("\"logs/%s_%d.txt\"", transporter.Unique, i))
 
 		var stdout bytes.Buffer
@@ -37,7 +39,7 @@ func (v *Views) status(transporter Transporter) (ForwarderStatusResponse, error)
 		}
 
 		if len(errOut) != 0 {
-			return ForwarderStatusResponse{}, fmt.Errorf(errOut)
+			return commonTransporter.ForwarderStatusResponse{}, fmt.Errorf(errOut)
 		}
 
 		if i == 0 {

@@ -217,7 +217,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 		case m := <-messageOut:
 			log.Printf("Picked up message %s", m)
 
-			var t Transporter
+			var t commonTransporter.Transporter
 
 			err = json.Unmarshal(m, &t)
 			if err != nil {
@@ -243,7 +243,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 			var out string
 			switch t.Action {
 			case "start":
-				var t1 RecorderStart
+				var t1 commonTransporter.RecorderStart
 
 				err = mapstructure.Decode(t.Payload, &t1)
 				if err != nil {

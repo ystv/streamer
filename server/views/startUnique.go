@@ -12,8 +12,10 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"github.com/ystv/streamer/server/helper/transporter/action"
-	"github.com/ystv/streamer/server/helper/transporter/server"
+	commonTransporter "github.com/ystv/streamer/common/transporter"
+	"github.com/ystv/streamer/common/transporter/action"
+	"github.com/ystv/streamer/common/transporter/server"
+	"github.com/ystv/streamer/common/wsMessages"
 	"github.com/ystv/streamer/server/helper/tx"
 	"github.com/ystv/streamer/server/storage"
 )
@@ -39,16 +41,16 @@ func (v *Views) StartUniqueFunc(c echo.Context) error {
 			return fmt.Errorf("failed to get stored as data is empty")
 		}
 
-		transporter := Transporter{
+		transporter := commonTransporter.Transporter{
 			Action: action.Start,
 			Unique: unique,
 		}
 
-		fStart := ForwarderStart{
+		fStart := commonTransporter.ForwarderStart{
 			StreamIn: c.FormValue("stream_selector"),
 		}
 
-		rStart := RecorderStart{
+		rStart := commonTransporter.RecorderStart{
 			StreamIn: c.FormValue("stream_selector"),
 			PathOut:  c.FormValue("save_path"),
 		}
@@ -101,19 +103,19 @@ func (v *Views) StartUniqueFunc(c echo.Context) error {
 				recorderTransporter := transporter
 				recorderTransporter.Payload = rStart
 
-				var response string
+				var response commonTransporter.ResponseTransporter
 				response, err = v.wsHelper(server.Recorder, recorderTransporter)
 				if err != nil {
 					log.Println(err, "Error sending to Recorder for start")
 					errors = true
 					return
 				}
-				if strings.Contains(response, "ERROR") {
+				if response.Status == wsMessages.Error {
 					log.Printf("Error sending to Recorder for start: %s", response)
 					errors = true
 					return
 				}
-				if !strings.Contains(response, "OKAY") {
+				if response.Status != wsMessages.Okay {
 					log.Printf("invalid response from Recorder for start: %s", response)
 					errors = true
 					return
@@ -125,19 +127,19 @@ func (v *Views) StartUniqueFunc(c echo.Context) error {
 			forwarderTransporter := transporter
 			forwarderTransporter.Payload = fStart
 
-			var response string
+			var response commonTransporter.ResponseTransporter
 			response, err = v.wsHelper(server.Forwarder, forwarderTransporter)
 			if err != nil {
 				log.Println(err, "Error sending to Forwarder for start")
 				errors = true
 				return
 			}
-			if strings.Contains(response, "ERROR") {
+			if response.Status == wsMessages.Error {
 				log.Printf("Error sending to Forwarder for start: %s", response)
 				errors = true
 				return
 			}
-			if !strings.Contains(response, "OKAY") {
+			if response.Status != wsMessages.Okay {
 				log.Printf("invalid response from Forwarder for start: %s", response)
 				errors = true
 				return

@@ -9,10 +9,11 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	commonTransporter "github.com/ystv/streamer/common/transporter"
 )
 
-func (v *Views) start(transporter Transporter) error {
-	array := strings.Split(transporter.Payload.(RecorderStart).PathOut, "/")
+func (v *Views) start(transporter commonTransporter.Transporter) error {
+	array := strings.Split(transporter.Payload.(commonTransporter.RecorderStart).PathOut, "/")
 	valid := false
 	var path string
 
@@ -54,7 +55,7 @@ func (v *Views) start(transporter Transporter) error {
 		return fmt.Errorf("invalid path")
 	}
 
-	streamIn := "rtmp://" + v.Config.StreamServer + transporter.Payload.(RecorderStart).StreamIn
+	streamIn := fmt.Sprintf("rtmp://%s%s", v.Config.StreamServer, transporter.Payload.(commonTransporter.RecorderStart).StreamIn)
 	path = v.Config.RecordingLocation + path
 
 	finish := make(chan bool)

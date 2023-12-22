@@ -5,9 +5,11 @@ import (
 	"bytes"
 	"fmt"
 	"os/exec"
+
+	commonTransporter "github.com/ystv/streamer/common/transporter"
 )
 
-func (v *Views) status(transporter Transporter) (string, error) {
+func (v *Views) status(transporter commonTransporter.Transporter) (string, error) {
 	c := exec.Command("tail", "-n", "26", fmt.Sprintf("\"logs/%s.txt\"", transporter.Unique))
 
 	var stdout bytes.Buffer
