@@ -17,6 +17,13 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 	valid := false
 	var path string
 
+	tempBaseFileName := strings.Split(array[len(array)-1], ".")
+	baseFileNameArray := tempBaseFileName[0 : len(tempBaseFileName)-1]
+	var baseFileName string
+	for _, s := range baseFileNameArray {
+		baseFileName += s
+	}
+
 	if len(array) == 1 {
 		valid = true
 	} else {
