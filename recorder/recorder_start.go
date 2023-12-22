@@ -18,7 +18,6 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 	var path string
 
 	if len(array) == 1 {
-		path = array[0]
 		valid = true
 	} else {
 		for i := 0; i < len(array)-1; i++ {
