@@ -10,7 +10,8 @@ import (
 	"sync"
 )
 
-// StopFunc is used when the stream is finished then you can stop the stream by pressing the stop button and that would kill all the ffmpeg commands
+// StopFunc is used when the stream is finished,
+// then you can stop the stream by pressing the stop button, and that would kill all the ffmpeg commands
 func (v *Views) StopFunc(c echo.Context) error {
 	/*if !authenticate(w, r) {
 		err := godotenv.Load()

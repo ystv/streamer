@@ -79,7 +79,8 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 					log.Println(err)
 					return
 				}
-				if err = c.Run(); err != nil {
+				err = c.Run()
+				if err != nil {
 					log.Println("could not run command: ", err)
 				}
 				time.Sleep(500 * time.Millisecond)

@@ -28,7 +28,8 @@ func (v *Views) status(transporter commonTransporter.Transporter) (commonTranspo
 
 		var errOut string
 
-		if err := c.Run(); err != nil {
+		err := c.Run()
+		if err != nil {
 			errOut = fmt.Sprintf("could not run command: %+v", err)
 		}
 
