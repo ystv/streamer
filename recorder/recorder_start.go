@@ -73,9 +73,13 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 			case <-finish:
 				return
 			default:
-				c := exec.Command("ffmpeg", "-i", "\""+streamIn+"\"", "-c", "copy", "\""+path+"_"+strconv.FormatUint(i, 10)+".mkv\"", ">>", "\"/logs/"+transporter.Unique+".txt\"", "2>&1")
-				err = v.cache.Add(transporter.Unique, c, cache.NoExpiration)
-				if err != nil {
+				// Checking if file exists
+				_, err = os.Stat(fmt.Sprintf("\"%s%s_%d.mkv", path, baseFileName, i))
+				if err == nil {
+					break
+				}
+				c := exec.Command("ffmpeg", "-i", fmt.Sprintf("\"%s\"", streamIn), "-c", "copy", fmt.Sprintf("\"%s%s_%d.mkv", path, baseFileName, i)+".mkv\"", ">>", "\"/logs/"+transporter.Unique+".txt\"", "2>&1")
+				if err = v.cache.Add(transporter.Unique, c, cache.NoExpiration); err != nil {
 					log.Println(err)
 					return
 				}
