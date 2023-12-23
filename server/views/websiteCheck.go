@@ -47,8 +47,5 @@ func (v *Views) websiteCheck(endpoint string) bool {
 		log.Printf("failed to read body for website check: %+v", err)
 		return true // sending back true if the checker is down
 	}
-	if string(body) == "Accepted" {
-		return true
-	}
-	return false
+	return string(body) == "Accepted"
 }
