@@ -3,7 +3,7 @@ package views
 import (
 	"encoding/xml"
 	"fmt"
-	"github.com/joho/godotenv"
+
 	"github.com/labstack/echo/v4"
 	"github.com/ystv/streamer/server/helper"
 	"net/http"
@@ -30,10 +30,10 @@ func (v *Views) EndpointsFunc(c echo.Context) error {
 		if v.conf.Verbose {
 			fmt.Println("Endpoints POST")
 		}
-		err := godotenv.Load()
-		if err != nil {
-			fmt.Printf("error loading .env file: %s", err)
-		}
+		//err := godotenv.Load()
+		//if err != nil {
+		//	fmt.Printf("error loading .env file: %s", err)
+		//}
 
 		streamPageContent, err := helper.GetBody("http://" + v.conf.StreamServer + "stat")
 		if err != nil {
