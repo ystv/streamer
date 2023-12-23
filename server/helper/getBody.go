@@ -12,10 +12,7 @@ func GetBody(url string) (body string, err error) {
 		return
 	}
 	defer func(Body io.ReadCloser) {
-		err = Body.Close()
-		if err != nil {
-			return
-		}
+		_ = Body.Close()
 	}(response.Body)
 
 	buf := new(strings.Builder)
