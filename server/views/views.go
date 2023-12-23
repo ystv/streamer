@@ -15,6 +15,7 @@ type (
 	// Config the global web-auth configuration
 	Config struct {
 		Verbose               bool
+		Version               string
 		Forwarder             string `envconfig:"FORWARDER"`
 		Recorder              string `envconfig:"RECORDER"`
 		ForwarderUsername     string `envconfig:"FORWARDER_USERNAME"`

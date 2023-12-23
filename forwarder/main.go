@@ -21,7 +21,9 @@ import (
 
 	commonTransporter "github.com/ystv/streamer/common/transporter"
 	"github.com/ystv/streamer/common/transporter/server"
+	specialTransporter "github.com/ystv/streamer/common/transporter/special"
 	"github.com/ystv/streamer/common/wsMessages"
+	specialWSMessage "github.com/ystv/streamer/common/wsMessages/special"
 )
 
 type (
@@ -161,9 +163,22 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 				close(errorChannel)
 			}
 		}()
-		err = c.WriteMessage(websocket.TextMessage, []byte(server.Forwarder))
+		response := specialTransporter.InitiationTransporter{
+			Server:  server.Forwarder,
+			Version: Version,
+		}
+
+		var resBytes []byte
+		resBytes, err = json.Marshal(response)
 		if err != nil {
-			log.Printf("failed to write name: %+v", err)
+			log.Printf("failed to marshal initial: %+v", err)
+			close(errorChannel)
+			return
+		}
+
+		err = c.WriteMessage(websocket.TextMessage, resBytes)
+		if err != nil {
+			log.Printf("failed to write name and version: %+v", err)
 			close(errorChannel)
 			return
 		}
@@ -177,12 +192,12 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 			return
 		}
 
-		if string(msg) != wsMessages.Acknowledged.String() {
+		if string(msg) != specialWSMessage.Acknowledged.String() {
 			log.Printf("failed to read acknowledgement: %s", string(msg))
 			close(errorChannel)
 			return
 		}
-		log.Println(wsMessages.Acknowledged)
+		log.Println(specialWSMessage.Acknowledged)
 		log.Printf("connected to  %s://%s", u.Scheme, u.Host)
 
 		for {
@@ -194,9 +209,9 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 				close(errorChannel)
 				return
 			}
-			if msgType == websocket.TextMessage && string(message) == wsMessages.Ping.String() {
+			if msgType == websocket.TextMessage && string(message) == specialWSMessage.Ping.String() {
 				pinging.Store(true)
-				err = c.WriteMessage(websocket.TextMessage, []byte(wsMessages.Pong))
+				err = c.WriteMessage(websocket.TextMessage, []byte(specialWSMessage.Pong))
 				if err != nil {
 					log.Printf("failed to write pong: %+v", err)
 					close(errorChannel)

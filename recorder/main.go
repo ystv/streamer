@@ -21,6 +21,7 @@ import (
 
 	commonTransporter "github.com/ystv/streamer/common/transporter"
 	"github.com/ystv/streamer/common/transporter/server"
+	specialTransporter "github.com/ystv/streamer/common/transporter/special"
 	"github.com/ystv/streamer/common/wsMessages"
 	specialWSMessage "github.com/ystv/streamer/common/wsMessages/special"
 )
@@ -162,9 +163,22 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 				close(errorChannel)
 			}
 		}()
-		err = c.WriteMessage(websocket.TextMessage, []byte(server.Recorder))
+		response := specialTransporter.InitiationTransporter{
+			Server:  server.Recorder,
+			Version: Version,
+		}
+
+		var resBytes []byte
+		resBytes, err = json.Marshal(response)
 		if err != nil {
-			log.Printf("failed to write name: %+v", err)
+			log.Printf("failed to marshal initial: %+v", err)
+			close(errorChannel)
+			return
+		}
+
+		err = c.WriteMessage(websocket.TextMessage, resBytes)
+		if err != nil {
+			log.Printf("failed to write name and version: %+v", err)
 			close(errorChannel)
 			return
 		}

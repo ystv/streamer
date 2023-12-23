@@ -80,6 +80,8 @@ func main() {
 		log.Fatal("Failed to create store: ", err)
 	}
 
+	config.Version = Version
+
 	r := &Router{
 		config: config,
 		router: echo.New(),
