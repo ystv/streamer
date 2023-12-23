@@ -2,6 +2,7 @@ package helper
 
 import (
 	"io"
+	"log"
 	"net/http"
 	"strings"
 )
@@ -9,6 +10,7 @@ import (
 func GetBody(url string) (body string, err error) {
 	response, err := http.Get(url)
 	if err != nil {
+		log.Printf("failed to get http: %+v", err)
 		return
 	}
 	defer func(Body io.ReadCloser) {
@@ -18,6 +20,7 @@ func GetBody(url string) (body string, err error) {
 	buf := new(strings.Builder)
 	_, err = io.Copy(buf, response.Body)
 	if err != nil {
+		log.Printf("failed to copy body: %+v", err)
 		return
 	}
 
