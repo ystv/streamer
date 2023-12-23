@@ -224,11 +224,8 @@
                         for (let i = selectObject.length; i > 0; i--) {
                             selectObject.remove(i);
                         }
-                        if ($('#stream_selector').val() === 'please_select') {
-                            streamFurther.hide();
-                        } else {
-                            streamFurther.show();
-                        }
+                        selectObject.options.selectedIndex = 0;
+                        streamFurther.hide();
                         return;
                     }
                     const myArray = data.split(" ");
