@@ -18,13 +18,16 @@ func (v *Views) CustomHTTPErrorHandler(err error, c echo.Context) {
 		status = 500
 	}
 	c.Response().WriteHeader(status)
-	data := struct {
+	var data struct {
 		Code  int
 		Error any
-	}{
-		Code:  status,
-		Error: he.Message,
 	}
+	if he == nil {
+		data.Error = err
+	} else {
+		data.Error = he.Message
+	}
+	data.Code = status
 	err1 := v.template.RenderTemplate(c.Response().Writer, data, templates.ErrorTemplate)
 	if err1 != nil {
 		log.Printf("failed to render error page: %+v", err1)
