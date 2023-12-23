@@ -9,7 +9,7 @@ require (
 	github.com/labstack/echo/v4 v4.11.4
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
-	github.com/ystv/streamer/common v0.0.0-20231223000419-998018556aed
+	github.com/ystv/streamer/common v0.0.0-20231223003742-018ffcfef069
 )
 
 require (

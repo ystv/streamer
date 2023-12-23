@@ -10,7 +10,7 @@ require (
 	github.com/labstack/gommon v0.4.2
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
-	github.com/ystv/streamer/common v0.0.0-20231223000419-998018556aed
+	github.com/ystv/streamer/common v0.0.0-20231223003742-018ffcfef069
 	golang.org/x/crypto v0.17.0
 	google.golang.org/protobuf v1.32.0
 )
