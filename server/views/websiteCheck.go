@@ -34,6 +34,8 @@ func (v *Views) websiteCheck(endpoint string) bool {
 	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
 
+	client.Timeout = 10 * time.Second
+
 	res, err := client.Do(r)
 	if err != nil {
 		log.Printf("failed to send request for website check: %+v", err)
