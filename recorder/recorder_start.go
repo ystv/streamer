@@ -39,6 +39,7 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 		if os.IsNotExist(err1) {
 			return fmt.Errorf("unable to get path: %w", err1)
 		}
+		valid = true
 	}
 	if !valid {
 		return fmt.Errorf("invalid path")
