@@ -243,11 +243,8 @@
                         select.options[select.options.length] = new Option(myArray[index], myArray[index]);
                     }
 
-                    if (endpointSelector.val() === 'please_select') {
-                        streamFurther.hide();
-                    } else {
-                        streamFurther.show();
-                    }
+                    selectObject.options.selectedIndex = 0;
+                    streamFurther.hide();
                 },
             });
         }
