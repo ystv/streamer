@@ -95,15 +95,15 @@ func (store *Store) DeleteStream(unique string) error {
 func (store *Store) GetStored() ([]*storage.Stored, error) {
 	streamer, err := store.Get()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get stored from GetStored: %w", err)
 	}
-	return streamer.Stored, err
+	return streamer.Stored, nil
 }
 
 func (store *Store) FindStored(unique string) (*storage.Stored, error) {
 	streamer, err := store.Get()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get stored from ")
 	}
 	for _, c1 := range streamer.Stored {
 		if c1.Stream == unique {
