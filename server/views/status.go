@@ -22,12 +22,12 @@ import (
 func (v *Views) StatusFunc(c echo.Context) error {
 	if c.Request().Method == "POST" {
 		if v.conf.Verbose {
-			fmt.Println("Status POST called")
+			log.Println("Status POST called")
 		}
 
 		unique := c.FormValue("unique_code")
 		if len(unique) != 10 {
-			return fmt.Errorf("unique key invalid")
+			return fmt.Errorf("unique key invalid: %s", unique)
 		}
 
 		stream, err := v.store.FindStream(unique)
@@ -74,7 +74,7 @@ func (v *Views) StatusFunc(c echo.Context) error {
 				}
 				m["recording"] = response.Payload.(string)
 
-				fmt.Println("Recorder status success")
+				log.Println("Recorder status success")
 			}()
 		} else {
 			wg.Add(1)
@@ -169,13 +169,13 @@ func (v *Views) StatusFunc(c echo.Context) error {
 			//	}
 			//}
 
-			fmt.Println("Forwarder status success")
+			log.Println("Forwarder status success")
 		}()
 		wg.Wait()
 		var jsonStr []byte
 		jsonStr, err = json.Marshal(m)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to marshal response for status: %w", err)
 		}
 		output := strings.ReplaceAll(
 			strings.ReplaceAll(

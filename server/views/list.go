@@ -2,6 +2,7 @@ package views
 
 import (
 	"fmt"
+	"log"
 	"github.com/labstack/echo/v4"
 	"github.com/ystv/streamer/server/templates"
 	"net/http"
@@ -23,18 +24,18 @@ func (v *Views) ListFunc(c echo.Context) error {
 	}*/
 	if c.Request().Method == "GET" {
 		if v.conf.Verbose {
-			fmt.Println("Stop GET called")
+			log.Println("Stop GET called")
 		}
 
 		return v.template.RenderTemplate(c.Response().Writer, nil, templates.ListTemplate)
 	} else if c.Request().Method == "POST" {
 		if v.conf.Verbose {
-			fmt.Println("Stop POST called")
+			log.Println("Stop POST called")
 		}
 
 		streams, err := v.store.GetStreams()
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to get streams: %w", err)
 		}
 
 		var streamsSlice []string
@@ -49,7 +50,7 @@ func (v *Views) ListFunc(c echo.Context) error {
 
 		stored, err := v.store.GetStored()
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to get stored: %w", err)
 		}
 
 		for _, s := range stored {

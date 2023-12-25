@@ -30,17 +30,17 @@ func (v *Views) StopFunc(c echo.Context) error {
 	}*/
 	if c.Request().Method == "POST" {
 		if v.conf.Verbose {
-			fmt.Println("Stop POST called")
+			log.Println("Stop POST called")
 		}
 
 		unique := c.FormValue("unique_code")
 		if len(unique) != 10 {
-			return fmt.Errorf("unique key invalid")
+			return fmt.Errorf("unique key invalid: %s", unique)
 		}
 
 		stream, err := v.store.FindStream(unique)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to get stream: %w, unique: %s", err, unique)
 		}
 
 		if stream == nil {
@@ -105,7 +105,7 @@ func (v *Views) StopFunc(c echo.Context) error {
 					return
 				}
 
-				fmt.Println("Recorder stop success")
+				log.Println("Recorder stop success")
 			}()
 		} else {
 			wg.Add(1)
@@ -129,7 +129,7 @@ func (v *Views) StopFunc(c echo.Context) error {
 				return
 			}
 
-			fmt.Println("Forwarder stop success")
+			log.Println("Forwarder stop success")
 			//var client *ssh.Client
 			//var session *ssh.Session
 			//if forwarderAuth == "PEM" {
@@ -151,19 +151,19 @@ func (v *Views) StopFunc(c echo.Context) error {
 			//	fmt.Println(err)
 			//}
 
-			fmt.Println("Forwarder stop success")
+			log.Println("Forwarder stop success")
 		}()
 		wg.Wait()
-		fmt.Println("STOPPED!")
+		log.Printf("stopped stream: %s", unique)
 
 		err = v.store.DeleteStream(unique)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to delete stream: %w, unique: %s", err, unique)
 		}
 
 		err = v.HandleTXLight(v.conf.TransmissionLight, tx.AllOff)
 		if err != nil {
-			fmt.Println(err)
+			log.Printf("failed to turn transmission light off: %+v, ignoring and continuing", err)
 		}
 
 		return c.String(http.StatusOK, "STOPPED!")

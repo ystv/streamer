@@ -2,6 +2,7 @@ package templates
 
 import (
 	"embed"
+	"fmt"
 	"html/template"
 	"io"
 	"log"
@@ -46,7 +47,7 @@ func (t *Templater) RenderTemplate(w io.Writer, data interface{}, mainTmpl Templ
 
 	if err != nil {
 		log.Printf("failed to get templates for template(RenderTemplate): %+v", err)
-		return err
+		return fmt.Errorf("failed to get templates for template(RenderTemplate): %+v", err)
 	}
 
 	return t1.Execute(w, data)

@@ -42,7 +42,7 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 		valid = true
 	}
 	if !valid {
-		return fmt.Errorf("invalid path")
+		return fmt.Errorf("invalid path: %+v", transporter)
 	}
 
 	streamIn := fmt.Sprintf("rtmp://%s%s", v.Config.StreamServer, transporter.Payload.(commonTransporter.RecorderStart).StreamIn)
@@ -52,7 +52,7 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 
 	err := v.cache.Add(fmt.Sprintf("%s_%s", transporter.Unique, finishChannelNameAppend), finish, cache.NoExpiration)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to add finishing channel to cache: %w", err)
 	}
 
 	go func() {
@@ -70,7 +70,7 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 				}
 				c := exec.Command("ffmpeg", "-i", fmt.Sprintf("\"%s\"", streamIn), "-c", "copy", fmt.Sprintf("\"%s%s_%d.mkv", path, baseFileName, i)+".mkv\"", ">>", "\"/logs/"+transporter.Unique+".txt\"", "2>&1")
 				if err = v.cache.Add(transporter.Unique, c, cache.NoExpiration); err != nil {
-					log.Println(err)
+					log.Printf("failed to add command to cache: %+v", err)
 					return
 				}
 				err = c.Run()
@@ -94,7 +94,7 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 				c1 := cmd.(*exec.Cmd)
 				err = c1.Process.Kill()
 				if err != nil {
-					log.Println(err)
+					log.Printf("failed to kill recorder: %+v", err)
 				}
 				v.cache.Delete(transporter.Unique)
 				return
@@ -103,6 +103,8 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 			}
 		}
 	}()
+
+	log.Printf("started recording: %s", transporter.Unique)
 
 	return nil
 }

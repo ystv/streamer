@@ -2,6 +2,7 @@ package views
 
 import (
 	"fmt"
+	"log"
 	"github.com/labstack/echo/v4"
 	"github.com/ystv/streamer/server/templates"
 	"net/http"
@@ -22,27 +23,29 @@ func (v *Views) ResumeFunc(c echo.Context) error {
 	}*/
 	if c.Request().Method == "GET" {
 		if v.conf.Verbose {
-			fmt.Println("Resume GET called")
+			log.Println("Resume GET called")
 		}
 
 		return v.template.RenderTemplate(c.Response().Writer, nil, templates.ResumeTemplate)
 	} else if c.Request().Method == "POST" {
 		if v.conf.Verbose {
-			fmt.Println("Resume POST called")
+			log.Println("Resume POST called")
 		}
 
-		stream, err := v.store.FindStream(c.FormValue("unique"))
+		unique := c.FormValue("unique")
+
+		stream, err := v.store.FindStream(unique)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to get stream: %w, unique: %s", err, unique)
 		}
 
 		if stream == nil {
-			fmt.Println("No data")
-			fmt.Println("REJECTED!")
+			log.Println("No data")
+			log.Printf("rejected resume: %s", unique)
 			return c.String(http.StatusOK, "REJECTED!")
 		}
 
-		fmt.Println("ACCEPTED!")
+		log.Printf("accepted resume: %s", unique)
 		return c.String(http.StatusOK, "ACCEPTED!")
 	}
 	return echo.NewHTTPError(http.StatusMethodNotAllowed, "invalid method")

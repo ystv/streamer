@@ -19,7 +19,7 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 
 		err := v.cache.Add(fmt.Sprintf("%s_0_%s", transporter.Unique, finishChannelNameAppend), finish, cache.NoExpiration)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to add finishing channel to cache: %w", err)
 		}
 
 		go func() {
@@ -32,7 +32,7 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 					c := exec.Command("ffmpeg", "-i", fmt.Sprintf("\"%s\"", streamIn), "-c", "copy", "-f", "flv", fmt.Sprintf("\"%slive/%s\"", v.Config.StreamServer, transporter.Payload.(commonTransporter.ForwarderStart).WebsiteOut), ">>", fmt.Sprintf("\"/logs/%s_0.txt\"", transporter.Unique), "2>&1")
 					err = v.cache.Add(transporter.Unique+"0", c, cache.NoExpiration)
 					if err != nil {
-						log.Println(err)
+						log.Printf("failed to add command to cache: %+v", err)
 						return
 					}
 					if err = c.Run(); err != nil {
@@ -54,7 +54,7 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 					c1 := cmd.(*exec.Cmd)
 					err = c1.Process.Kill()
 					if err != nil {
-						log.Println(err)
+						log.Printf("failed to kill forwarder: %+v", err)
 					}
 					v.cache.Delete(fmt.Sprintf("%s_0", transporter.Unique))
 					return
@@ -70,7 +70,7 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 
 		err := v.cache.Add(fmt.Sprintf("%s_%d_%s", transporter.Unique, i+1, finishChannelNameAppend), finish, cache.NoExpiration)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to add finishing channel to cache: %w", err)
 		}
 
 		k := i
@@ -118,6 +118,8 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 			}
 		}()
 	}
+
+	log.Printf("stared forwarder: %s", transporter.Unique)
 
 	return nil
 }

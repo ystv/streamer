@@ -20,7 +20,7 @@ var wsUpgrade = websocket.Upgrader{}
 func (v *Views) Websocket(c echo.Context) error {
 	ws, err := wsUpgrade.Upgrade(c.Response(), c.Request(), nil)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to upgrade web socket: %w", err)
 	}
 	defer func(ws *websocket.Conn) {
 		_ = ws.Close()
@@ -28,7 +28,7 @@ func (v *Views) Websocket(c echo.Context) error {
 
 	_, msg, err := ws.ReadMessage()
 	if err != nil {
-		c.Logger().Error(err)
+		log.Printf("failed to read message from websocket: %+v", err)
 		_ = ws.Close()
 		return nil
 	}
@@ -58,21 +58,21 @@ func (v *Views) Websocket(c echo.Context) error {
 
 	err = v.cache.Add(responseTransporter.Server.String(), clientChannel, cache.NoExpiration)
 	if err != nil {
-		c.Logger().Error(err)
+		log.Printf("failed to add channel to cache: %+v, server: %s", err, responseTransporter.Server)
 		_ = ws.Close()
 		return nil
 	}
 
 	err = v.cache.Add(responseTransporter.Server.String()+internalChannelNameAppend, internalChannel, cache.NoExpiration)
 	if err != nil {
-		c.Logger().Error(err)
+		log.Printf("failed to add finish channel to cache: %+v, server: %s", err, responseTransporter.Server)
 		_ = ws.Close()
 		return nil
 	}
 
 	err = ws.WriteMessage(websocket.TextMessage, []byte(specialWSMessage.Acknowledged))
 	if err != nil {
-		c.Logger().Error(err)
+		log.Printf("failed to write acknowledgement response: %+v, server: %s", err, responseTransporter.Server)
 		_ = ws.Close()
 		return nil
 	}
@@ -92,7 +92,7 @@ func (v *Views) Websocket(c echo.Context) error {
 		case res := <-clientChannel:
 			err = ws.WriteMessage(websocket.TextMessage, res)
 			if err != nil {
-				c.Logger().Error(err)
+				log.Printf("failed to write response: %+v, server %s", err, responseTransporter.Server)
 				close(internalChannel)
 				close(clientChannel)
 				v.cache.Delete(responseTransporter.Server.String())
@@ -102,8 +102,7 @@ func (v *Views) Websocket(c echo.Context) error {
 
 			_, msg, err = ws.ReadMessage()
 			if err != nil {
-				c.Logger().Error(err)
-				internalChannel <- []byte(fmt.Sprintf("ERROR: failed to read message from %s: %+v", responseTransporter.Server.String(), err))
+				log.Printf("failed to read message: %+v, server: %s", err, responseTransporter.Server)
 				close(internalChannel)
 				close(clientChannel)
 				v.cache.Delete(responseTransporter.Server.String())

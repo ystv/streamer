@@ -162,7 +162,7 @@ func (v *Views) StartUniqueFunc(c echo.Context) error {
 				Streams:   uint64(len(streams)),
 			})
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to add stream for startUnique: %w", err)
 			}
 
 			if s == nil {

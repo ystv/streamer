@@ -6,6 +6,7 @@ import (
 	"github.com/ystv/streamer/server/helper/tx"
 	"github.com/ystv/streamer/server/storage"
 	"github.com/ystv/streamer/server/templates"
+	"log"
 	"math"
 	"net/http"
 	"sort"
@@ -17,13 +18,13 @@ import (
 func (v *Views) SaveFunc(c echo.Context) error {
 	if c.Request().Method == "GET" {
 		if v.conf.Verbose {
-			fmt.Println("Save GET called")
+			log.Println("Save GET called")
 		}
 
 		return v.template.RenderTemplate(c.Response().Writer, nil, templates.SaveTemplate)
 	} else if c.Request().Method == "POST" {
 		if v.conf.Verbose {
-			fmt.Println("Save POST called")
+			log.Println("Save POST called")
 		}
 
 		endpoint := strings.Split(c.FormValue("endpointsTable"), "~")[1]
@@ -52,7 +53,7 @@ func (v *Views) SaveFunc(c echo.Context) error {
 
 			streams1, err := v.store.GetStreams()
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to get streams: %w", err)
 			}
 
 			if len(streams1) == 0 {
@@ -73,7 +74,7 @@ func (v *Views) SaveFunc(c echo.Context) error {
 
 			stored, err := v.store.GetStored()
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to get stored: %w", err)
 			}
 
 			if len(stored) == 0 {
@@ -117,7 +118,7 @@ func (v *Views) SaveFunc(c echo.Context) error {
 
 		s, err := v.store.AddStored(stored)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to add stored: %w, unique: %s", err, string(b))
 		}
 
 		if s == nil {
@@ -126,7 +127,7 @@ func (v *Views) SaveFunc(c echo.Context) error {
 
 		err = v.HandleTXLight(v.conf.TransmissionLight, tx.RehearsalOn)
 		if err != nil {
-			fmt.Println(err)
+			log.Printf("failed to turn transmission light on: %+v, ignoring and continuing", err)
 		}
 
 		return c.String(http.StatusOK, string(b))

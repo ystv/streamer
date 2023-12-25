@@ -77,7 +77,7 @@ func (v *Views) StartFunc(c echo.Context) error {
 
 			streams1, err := v.store.GetStreams()
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to get streams: %w", err)
 			}
 
 			if len(streams1) == 0 {
@@ -94,7 +94,7 @@ func (v *Views) StartFunc(c echo.Context) error {
 
 			stored, err := v.store.GetStored()
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to get stored: %w", err)
 			}
 
 			if len(stored) == 0 {
@@ -177,7 +177,7 @@ func (v *Views) StartFunc(c echo.Context) error {
 		if !errors {
 			err := v.HandleTXLight(v.conf.TransmissionLight, tx.TransmissionOn)
 			if err != nil {
-				log.Println(err)
+				log.Printf("failed to turn transmission light on: %+v, ignoring and continuing", err)
 			}
 
 			s, err := v.store.AddStream(&storage.Stream{
@@ -188,7 +188,7 @@ func (v *Views) StartFunc(c echo.Context) error {
 				Streams:   uint64(len(streams)),
 			})
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to add stream for start: %w", err)
 			}
 
 			if s == nil {
