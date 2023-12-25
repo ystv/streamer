@@ -2,9 +2,10 @@ package views
 
 import (
 	"fmt"
-	"github.com/ystv/streamer/server/helper/tx"
 	"net/http"
 	"strings"
+
+	"github.com/ystv/streamer/server/helper/tx"
 )
 
 func (v *Views) HandleTXLight(url string, function tx.FunctionTX) (err error) {

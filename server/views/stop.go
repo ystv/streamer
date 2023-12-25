@@ -2,15 +2,16 @@ package views
 
 import (
 	"fmt"
-	commonTransporter "github.com/ystv/streamer/common/transporter"
-	"github.com/ystv/streamer/common/transporter/action"
-	"github.com/ystv/streamer/common/transporter/server"
-	"github.com/ystv/streamer/common/wsMessages"
 	"log"
 	"net/http"
 	"sync"
 
 	"github.com/labstack/echo/v4"
+
+	commonTransporter "github.com/ystv/streamer/common/transporter"
+	"github.com/ystv/streamer/common/transporter/action"
+	"github.com/ystv/streamer/common/transporter/server"
+	"github.com/ystv/streamer/common/wsMessages"
 	"github.com/ystv/streamer/server/helper/tx"
 )
 

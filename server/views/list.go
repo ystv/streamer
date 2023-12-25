@@ -3,10 +3,12 @@ package views
 import (
 	"fmt"
 	"log"
-	"github.com/labstack/echo/v4"
-	"github.com/ystv/streamer/server/templates"
 	"net/http"
 	"strings"
+
+	"github.com/labstack/echo/v4"
+
+	"github.com/ystv/streamer/server/templates"
 )
 
 // ListFunc lists all current streams that are registered in the database

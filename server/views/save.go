@@ -2,16 +2,18 @@ package views
 
 import (
 	"fmt"
-	"github.com/labstack/echo/v4"
-	"github.com/ystv/streamer/server/helper/tx"
-	"github.com/ystv/streamer/server/storage"
-	"github.com/ystv/streamer/server/templates"
 	"log"
 	"math"
 	"net/http"
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/labstack/echo/v4"
+
+	"github.com/ystv/streamer/server/helper/tx"
+	"github.com/ystv/streamer/server/storage"
+	"github.com/ystv/streamer/server/templates"
 )
 
 // SaveFunc allows for the functionality of saving a stream's details for later in order to make things easier for massive operations where you have multiple streams at once

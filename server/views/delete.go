@@ -3,8 +3,9 @@ package views
 import (
 	"fmt"
 	"log"
-	"github.com/labstack/echo/v4"
 	"net/http"
+
+	"github.com/labstack/echo/v4"
 )
 
 // DeleteFunc will delete the saved stream before it can start

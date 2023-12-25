@@ -2,7 +2,7 @@ package store
 
 import (
 	"fmt"
-	_ "fmt"
+
 	"github.com/ystv/streamer/server/storage"
 )
 

@@ -3,9 +3,11 @@ package views
 import (
 	"fmt"
 	"log"
-	"github.com/labstack/echo/v4"
-	"github.com/ystv/streamer/server/templates"
 	"net/http"
+
+	"github.com/labstack/echo/v4"
+
+	"github.com/ystv/streamer/server/templates"
 )
 
 // RecallFunc can pull back up stream details from the save function and allows you to start a stored stream
