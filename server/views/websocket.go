@@ -38,6 +38,7 @@ func (v *Views) Websocket(c echo.Context) error {
 	err = json.Unmarshal(msg, &responseTransporter)
 	if err != nil {
 		log.Printf("failed to unmarshal response: %+v", err)
+		_ = ws.Close()
 		return nil
 	}
 
@@ -115,6 +116,7 @@ func (v *Views) Websocket(c echo.Context) error {
 			err = ws.WriteMessage(websocket.TextMessage, []byte(specialWSMessage.Ping))
 			if err != nil {
 				log.Printf("failed to write ping for %s: %+v", responseTransporter.Server, err)
+				close(internalChannel)
 				close(clientChannel)
 				v.cache.Delete(responseTransporter.Server.String())
 				v.cache.Delete(responseTransporter.Server.String() + internalChannelNameAppend)
@@ -124,6 +126,7 @@ func (v *Views) Websocket(c echo.Context) error {
 			msgType, msg, err = ws.ReadMessage()
 			if err != nil || msgType != websocket.TextMessage || string(msg) != specialWSMessage.Pong.String() {
 				log.Printf("failed to read pong for %s: %+v", responseTransporter.Server, err)
+				close(internalChannel)
 				close(clientChannel)
 				v.cache.Delete(responseTransporter.Server.String())
 				v.cache.Delete(responseTransporter.Server.String() + internalChannelNameAppend)
