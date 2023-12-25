@@ -61,15 +61,18 @@ func (v *Views) StatusFunc(c echo.Context) error {
 				var response commonTransporter.ResponseTransporter
 				response, err = v.wsHelper(server.Recorder, recorderTransporter)
 				if err != nil {
-					log.Println(err, "Error sending to Recorder for status")
+					log.Printf("failed to send or receive message from recorder for status: %+v", err)
+					m["recording"] = fmt.Sprintf("failed to send or receive message from recorder for status: %+v", err)
 					return
 				}
 				if response.Status == wsMessages.Error {
-					log.Printf("Error sending to Recorder for status: %s", response)
+					log.Printf("failed to get correct response from recorder for status: %s", response.Payload)
+					m["recording"] = fmt.Sprintf("failed to get correct response from recorder for status: %s", response.Payload)
 					return
 				}
 				if response.Status != wsMessages.Okay {
-					log.Printf("invalid response from Recorder for status: %s", response)
+					log.Printf("invalid response from recorder for status: %s", response)
+					m["recording"] = fmt.Sprintf("invalid response from recorder for status: %s", response)
 					return
 				}
 				m["recording"] = response.Payload.(string)
@@ -88,15 +91,18 @@ func (v *Views) StatusFunc(c echo.Context) error {
 			var response commonTransporter.ResponseTransporter
 			response, err = v.wsHelper(server.Forwarder, forwarderTransporter)
 			if err != nil {
-				log.Println(err, "Error sending to Recorder for status")
+				log.Printf("failed to send or receive message from forwarder for status: %+v", err)
+				m["0"] = fmt.Sprintf("failed to send or receive message from forwarder for status: %+v", err)
 				return
 			}
 			if response.Status == wsMessages.Error {
-				log.Printf("Error sending to Recorder for status: %s", response)
+				log.Printf("failed to get correct response from forwarder for status: %s", response.Payload)
+				m["0"] = fmt.Sprintf("failed to get correct response from forwarder for status: %s", response.Payload)
 				return
 			}
 			if response.Status != wsMessages.Okay {
-				log.Printf("invalid response from Recorder for status: %s", response)
+				log.Printf("invalid response from recorder for status: %s", response)
+				m["0"] = fmt.Sprintf("invalid response from recorder for status: %s", response)
 				return
 			}
 
@@ -104,7 +110,8 @@ func (v *Views) StatusFunc(c echo.Context) error {
 
 			err = mapstructure.Decode(response.Payload, &forwarderStatus)
 			if err != nil {
-				log.Printf("failed to decode: %+v", err)
+				log.Printf("failed to decode message from forwarder for status: %+v", err)
+				m["0"] = fmt.Sprintf("failed to decode message from forwarder for status: %+v", err)
 				return
 			}
 
