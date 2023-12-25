@@ -18,17 +18,6 @@ import (
 // StopFunc is used when the stream is finished,
 // then you can stop the stream by pressing the stop button, and that would kill all the ffmpeg commands
 func (v *Views) StopFunc(c echo.Context) error {
-	/*if !authenticate(w, r) {
-		err := godotenv.Load()
-		if err != nil {
-			fmt.Printf("error loading .env file: %s", err)
-		}
-
-		jwtAuthentication := os.Getenv("JWT_AUTHENTICATION")
-
-		http.Redirect(w, r, jwtAuthentication+"list", http.StatusTemporaryRedirect)
-		return
-	}*/
 	if c.Request().Method == "POST" {
 		if v.conf.Verbose {
 			log.Println("Stop POST called")
