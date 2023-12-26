@@ -125,7 +125,7 @@
                                 type: 'post',
                                 dataType: 'text',
                                 contentType: 'application/x-www-form-urlencoded',
-                                data: ({"unique": unique}),
+                                data: ({"unique_code": unique}),
                                 success: function (data) {
                                     let statusData = data.split('<br><br><br>');
                                     for (let j = 0; j < statusData.length; j++) {
@@ -151,7 +151,7 @@
                     type: 'post',
                     dataType: 'text',
                     contentType: 'application/x-www-form-urlencoded',
-                    data: ({"unique": unique}),
+                    data: ({"unique_code": unique}),
                     success: function (data) {
                         if (data === "STOPPED!") {
                             document.getElementById('resumed').hidden = true;
