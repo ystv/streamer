@@ -119,7 +119,7 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 		}()
 	}
 
-	log.Printf("stared forwarder: %s", transporter.Unique)
+	log.Printf("started forwarder: %s", transporter.Unique)
 
 	return nil
 }
