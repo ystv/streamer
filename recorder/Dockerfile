@@ -28,7 +28,7 @@ FROM alpine
 LABEL site="ystv-streamer-recorder"
 
 RUN apk update && apk upgrade && \
-    apk add --no-cache ffmpeg
+    apk add --no-cache ffmpeg ca-certificates
 
 FROM scratch
 
