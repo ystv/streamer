@@ -16,6 +16,10 @@ RUN go mod download
 
 COPY . .
 
+RUN apk update && apk upgrade && \
+    apk add --no-cache ffmpeg ca-certificates && \
+    update-ca-certificates
+
 # Set build variables
 RUN echo -n "-X 'main.Version=$STREAMER_VERSION_ARG" > ./ldflags && \
     tr -d \\n < ./ldflags > ./temp && mv ./temp ./ldflags && \
@@ -23,17 +27,6 @@ RUN echo -n "-X 'main.Version=$STREAMER_VERSION_ARG" > ./ldflags && \
 
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="$(cat ./ldflags)" -o /bin/recorder
 
-FROM alpine
-
-LABEL site="ystv-streamer-recorder"
-
-RUN apk update && apk upgrade && \
-    apk add --no-cache ffmpeg ca-certificates update-ca-certificates
-
-FROM scratch
-
-LABEL site="ystv-streamer-recorder"
-# Copy binary
-COPY --from=build /bin/recorder /bin/recorder
 EXPOSE 1323
+
 ENTRYPOINT ["/bin/recorder"]

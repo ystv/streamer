@@ -15,6 +15,10 @@ RUN go mod download
 
 COPY . .
 
+RUN apk update && apk upgrade && \
+    apk add --no-cache ffmpeg ca-certificates && \
+    update-ca-certificates
+
 # Set build variables
 RUN echo -n "-X 'main.Version=$STREAMER_VERSION_ARG" > ./ldflags && \
     tr -d \\n < ./ldflags > ./temp && mv ./temp ./ldflags && \
@@ -22,17 +26,6 @@ RUN echo -n "-X 'main.Version=$STREAMER_VERSION_ARG" > ./ldflags && \
 
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="$(cat ./ldflags)" -o /bin/forwarder
 
-FROM alpine
-
-LABEL site="ystv-streamer-forwarder"
-
-RUN apk update && apk upgrade && \
-    apk add --no-cache ffmpeg ca-certificates update-ca-certificates
-
-FROM scratch
-
-LABEL site="ystv-streamer-forwarder"
-# Copy binary
-COPY --from=build /bin/forwarder /bin/forwarder
 EXPOSE 1323
+
 ENTRYPOINT ["/bin/forwarder"]
