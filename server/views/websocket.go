@@ -80,15 +80,13 @@ func (v *Views) Websocket(c echo.Context) error {
 
 	log.Println("connected", responseTransporter.Server)
 
-	loop := true
-
 	ticker := time.NewTicker(5 * time.Second)
 	defer func() {
 		ticker.Stop()
 		_ = ws.Close()
 	}()
 
-	for loop {
+	for {
 		select {
 		case res := <-clientChannel:
 			err = ws.WriteMessage(websocket.TextMessage, res)
@@ -134,5 +132,4 @@ func (v *Views) Websocket(c echo.Context) error {
 			}
 		}
 	}
-	return nil
 }
