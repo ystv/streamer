@@ -99,6 +99,7 @@ func (v *Views) Websocket(c echo.Context) error {
 				v.cache.Delete(responseTransporter.Server.String())
 				v.cache.Delete(responseTransporter.Server.String() + internalChannelNameAppend)
 				loop = false
+				return nil
 			}
 
 			_, msg, err = ws.ReadMessage()
@@ -109,6 +110,7 @@ func (v *Views) Websocket(c echo.Context) error {
 				v.cache.Delete(responseTransporter.Server.String())
 				v.cache.Delete(responseTransporter.Server.String() + internalChannelNameAppend)
 				loop = false
+				return nil
 			}
 			internalChannel <- msg
 			log.Printf("Message received from \"%s\": %s", responseTransporter.Server, msg)
@@ -121,6 +123,7 @@ func (v *Views) Websocket(c echo.Context) error {
 				v.cache.Delete(responseTransporter.Server.String())
 				v.cache.Delete(responseTransporter.Server.String() + internalChannelNameAppend)
 				loop = false
+				return nil
 			}
 			var msgType int
 			msgType, msg, err = ws.ReadMessage()
@@ -131,6 +134,7 @@ func (v *Views) Websocket(c echo.Context) error {
 				v.cache.Delete(responseTransporter.Server.String())
 				v.cache.Delete(responseTransporter.Server.String() + internalChannelNameAppend)
 				loop = false
+				return nil
 			}
 		}
 	}
