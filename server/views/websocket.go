@@ -98,7 +98,6 @@ func (v *Views) Websocket(c echo.Context) error {
 				close(clientChannel)
 				v.cache.Delete(responseTransporter.Server.String())
 				v.cache.Delete(responseTransporter.Server.String() + internalChannelNameAppend)
-				loop = false
 				return nil
 			}
 
@@ -109,7 +108,6 @@ func (v *Views) Websocket(c echo.Context) error {
 				close(clientChannel)
 				v.cache.Delete(responseTransporter.Server.String())
 				v.cache.Delete(responseTransporter.Server.String() + internalChannelNameAppend)
-				loop = false
 				return nil
 			}
 			internalChannel <- msg
@@ -122,7 +120,6 @@ func (v *Views) Websocket(c echo.Context) error {
 				close(clientChannel)
 				v.cache.Delete(responseTransporter.Server.String())
 				v.cache.Delete(responseTransporter.Server.String() + internalChannelNameAppend)
-				loop = false
 				return nil
 			}
 			var msgType int
@@ -133,7 +130,6 @@ func (v *Views) Websocket(c echo.Context) error {
 				close(clientChannel)
 				v.cache.Delete(responseTransporter.Server.String())
 				v.cache.Delete(responseTransporter.Server.String() + internalChannelNameAppend)
-				loop = false
 				return nil
 			}
 		}
