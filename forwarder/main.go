@@ -157,12 +157,12 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 	}(c)
 	go func() {
 		pinging.Store(false)
-		//defer close(done)
-		//defer func() {
-		//	if r := recover(); r != nil {
-		//		close(errorChannel)
-		//	}
-		//}()
+		defer close(done)
+		defer func() {
+			if r := recover(); r != nil {
+				close(errorChannel)
+			}
+		}()
 		response := specialTransporter.InitiationTransporter{
 			Server:  server.Forwarder,
 			Version: Version,
