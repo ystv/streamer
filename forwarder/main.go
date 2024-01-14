@@ -280,6 +280,15 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 					continue
 				}
 			case "status":
+				_, ok := v.cache.Get(fmt.Sprintf("%s_1", t.Unique))
+				if !ok {
+					log.Println(v.cache.Items())
+					kill := v.errorResponse(fmt.Errorf("failed to get status, invalid unique: %s", t.Unique), c)
+					if kill {
+						return
+					}
+					continue
+				}
 				var t1 commonTransporter.ForwarderStatus
 
 				err = mapstructure.Decode(t.Payload, &t1)
@@ -310,6 +319,14 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 					continue
 				}
 			case "stop":
+				_, ok := v.cache.Get(fmt.Sprintf("%s_1", t.Unique))
+				if !ok {
+					kill := v.errorResponse(fmt.Errorf("failed to stop forward, invalid unique: %s", t.Unique), c)
+					if kill {
+						return
+					}
+					continue
+				}
 				err = v.stop(t)
 				if err != nil {
 					kill := v.errorResponse(fmt.Errorf("failed to stop forwarder: %w", err), c)
