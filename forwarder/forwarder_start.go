@@ -102,7 +102,7 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 					c1 := cmd.(*exec.Cmd)
 					err = c1.Process.Kill()
 					if err != nil {
-						log.Println(err)
+						log.Printf("failed to kill cmd in finish: %+v", err)
 					}
 					v.cache.Delete(fmt.Sprintf("%s_%d", transporter.Unique, k))
 					return
