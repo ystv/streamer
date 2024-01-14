@@ -52,7 +52,7 @@ func (v *Views) StartFunc(c echo.Context) error {
 		}
 
 		// This section finds the number of the stream from the form
-		// You can miss values out and some rearranging will have to be done
+		// You can miss values out, and some rearranging will have to be done
 		largest := 0
 		var numbers []int
 		for s := range c.Request().PostForm {
