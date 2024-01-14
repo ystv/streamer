@@ -157,12 +157,12 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 	}(c)
 	go func() {
 		pinging.Store(false)
-		defer close(done)
-		defer func() {
-			if r := recover(); r != nil {
-				close(errorChannel)
-			}
-		}()
+		//defer close(done)
+		//defer func() {
+		//	if r := recover(); r != nil {
+		//		close(errorChannel)
+		//	}
+		//}()
 		response := specialTransporter.InitiationTransporter{
 			Server:  server.Forwarder,
 			Version: Version,
@@ -172,14 +172,12 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 		resBytes, err = json.Marshal(response)
 		if err != nil {
 			log.Printf("failed to marshal initial: %+v", err)
-			close(errorChannel)
 			return
 		}
 
 		err = c.WriteMessage(websocket.TextMessage, resBytes)
 		if err != nil {
 			log.Printf("failed to write name and version: %+v", err)
-			close(errorChannel)
 			return
 		}
 
@@ -188,13 +186,11 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 		_, msg, err = c.ReadMessage()
 		if err != nil {
 			log.Printf("failed to read acknowledgement: %+v", err)
-			close(errorChannel)
 			return
 		}
 
 		if string(msg) != specialWSMessage.Acknowledged.String() {
 			log.Printf("failed to read acknowledgement: %s", string(msg))
-			close(errorChannel)
 			return
 		}
 		log.Println(specialWSMessage.Acknowledged)
@@ -206,7 +202,6 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 			msgType, message, err = c.ReadMessage()
 			if err != nil {
 				log.Printf("failed to read: %+v", err)
-				close(errorChannel)
 				return
 			}
 			if msgType == websocket.TextMessage && string(message) == specialWSMessage.Ping.String() {
@@ -214,7 +209,6 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 				err = c.WriteMessage(websocket.TextMessage, []byte(specialWSMessage.Pong))
 				if err != nil {
 					log.Printf("failed to write pong: %+v", err)
-					close(errorChannel)
 					return
 				}
 				pinging.Store(false)
@@ -225,7 +219,6 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 		}
 	}()
 
-	defer close(errorChannel)
 	for {
 		select {
 		case <-done:
