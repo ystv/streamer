@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 	"time"
 
@@ -68,14 +69,9 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 				if err == nil {
 					break
 				}
-				c := exec.Command("ffmpeg", "-i", fmt.Sprintf("\"%s\"", streamIn), "-c", "copy", fmt.Sprintf("\"%s%s_%d.mkv", path, baseFileName, i)+".mkv\"", ">>", "\"/logs/"+transporter.Unique+".txt\"", "2>&1")
-				if err = v.cache.Add(transporter.Unique, c, cache.NoExpiration); err != nil {
-					log.Printf("failed to add command to cache: %+v", err)
-					return
-				}
-				err = c.Run()
+				err = v.helperStart(transporter, fmt.Sprintf("\"%s\"", streamIn), path, baseFileName, i)
 				if err != nil {
-					log.Println("could not run command: ", err)
+					log.Printf("failed to record: %+v", err)
 				}
 				time.Sleep(500 * time.Millisecond)
 			}
@@ -106,5 +102,29 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 
 	log.Printf("started recording: %s", transporter.Unique)
 
+	return nil
+}
+
+func (v *Views) helperStart(transporter commonTransporter.Transporter, streamIn, path, baseFileName string, i uint64) error {
+	c := exec.Command("ffmpeg", "-i", streamIn, "-c", "copy", fmt.Sprintf("\"%s%s_%d.mkv", path, baseFileName, i))
+	err := v.cache.Add(transporter.Unique+strconv.FormatUint(i, 10), c, cache.NoExpiration)
+	if err != nil {
+		return fmt.Errorf("failed to add command to cache: %w", err)
+	}
+	var f *os.File
+	f, err = os.OpenFile(fmt.Sprintf("/logs/%s.txt", transporter.Unique), os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	if err != nil {
+		panic(fmt.Errorf("failed to open file: %w", err))
+	}
+	defer func(f *os.File) {
+		_ = f.Close()
+	}(f)
+
+	c.Stdout = f
+	c.Stderr = f
+
+	if err = c.Run(); err != nil {
+		log.Println("could not run command: ", err)
+	}
 	return nil
 }
