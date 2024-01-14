@@ -19,11 +19,8 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 	valid := false
 	var path string
 
-	tempBaseFileName := strings.Split(array[len(array)-1], ".")
-	baseFileNameArray := tempBaseFileName[0 : len(tempBaseFileName)-1]
-	var baseFileName string
-	for _, s := range baseFileNameArray {
-		baseFileName += s
+	if len(array) == 0 || array == nil {
+		return fmt.Errorf("failed to get path out array")
 	}
 
 	if len(array) == 1 {
@@ -44,6 +41,16 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 	}
 	if !valid {
 		return fmt.Errorf("invalid path: %+v", transporter)
+	}
+
+	tempBaseFileName := strings.Split(array[len(array)-1], ".")
+	if len(tempBaseFileName) < 2 || tempBaseFileName == nil {
+		return fmt.Errorf("failed to get base file name: %s", tempBaseFileName)
+	}
+	baseFileNameArray := tempBaseFileName[0 : len(tempBaseFileName)-1]
+	var baseFileName string
+	for _, s := range baseFileNameArray {
+		baseFileName += s
 	}
 
 	streamIn := fmt.Sprintf("%s%s", v.Config.StreamServer, transporter.Payload.(commonTransporter.RecorderStart).StreamIn)
