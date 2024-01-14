@@ -16,10 +16,10 @@ jobs:
           go-version: '1.21'
       - name: download nilaway
         run: go install go.uber.org/nilaway/cmd/nilaway@latest
-      - name: cd to server
-        run: cd server
+#      - name: cd to server
+#        run: cd server && nilaway .
       - name: run nilaway on server
-        run: nilaway .
+        run: cd server && nilaway .
 
   nilaway-forwarder:
     name: nilaway-forwarder
@@ -31,10 +31,10 @@ jobs:
           go-version: '1.21'
       - name: download nilaway
         run: go install go.uber.org/nilaway/cmd/nilaway@latest
-      - name: cd to forwarder
-        run: cd forwarder
+#      - name: cd to forwarder
+#        run: cd forwarder
       - name: run nilaway on forwarder
-        run: nilaway .
+        run: cd forwarder && nilaway .
 
   nilaway-recorder:
     name: nilaway-recorder
@@ -46,10 +46,10 @@ jobs:
           go-version: '1.21'
       - name: download nilaway
         run: go install go.uber.org/nilaway/cmd/nilaway@latest
-      - name: cd to recorder
-        run: cd recorder
+#      - name: cd to recorder
+#        run: cd recorder
       - name: run nilaway on recorder
-        run: nilaway .
+        run: cd recorder && nilaway .
 
   nilaway-common:
     name: nilaway-common
@@ -61,7 +61,7 @@ jobs:
           go-version: '1.21'
       - name: download nilaway
         run: go install go.uber.org/nilaway/cmd/nilaway@latest
-      - name: cd to common
-        run: cd common
+#      - name: cd to common
+#        run: cd common
       - name: run nilaway on common
-        run: nilaway .
+        run: cd common && nilaway .
