@@ -58,17 +58,22 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 		"thisYear": func() int {
 			return time.Now().Year()
 		},
-		"add": func(a, b int) int {
-			return a + b
-		},
-		"inc": func(a int) int {
-			return a + 1
-		},
-		"dec": func(a int) int {
-			return a - 1
-		},
-		"even": func(a int) bool {
-			return a%2 == 0
-		},
 	}
 }
+
+// This section is for go template linter
+var (
+	AllTemplates = [][]string{
+		{"facebookHelp.tmpl", "_base.tmpl"},
+		{"list.tmpl", "_base.tmpl"},
+		{"main.tmpl", "_base.tmpl"},
+		{"recall.tmpl", "_base.tmpl"},
+		{"resume.tmpl", "_base.tmpl"},
+		{"save.tmpl", "_base.tmpl"},
+		{"youtubeHelp.tmpl", "_base.tmpl"},
+		{"error.tmpl", "_base.tmpl"},
+		{"404NotFound.tmpl", "_base.tmpl"},
+	}
+
+	_ = AllTemplates
+)
