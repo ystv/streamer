@@ -14,7 +14,7 @@ import (
 )
 
 func (v *Views) start(transporter commonTransporter.Transporter) error {
-	streamIn := fmt.Sprintf("rtmp://%s%s", v.Config.StreamServer, transporter.Payload.(commonTransporter.ForwarderStart).StreamIn)
+	streamIn := fmt.Sprintf("%s%s", v.Config.StreamServer, transporter.Payload.(commonTransporter.ForwarderStart).StreamIn)
 
 	if len(transporter.Payload.(commonTransporter.ForwarderStart).WebsiteOut) > 0 {
 		finish := make(chan bool)

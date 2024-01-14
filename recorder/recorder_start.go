@@ -46,7 +46,7 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 		return fmt.Errorf("invalid path: %+v", transporter)
 	}
 
-	streamIn := fmt.Sprintf("rtmp://%s%s", v.Config.StreamServer, transporter.Payload.(commonTransporter.RecorderStart).StreamIn)
+	streamIn := fmt.Sprintf("%s%s", v.Config.StreamServer, transporter.Payload.(commonTransporter.RecorderStart).StreamIn)
 	path = v.Config.RecordingLocation + path
 
 	finish := make(chan bool)
