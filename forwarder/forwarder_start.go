@@ -25,7 +25,7 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 		go func() {
 			for {
 				v.cache.Delete(fmt.Sprintf("%s_0", transporter.Unique))
-				switch {
+				select {
 				case <-finish:
 					return
 				default:
@@ -45,7 +45,7 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 
 		go func() {
 			for {
-				switch {
+				select {
 				case <-finish:
 					cmd, ok := v.cache.Get(fmt.Sprintf("%s_0", transporter.Unique))
 					if !ok {
@@ -78,7 +78,7 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 			j := k
 			for {
 				v.cache.Delete(fmt.Sprintf("%s_%d", transporter.Unique, j+1))
-				switch {
+				select {
 				case <-finish:
 					return
 				default:
@@ -98,7 +98,7 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 
 		go func() {
 			for {
-				switch {
+				select {
 				case <-finish:
 					cmd, ok := v.cache.Get(fmt.Sprintf("%s_%d", transporter.Unique, k))
 					if !ok {

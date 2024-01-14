@@ -59,7 +59,7 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 		var i uint64
 		for {
 			v.cache.Delete(transporter.Unique)
-			switch {
+			select {
 			case <-finish:
 				return
 			default:
@@ -85,7 +85,7 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 
 	go func() {
 		for {
-			switch {
+			select {
 			case <-finish:
 				cmd, ok := v.cache.Get(transporter.Unique)
 				if !ok {
