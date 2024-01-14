@@ -1,57 +1,64 @@
 name: golangci-lint
-on: [push, pull_request]
+on: [ push, pull_request ]
 
 permissions:
   contents: read
   pull-requests: read
 
 jobs:
-  setup-golangci:
-    name: setup-golangci
+  golangci-server:
+    name: lint-server
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: WillAbides/setup-go-faster@v1
         with:
           go-version: '1.21'
-  golangci-server:
-    name: lint-server
-    runs-on: ubuntu-latest
-    needs: setup-golangci
-    steps:
       - name: golangci-lint-server
         uses: golangci/golangci-lint-action@v3
         with:
           version: latest
           only-new-issues: true
           working-directory: ./server
+
   golangci-forwarder:
     name: lint-forwarder
     runs-on: ubuntu-latest
-    needs: setup-golangci
     steps:
+      - uses: actions/checkout@v3
+      - uses: WillAbides/setup-go-faster@v1
+        with:
+          go-version: '1.21'
       - name: golangci-lint-forwarder
         uses: golangci/golangci-lint-action@v3
         with:
           version: latest
           only-new-issues: true
           working-directory: ./forwarder
+
   golangci-recorder:
     name: lint-recorder
     runs-on: ubuntu-latest
-    needs: setup-golangci
     steps:
+      - uses: actions/checkout@v3
+      - uses: WillAbides/setup-go-faster@v1
+        with:
+          go-version: '1.21'
       - name: golangci-lint-recorder
         uses: golangci/golangci-lint-action@v3
         with:
           version: latest
           only-new-issues: true
           working-directory: ./recorder
+
   golangci-common:
     name: lint-common
     runs-on: ubuntu-latest
-    needs: setup-golangci
     steps:
+      - uses: actions/checkout@v3
+      - uses: WillAbides/setup-go-faster@v1
+        with:
+          go-version: '1.21'
       - name: golangci-lint-common
         uses: golangci/golangci-lint-action@v3
         with:

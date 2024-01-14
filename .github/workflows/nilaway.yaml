@@ -16,38 +16,58 @@ jobs:
           go-version: '1.21'
       - name: download nilaway
         run: go install go.uber.org/nilaway/cmd/nilaway@latest
+
   nilaway-server:
     name: nilaway-server
     runs-on: ubuntu-latest
     needs: setup-nilaway
     steps:
+      - uses: actions/checkout@v3
+      - uses: WillAbides/setup-go-faster@v1
+        with:
+          go-version: '1.21'
       - name: cd to server
         run: cd server
       - name: run nilaway on server
         run: nilaway .
+
   nilaway-forwarder:
     name: nilaway-forwarder
     runs-on: ubuntu-latest
     needs: setup-nilaway
     steps:
+      - uses: actions/checkout@v3
+      - uses: WillAbides/setup-go-faster@v1
+        with:
+          go-version: '1.21'
       - name: cd to forwarder
         run: cd forwarder
       - name: run nilaway on forwarder
         run: nilaway .
+
   nilaway-recorder:
     name: nilaway-recorder
     runs-on: ubuntu-latest
     needs: setup-nilaway
     steps:
+      - uses: actions/checkout@v3
+      - uses: WillAbides/setup-go-faster@v1
+        with:
+          go-version: '1.21'
       - name: cd to recorder
         run: cd recorder
       - name: run nilaway on recorder
         run: nilaway .
+
   nilaway-common:
     name: nilaway-common
     runs-on: ubuntu-latest
     needs: setup-nilaway
     steps:
+      - uses: actions/checkout@v3
+      - uses: WillAbides/setup-go-faster@v1
+        with:
+          go-version: '1.21'
       - name: cd to common
         run: cd common
       - name: run nilaway on common
