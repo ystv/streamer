@@ -388,7 +388,7 @@
                     data: $('#stream_outs').serialize(),
                     success: function (data) {
                         if (data.error !== null) {
-                            error.html(data);
+                            error.html(data.error);
                             startPressed = false;
                             return;
                         }
