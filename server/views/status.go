@@ -57,7 +57,7 @@ func (v *Views) StatusFunc(c echo.Context) error {
 
 		if stream == nil {
 			log.Println("failed to get stream as data is empty")
-			errResponse.Error = fmt.Sprintf("failed to get stream as data is empty")
+			errResponse.Error = "failed to get stream as data is empty"
 			return c.JSON(http.StatusOK, errResponse)
 		}
 
