@@ -49,6 +49,7 @@ func (v *Views) websiteCheck(endpoint string) bool {
 		log.Printf("failed to read body for website check: %+v", err)
 		return true // sending back true if the checker is down
 	}
+	log.Println(res)
 	if (res.StatusCode >= 500 && res.StatusCode < 600) || res.StatusCode == http.StatusNotFound {
 		log.Printf("failed to get correct status from cobra: %d", res.StatusCode)
 		return true // sending back true if the checker is down
