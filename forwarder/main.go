@@ -163,6 +163,9 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 				close(errorChannel)
 			}
 		}()
+		defer func(c *websocket.Conn) {
+			_ = c.Close()
+		}(c)
 		response := specialTransporter.InitiationTransporter{
 			Server:  server.Forwarder,
 			Version: Version,
