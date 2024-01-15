@@ -387,12 +387,12 @@
                     contentType: 'application/x-www-form-urlencoded',
                     data: $('#stream_outs').serialize(),
                     success: function (data) {
-                        if (data.includes("An error has occurred...\n")) {
+                        if (data.error.length > 0) {
                             error.html(data);
                             startPressed = false;
                             return;
                         }
-                        $('#unique').html(data);
+                        $('#unique').html(data.unique);
                         document.getElementById('start_window').hidden = true;
                         document.getElementById('start_window').style.visibility = "hidden";
                         document.getElementById('started_window').hidden = false;
