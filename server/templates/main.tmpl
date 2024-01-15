@@ -145,6 +145,7 @@
             <p class="title">STARTED!</p><br><br>
             <p>The stream has been forwarded, the unique code of this forward is below</p><br>
             <p id="unique" class="subtitle"></p><br>
+            <p id="statusError" style="color: red"></p><br>
             <table class="table table-bordered" id="tableStatus"></table>
             <br>
             <p>This window can be closed as long as you have the code to stop the stream<br>
@@ -424,12 +425,24 @@
                                 contentType: 'application/x-www-form-urlencoded',
                                 data: ({"unique_code": unique}),
                                 success: function (data) {
-                                    let statusData = data.split('<br><br><br>');
-                                    for (let j = 0; j < statusData.length; j++) {
-                                        let tempStatus = statusData[j].split(":");
-                                        let tempStatus1 = tempStatus[0].trim() + "_status";
-                                        let first = statusData[j].indexOf(":") + 1;
-                                        document.getElementById(tempStatus1).innerHTML = statusData[j].substring(first);
+                                    if (data.error.length > 0) {
+                                        document.getElementById("statusError").innerHTML = data.error
+                                    } else {
+                                        for (let j = 0; j < data.status.length; j++) {
+                                            let status1 = data.status[j]
+                                            if (status1.error.length > 0) {
+                                                document.getElementById(status1.name + "_status").innerHTML = status1.error;
+                                            } else {
+                                                document.getElementById(status1.name + "_status").innerHTML = status1.response;
+                                            }
+                                        }
+                                        // let statusData = data.split('<br><br><br>');
+                                        // for (let j = 0; j < statusData.length; j++) {
+                                        //     let tempStatus = statusData[j].split(":");
+                                        //     let tempStatus1 = tempStatus[0].trim() + "_status";
+                                        //     let first = statusData[j].indexOf(":") + 1;
+                                        //     document.getElementById(tempStatus1).innerHTML = statusData[j].substring(first);
+                                        // }
                                     }
                                 },
                             })
