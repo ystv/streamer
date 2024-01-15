@@ -106,6 +106,7 @@ func main() {
 	for {
 		log.Printf("streamer forwarder version: %s\n", Version)
 		v.run(config, interrupt)
+		time.Sleep(5 * time.Second)
 	}
 }
 
