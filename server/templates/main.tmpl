@@ -388,12 +388,6 @@
                     data: $('#stream_outs').serialize(),
                     success: function (data) {
                         const jsonData = JSON.parse(data);
-                        console.log(jsonData);
-                        console.log(jsonData.unique);
-                        console.log(jsonData.error);
-                        console.log(jsonData.error === '');
-                        console.log(jsonData.error === "");
-                        console.log(jsonData.error === null);
                         if (jsonData.error !== "") {
                             error.html(jsonData.error);
                             startPressed = false;
