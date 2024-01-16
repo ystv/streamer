@@ -79,7 +79,7 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 				case <-finish:
 					return
 				default:
-					err = v.helperStart(transporter, streamIn, fmt.Sprintf("\"%s\"", transporter.Payload.(commonTransporter.ForwarderStart).Streams[i]), j+1)
+					err = v.helperStart(transporter, streamIn, fmt.Sprintf("\"%s\"", transporter.Payload.(commonTransporter.ForwarderStart).Streams[j]), j+1)
 					if err != nil {
 						log.Printf("failed to stream: %+v", err)
 						return
