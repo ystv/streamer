@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"strconv"
 	"time"
 
 	"github.com/patrickmn/go-cache"
@@ -120,7 +119,7 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 
 func (v *Views) helperStart(transporter commonTransporter.Transporter, streamIn, streamOut string, i int) error {
 	c := exec.Command("ffmpeg", "-i", streamIn, "-c", "copy", "-f", "flv", streamOut)
-	err := v.cache.Add(transporter.Unique+strconv.Itoa(i), c, cache.NoExpiration)
+	err := v.cache.Add(fmt.Sprintf("%s_%d", transporter.Unique, i), c, cache.NoExpiration)
 	if err != nil {
 		return fmt.Errorf("failed to add command to cache: %w", err)
 	}
