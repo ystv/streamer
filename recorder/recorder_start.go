@@ -53,7 +53,7 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 		baseFileName += s
 	}
 
-	streamIn := fmt.Sprintf("%s%s", v.Config.StreamServer, transporter.Payload.(commonTransporter.RecorderStart).StreamIn)
+	streamIn := fmt.Sprintf("rtmp://%s%s", v.Config.StreamServer, transporter.Payload.(commonTransporter.RecorderStart).StreamIn)
 	path = v.Config.RecordingLocation + path
 
 	finish := make(chan bool)
