@@ -207,6 +207,8 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 			msgType, message, err = c.ReadMessage()
 			if err != nil {
 				log.Printf("failed to read: %+v", err)
+				log.Printf("message type: %d", msgType)
+				log.Printf("message contents: %s", string(message))
 				close(errorChannel)
 				return
 			}
