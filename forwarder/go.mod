@@ -2,6 +2,8 @@ module github.com/ystv/streamer/forwarder
 
 go 1.21
 
+toolchain go1.21.6
+
 require (
 	github.com/gorilla/websocket v1.5.1
 	github.com/joho/godotenv v1.5.1
