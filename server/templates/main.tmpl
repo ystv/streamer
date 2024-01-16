@@ -387,23 +387,24 @@
                     contentType: 'application/x-www-form-urlencoded',
                     data: $('#stream_outs').serialize(),
                     success: function (data) {
-                        console.log(data);
-                        console.log(data.unique);
-                        console.log(data.error);
-                        console.log(data.error === '');
-                        console.log(data.error === "");
-                        console.log(data.error === null);
-                        if (data.error !== "") {
-                            error.html(data.error);
+                        const jsonData = JSON.parse(data);
+                        console.log(jsonData);
+                        console.log(jsonData.unique);
+                        console.log(jsonData.error);
+                        console.log(jsonData.error === '');
+                        console.log(jsonData.error === "");
+                        console.log(jsonData.error === null);
+                        if (jsonData.error !== "") {
+                            error.html(jsonData.error);
                             startPressed = false;
                             return;
                         }
-                        $('#unique').html(data.unique);
+                        $('#unique').html(jsonData.unique);
                         document.getElementById('start_window').hidden = true;
                         document.getElementById('start_window').style.visibility = "hidden";
                         document.getElementById('started_window').hidden = false;
                         document.getElementById('started_window').style.visibility = "visible";
-                        unique = data;
+                        unique = jsonData.unique;
                         let tableStatus = $('#tableStatus');
                         if (document.getElementById('record').checked) {
                             tableStatus.append('<tr><td><p class="subtitle">Recording status</p></td><td><p id="recording_status"></p><br></td></tr>');
@@ -431,11 +432,12 @@
                                 contentType: 'application/x-www-form-urlencoded',
                                 data: ({"unique_code": unique}),
                                 success: function (data) {
-                                    if (data.error !== "") {
-                                        document.getElementById("statusError").innerHTML = data.error
+                                    const jsonData1 = JSON.parse(data);
+                                    if (jsonData1.error !== "") {
+                                        document.getElementById("statusError").innerHTML = jsonData1.error
                                     } else {
-                                        for (let j = 0; j < data.status.length; j++) {
-                                            let status1 = data.status[j]
+                                        for (let j = 0; j < jsonData1.status.length; j++) {
+                                            let status1 = jsonData1.status[j]
                                             if (status1.error.length > 0) {
                                                 document.getElementById(status1.name + "_status").innerHTML = status1.error;
                                             } else {
