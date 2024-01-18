@@ -32,7 +32,7 @@ func (v *Views) wsHelper(name server.Server, transporter commonTransporter.Trans
 
 	err = json.Unmarshal(received, &responseTransporter)
 	if err != nil {
-		return commonTransporter.ResponseTransporter{}, fmt.Errorf("failed to unmarshal response: %w", err)
+		return commonTransporter.ResponseTransporter{}, fmt.Errorf("failed to unmarshal response: %w, recieved message: %s", err, string(received))
 	}
 
 	return responseTransporter, nil
