@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
@@ -80,11 +79,11 @@ func (v *Views) Websocket(c echo.Context) error {
 
 	log.Println("connected", responseTransporter.Server)
 
-	ticker := time.NewTicker(5 * time.Second)
-	defer func() {
-		ticker.Stop()
-		_ = ws.Close()
-	}()
+	//ticker := time.NewTicker(5 * time.Second)
+	//defer func() {
+	//	ticker.Stop()
+	//	_ = ws.Close()
+	//}()
 
 	for {
 		select {
@@ -110,26 +109,26 @@ func (v *Views) Websocket(c echo.Context) error {
 			}
 			internalChannel <- msg
 			log.Printf("Message received from \"%s\": %s", responseTransporter.Server, msg)
-		case <-ticker.C:
-			err = ws.WriteMessage(websocket.TextMessage, []byte(specialWSMessage.Ping))
-			if err != nil {
-				log.Printf("failed to write ping for %s: %+v", responseTransporter.Server, err)
-				close(internalChannel)
-				close(clientChannel)
-				v.cache.Delete(responseTransporter.Server.String())
-				v.cache.Delete(responseTransporter.Server.String() + internalChannelNameAppend)
-				return nil
-			}
-			var msgType int
-			msgType, msg, err = ws.ReadMessage()
-			if err != nil || msgType != websocket.TextMessage || string(msg) != specialWSMessage.Pong.String() {
-				log.Printf("failed to read pong for %s: %+v", responseTransporter.Server, err)
-				close(internalChannel)
-				close(clientChannel)
-				v.cache.Delete(responseTransporter.Server.String())
-				v.cache.Delete(responseTransporter.Server.String() + internalChannelNameAppend)
-				return nil
-			}
+			//case <-ticker.C:
+			//	err = ws.WriteMessage(websocket.TextMessage, []byte(specialWSMessage.Ping))
+			//	if err != nil {
+			//		log.Printf("failed to write ping for %s: %+v", responseTransporter.Server, err)
+			//		close(internalChannel)
+			//		close(clientChannel)
+			//		v.cache.Delete(responseTransporter.Server.String())
+			//		v.cache.Delete(responseTransporter.Server.String() + internalChannelNameAppend)
+			//		return nil
+			//	}
+			//	var msgType int
+			//	msgType, msg, err = ws.ReadMessage()
+			//	if err != nil || msgType != websocket.TextMessage || string(msg) != specialWSMessage.Pong.String() {
+			//		log.Printf("failed to read pong for %s: %+v", responseTransporter.Server, err)
+			//		close(internalChannel)
+			//		close(clientChannel)
+			//		v.cache.Delete(responseTransporter.Server.String())
+			//		v.cache.Delete(responseTransporter.Server.String() + internalChannelNameAppend)
+			//		return nil
+			//	}
 		}
 	}
 }
