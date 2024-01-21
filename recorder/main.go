@@ -212,18 +212,17 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 				close(errorChannel)
 				return
 			}
-			_ = msgType
-			//if msgType == websocket.TextMessage && string(message) == specialWSMessage.Ping.String() {
-			//	pinging.Store(true)
-			//	err = c.WriteMessage(websocket.TextMessage, []byte(specialWSMessage.Pong))
-			//	if err != nil {
-			//		log.Printf("failed to write pong: %+v", err)
-			//		close(errorChannel)
-			//		return
-			//	}
-			//	pinging.Store(false)
-			//	continue
-			//}
+			if msgType == websocket.TextMessage && string(message) == specialWSMessage.Ping.String() {
+				//pinging.Store(true)
+				err = c.WriteMessage(websocket.TextMessage, []byte(specialWSMessage.Pong))
+				if err != nil {
+					log.Printf("failed to write pong: %+v", err)
+					close(errorChannel)
+					return
+				}
+				//pinging.Store(false)
+				continue
+			}
 			log.Printf("Received message: %s", message)
 			messageOut <- message
 		}
