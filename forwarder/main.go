@@ -28,6 +28,7 @@ import (
 type (
 	Config struct {
 		StreamServer            string `envconfig:"STREAM_SERVER"`
+		StreamServerScheme      string `envconfig:"STREAM_SERVER_SCHEME"`
 		StreamerWebAddress      string `envconfig:"STREAMER_WEB_ADDRESS"`
 		StreamerWebsocketPath   string `envconfig:"STREAMER_WEBSOCKET_PATH"`
 		StreamerWebsocketScheme string `envconfig:"STREAMER_WEBSOCKET_SCHEME"`

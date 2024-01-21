@@ -13,7 +13,7 @@ import (
 )
 
 func (v *Views) start(transporter commonTransporter.Transporter) error {
-	streamIn := fmt.Sprintf("rtmp://%s%s", v.Config.StreamServer, transporter.Payload.(commonTransporter.ForwarderStart).StreamIn)
+	streamIn := fmt.Sprintf("%s://%s%s", v.Config.StreamServerScheme, v.Config.StreamServer, transporter.Payload.(commonTransporter.ForwarderStart).StreamIn)
 
 	if len(transporter.Payload.(commonTransporter.ForwarderStart).WebsiteOut) > 0 {
 		finish := make(chan bool)
@@ -30,7 +30,7 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 				case <-finish:
 					return
 				default:
-					err = v.helperStart(transporter, streamIn, fmt.Sprintf("rtmp://%slive/%s", v.Config.StreamServer, transporter.Payload.(commonTransporter.ForwarderStart).WebsiteOut), 0)
+					err = v.helperStart(transporter, streamIn, fmt.Sprintf("%s://%slive/%s", v.Config.StreamServerScheme, v.Config.StreamServer, transporter.Payload.(commonTransporter.ForwarderStart).WebsiteOut), 0)
 					if err != nil {
 						log.Printf("failed to stream: %+v", err)
 						return
