@@ -13,7 +13,7 @@ type (
 		// Payload is used for either Transporter or a ping
 		Payload interface{} `json:"payload"`
 		// ReturningChannel is the channel for returning data on
-		ReturningChannel chan []byte `json:"returningChannel"`
+		ReturningChannel chan []byte `json:"returningChannel,omitempty"`
 	}
 
 	// Transporter is the parent struct to send to a recipient and must always be used except with a ping
