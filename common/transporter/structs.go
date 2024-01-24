@@ -11,7 +11,9 @@ type (
 		// ID is the unique code used to identify a request
 		ID string `json:"id"`
 		// Payload is used for either Transporter or a ping
-		Payload interface{} `json:"Payload"`
+		Payload interface{} `json:"payload"`
+		// ReturningChannel is the channel for returning data on
+		ReturningChannel chan []byte `json:"returningChannel"`
 	}
 
 	// Transporter is the parent struct to send to a recipient and must always be used except with a ping
