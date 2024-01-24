@@ -6,6 +6,14 @@ import (
 )
 
 type (
+	// TransporterUnique is sent with an ID in order to be returned and sorted
+	TransporterUnique struct {
+		// ID is the unique code used to identify a request
+		ID string `json:"id"`
+		// Payload is used for either Transporter or a ping
+		Payload interface{} `json:"Payload"`
+	}
+
 	// Transporter is the parent struct to send to a recipient and must always be used except with a ping
 	Transporter struct {
 		// Action is the action that is to be performed by the recipient
