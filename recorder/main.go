@@ -9,7 +9,6 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
-	"sync/atomic"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -112,10 +111,10 @@ func main() {
 	}
 }
 
-var pinging atomic.Bool
+//var pinging atomic.Bool
 
 func (v *Views) run(config Config, interrupt chan os.Signal) {
-	messageOut := make(chan []byte)
+	messageOut := make(chan commonTransporter.TransporterUnique)
 	errorChannel := make(chan error, 1)
 	done := make(chan struct{})
 	u := url.URL{Scheme: config.StreamerWebsocketScheme, Host: config.StreamerWebAddress, Path: "/" + config.StreamerWebsocketPath}
@@ -158,7 +157,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 		_ = c.Close()
 	}(c)
 	go func() {
-		pinging.Store(false)
+		//pinging.Store(false)
 		defer close(done)
 		defer func() {
 			if r := recover(); r != nil {
@@ -205,27 +204,73 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 		log.Printf("connected to  %s://%s", u.Scheme, u.Host)
 
 		for {
+			//var msgType int
+			//var message []byte
+			//msgType, message, err = c.ReadMessage()
+			//if err != nil {
+			//	log.Printf("failed to read: %+v", err)
+			//	close(errorChannel)
+			//	return
+			//}
+			//if msgType == websocket.TextMessage && string(message) == specialWSMessage.Ping.String() {
+			//	//pinging.Store(true)
+			//	err = c.WriteMessage(websocket.TextMessage, []byte(specialWSMessage.Pong))
+			//	if err != nil {
+			//		log.Printf("failed to write pong: %+v", err)
+			//		close(errorChannel)
+			//		return
+			//	}
+			//	//pinging.Store(false)
+			//	continue
+			//}
+			//log.Printf("Received message: %s", message)
+			//messageOut <- message
 			var msgType int
 			var message []byte
 			msgType, message, err = c.ReadMessage()
 			if err != nil {
 				log.Printf("failed to read: %+v", err)
+				log.Printf("message type: %d", msgType)
+				log.Printf("message contents: %s", string(message))
 				close(errorChannel)
 				return
 			}
-			if msgType == websocket.TextMessage && string(message) == specialWSMessage.Ping.String() {
-				//pinging.Store(true)
-				err = c.WriteMessage(websocket.TextMessage, []byte(specialWSMessage.Pong))
-				if err != nil {
-					log.Printf("failed to write pong: %+v", err)
-					close(errorChannel)
-					return
-				}
-				//pinging.Store(false)
-				continue
+			var receivedMessage commonTransporter.TransporterUnique
+			err = json.Unmarshal(message, &receivedMessage)
+			if err != nil {
+
 			}
+			switch receivedMessage.Payload.(type) {
+			case commonTransporter.Transporter:
+				break
+			case string:
+				if msgType == websocket.TextMessage && receivedMessage.Payload.(string) == specialWSMessage.Ping.String() {
+					log.Println("pong")
+					receivedMessage.Payload = specialWSMessage.Pong
+					var responsePing []byte
+					responsePing, err = json.Marshal(receivedMessage)
+					err = c.WriteMessage(websocket.TextMessage, responsePing)
+					if err != nil {
+						log.Printf("failed to write pong: %+v", err)
+						close(errorChannel)
+						return
+					}
+					continue
+				}
+			}
+			//if msgType == websocket.TextMessage && string(message) == specialWSMessage.Ping.String() {
+			//	//pinging.Store(true)
+			//	err = c.WriteMessage(websocket.TextMessage, []byte(specialWSMessage.Pong))
+			//	if err != nil {
+			//		log.Printf("failed to write pong: %+v", err)
+			//		close(errorChannel)
+			//		return
+			//	}
+			//	//pinging.Store(false)
+			//	continue
+			//}
 			log.Printf("Received message: %s", message)
-			messageOut <- message
+			messageOut <- receivedMessage
 		}
 	}()
 
@@ -239,16 +284,16 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 		case m := <-messageOut:
 			log.Printf("Picked up message %s", m)
 
-			var t commonTransporter.Transporter
+			t := m.Payload.(commonTransporter.Transporter)
 
-			err = json.Unmarshal(m, &t)
-			if err != nil {
-				kill := v.errorResponse(fmt.Errorf("failed to unmarshal data: %w", err), c)
-				if kill {
-					return
-				}
-				continue
-			}
+			//err = json.Unmarshal(m, &t)
+			//if err != nil {
+			//	kill := v.errorResponse(fmt.Errorf("failed to unmarshal data: %w", err), c)
+			//	if kill {
+			//		return
+			//	}
+			//	continue
+			//}
 
 			if len(t.Unique) != 10 {
 				kill := v.errorResponse(fmt.Errorf("failed to get unique, length is not equal to 10: %d", len(t.Unique)), c)
@@ -316,21 +361,29 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 				continue
 			}
 
+			//response := commonTransporter.ResponseTransporter{Status: wsMessages.Okay}
+			//
+			//if len(out) > 0 {
+			//	response.Payload = out
+			//}
+
 			response := commonTransporter.ResponseTransporter{Status: wsMessages.Okay}
 
 			if len(out) > 0 {
 				response.Payload = out
 			}
 
+			m.Payload = response
+
 			var resBytes []byte
-			resBytes, err = json.Marshal(response)
+			resBytes, err = json.Marshal(m)
 			if err != nil {
 				log.Printf("failed to marshal response: %+v", err)
 			}
 
-			for pinging.Load() {
-				time.Sleep(10 * time.Millisecond)
-			}
+			//for pinging.Load() {
+			//	time.Sleep(10 * time.Millisecond)
+			//}
 			err = c.WriteMessage(websocket.TextMessage, resBytes)
 			if err != nil {
 				log.Printf("failed to write okay response : %+v", err)
@@ -352,9 +405,9 @@ func (v *Views) errorResponse(incomingErr error, c *websocket.Conn) bool {
 	if err != nil {
 		log.Printf("failed to marshal response: %+v", err)
 	}
-	for pinging.Load() {
-		time.Sleep(10 * time.Millisecond)
-	}
+	//for pinging.Load() {
+	//	time.Sleep(10 * time.Millisecond)
+	//}
 	err = c.WriteMessage(websocket.TextMessage, resBytes)
 	if err != nil {
 		log.Printf("failed to write error response : %+v", err)
