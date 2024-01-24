@@ -93,7 +93,7 @@ func main() {
 			if err = e.Shutdown(context.Background()); err != nil {
 				e.Logger.Fatal(err)
 			}
-			fmt.Printf("signal: %s\n", sig)
+			log.Printf("signal: %s\n", sig)
 			os.Exit(0)
 		}
 	}()
