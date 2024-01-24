@@ -24,7 +24,7 @@ import (
 func (v *Views) StartUniqueFunc(c echo.Context) error {
 	if c.Request().Method == "POST" {
 		if v.conf.Verbose {
-			fmt.Println("StartUnique POST called")
+			log.Println("StartUnique POST called")
 		}
 
 		unique := c.FormValue("unique_code")

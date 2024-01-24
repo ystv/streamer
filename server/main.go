@@ -3,11 +3,6 @@ package main
 import (
 	"embed"
 	"encoding/json"
-	"fmt"
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
-	"github.com/ystv/streamer/server/store"
-	"github.com/ystv/streamer/server/views"
 	"log"
 	"net/http"
 	"os"
@@ -15,6 +10,11 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+
+	"github.com/ystv/streamer/server/store"
+	"github.com/ystv/streamer/server/views"
 )
 
 type (
@@ -37,8 +37,6 @@ var embeddedFiles embed.FS
 func main() {
 	if strings.Contains(os.Args[0], "/var/folders") || strings.Contains(os.Args[0], "/tmp/go") || strings.Contains(os.Args[0], "./streamer") {
 		if len(os.Args) > 2 {
-			fmt.Println(string(rune(len(os.Args))))
-			fmt.Println(os.Args)
 			log.Fatalf("Arguments error")
 		}
 		for i := 0; i < len(os.Args)-1; i++ {
@@ -46,8 +44,6 @@ func main() {
 		}
 	} else {
 		if len(os.Args) > 1 {
-			fmt.Println(string(rune(len(os.Args))))
-			fmt.Println(os.Args)
 			log.Fatalf("Arguments error")
 		}
 	}
@@ -143,7 +139,7 @@ func (r *Router) loadRoutes() {
 			Status: http.StatusOK,
 		})
 		if err != nil {
-			fmt.Println(err)
+			log.Printf("failed to marshal api health: %+v", err)
 			return &echo.HTTPError{
 				Code:     http.StatusBadRequest,
 				Message:  err.Error(),

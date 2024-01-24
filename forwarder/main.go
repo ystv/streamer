@@ -68,7 +68,7 @@ func main() {
 			Status: http.StatusOK,
 		})
 		if err != nil {
-			fmt.Println(err)
+			log.Printf("failed to marshal api health: %+v", err)
 			return &echo.HTTPError{
 				Code:     http.StatusBadRequest,
 				Message:  err.Error(),

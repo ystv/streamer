@@ -2,12 +2,13 @@ package views
 
 import (
 	"encoding/xml"
-	"fmt"
-
-	"github.com/labstack/echo/v4"
-	"github.com/ystv/streamer/server/helper"
+	"log"
 	"net/http"
 	"strings"
+
+	"github.com/labstack/echo/v4"
+
+	"github.com/ystv/streamer/server/helper"
 )
 
 // EndpointsFunc presents the endpoints to the user
@@ -24,27 +25,23 @@ func (v *Views) EndpointsFunc(c echo.Context) error {
 		return
 	}*/
 	if v.conf.Verbose {
-		fmt.Println("Endpoints called")
+		log.Println("Endpoints called")
 	}
 	if c.Request().Method == "POST" {
 		if v.conf.Verbose {
-			fmt.Println("Endpoints POST")
+			log.Println("Endpoints POST")
 		}
-		//err := godotenv.Load()
-		//if err != nil {
-		//	fmt.Printf("error loading .env file: %s", err)
-		//}
 
 		streamPageContent, err := helper.GetBody("http://" + v.conf.StreamServer + "stat")
 		if err != nil {
-			fmt.Println(err)
+			log.Printf("failed to get stat page: %+v", err)
 		}
 
 		var rtmp RTMP
 
 		err = xml.Unmarshal([]byte(streamPageContent), &rtmp)
 		if err != nil {
-			fmt.Println(err)
+			log.Printf("failed to unmarshal xml: %+v", err)
 		}
 
 		var endpoints []string

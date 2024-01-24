@@ -1,18 +1,18 @@
 package views
 
 import (
-	"fmt"
+	"log"
 )
 
 // SavedStreamCheck checks if there are any existing streams still registered in the database
 func (v *Views) SavedStreamCheck() bool {
 	if v.conf.Verbose {
-		fmt.Println("Saved Stream Check called")
+		log.Println("Saved Stream Check called")
 	}
 
 	stored, err := v.store.GetStored()
 	if err != nil {
-		fmt.Println(err)
+		log.Printf("failed to get stored for saveStreamCheck: %+v", err)
 		return false
 	}
 

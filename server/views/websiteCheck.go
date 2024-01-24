@@ -1,7 +1,6 @@
 package views
 
 import (
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -14,7 +13,7 @@ import (
 // websiteCheck checks if the website stream key is valid using software called COBRA
 func (v *Views) websiteCheck(endpoint string) bool {
 	if v.conf.Verbose {
-		fmt.Println("Website Check called")
+		log.Println("Website Check called")
 	}
 
 	data := url.Values{}

@@ -2,6 +2,7 @@ package views
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/labstack/echo/v4"
 
@@ -23,7 +24,7 @@ func (v *Views) HomeFunc(c echo.Context) error {
 		return
 	}*/
 	if v.conf.Verbose {
-		fmt.Println("Home called")
+		log.Println("Home called")
 	}
 
 	_, rec := v.cache.Get(server.Recorder.String())

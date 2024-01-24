@@ -24,7 +24,7 @@ import (
 func (v *Views) StartFunc(c echo.Context) error {
 	if c.Request().Method == "POST" {
 		if v.conf.Verbose {
-			fmt.Println("Start POST called")
+			log.Println("Start POST called")
 		}
 
 		transporter := commonTransporter.Transporter{

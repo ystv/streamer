@@ -2,11 +2,13 @@ package views
 
 import (
 	"encoding/xml"
-	"fmt"
-	"github.com/labstack/echo/v4"
-	"github.com/ystv/streamer/server/helper"
+	"log"
 	"net/http"
 	"strings"
+
+	"github.com/labstack/echo/v4"
+
+	"github.com/ystv/streamer/server/helper"
 )
 
 // StreamsFunc collects the data from the rtmp stat page of nginx and produces a list of active streaming endpoints from given endpoints
@@ -24,7 +26,7 @@ func (v *Views) StreamsFunc(c echo.Context) error {
 	}*/
 	if c.Request().Method == "POST" {
 		if v.conf.Verbose {
-			fmt.Println("Streams POST called")
+			log.Println("Streams POST called")
 		}
 
 		err := c.Request().ParseForm()

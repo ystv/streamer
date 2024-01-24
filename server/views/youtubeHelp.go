@@ -1,7 +1,8 @@
 package views
 
 import (
-	"fmt"
+	"log"
+
 	"github.com/labstack/echo/v4"
 	"github.com/ystv/streamer/server/templates"
 )
@@ -21,7 +22,7 @@ func (v *Views) YoutubeHelpFunc(c echo.Context) error {
 	}*/
 
 	if v.conf.Verbose {
-		fmt.Println("YouTube called")
+		log.Println("YouTube called")
 	}
 
 	return v.template.RenderTemplate(c.Response().Writer, nil, templates.YouTubeHelpTemplate)

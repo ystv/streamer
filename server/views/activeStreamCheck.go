@@ -2,19 +2,21 @@ package views
 
 import (
 	"fmt"
-	"github.com/labstack/echo/v4"
+	"log"
 	"net/http"
+
+	"github.com/labstack/echo/v4"
 )
 
 // ActiveStreamCheck checks if there are any existing streams still registered in the database
 func (v *Views) ActiveStreamCheck() bool {
 	if v.conf.Verbose {
-		fmt.Println("Active Stream Check called")
+		log.Println("Active Stream Check called")
 	}
 
 	streams, err := v.store.GetStreams()
 	if err != nil {
-		fmt.Println(err)
+		log.Printf("failed to get streams for activeStreamCheck: %+v", err)
 		return false
 	}
 
