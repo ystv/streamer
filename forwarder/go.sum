@@ -27,8 +27,8 @@ github.com/valyala/bytebufferpool v1.0.0 h1:GqA5TC/0021Y/b9FG4Oi9Mr3q7XYx6Kllzaw
 github.com/valyala/bytebufferpool v1.0.0/go.mod h1:6bBcMArwyJ5K/AmCkWv1jt77kVWyCJ6HpOuEn7z0Csc=
 github.com/valyala/fasttemplate v1.2.2 h1:lxLXG0uE3Qnshl9QyaK6XJxMXlQZELvChBOCmQD0Loo=
 github.com/valyala/fasttemplate v1.2.2/go.mod h1:KHLXt3tVN2HBp8eijSv/kGJopbvo7S+qRAEEKiv+SiQ=
-github.com/ystv/streamer/common v0.0.0-20240124161420-457edbb0b385 h1:sMky581wWg2UfDFf4rawaJKX7nK9jGG1KIaHzIi1slE=
-github.com/ystv/streamer/common v0.0.0-20240124161420-457edbb0b385/go.mod h1:z6ngpeQPvzjqpPqWDwQsXE7rY4cEzhgQugL2P0OaKKw=
+github.com/ystv/streamer/common v0.0.0-20240124173636-01aea7384fd2 h1:IuXoAYe8yNLH4TuWGolJ8Vs/jwka7BeICYuzLCgOX54=
+github.com/ystv/streamer/common v0.0.0-20240124173636-01aea7384fd2/go.mod h1:z6ngpeQPvzjqpPqWDwQsXE7rY4cEzhgQugL2P0OaKKw=
 golang.org/x/crypto v0.18.0 h1:PGVlW0xEltQnzFZ55hkuX5+KLyrMYhHld1YHO4AKcdc=
 golang.org/x/crypto v0.18.0/go.mod h1:R0j02AL6hcrfOiy9T4ZYp/rcWeMxM3L6QYxlOuEG1mg=
 golang.org/x/net v0.20.0 h1:aCL9BSgETF1k+blQaYUBx9hJ9LOGP3gAVemcZlf1Kpo=
