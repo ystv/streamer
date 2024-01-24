@@ -183,32 +183,7 @@ func (v *Views) StatusFunc(c echo.Context) error {
 			log.Println("Forwarder status success")
 		}()
 		wg.Wait()
-		//var jsonStr []byte
-		//jsonStr, err = json.Marshal(m)
-		//if err != nil {
-		//	log.Printf("failed to marshal response for status: %+v", err)
-		//	errResponse.Error = fmt.Sprintf("failed to marshal response for status: %+v", err)
-		//	return c.JSON(http.StatusOK, errResponse)
-		//}
 
-		//jsonStr, err = json.Marshal(statusResponse)
-		//if err != nil {
-		//	log.Printf("failed to marshal response for status: %+v", err)
-		//	errResponse.Error = fmt.Sprintf("failed to marshal response for status: %+v", err)
-		//	return c.JSON(http.StatusOK, errResponse)
-		//}
-
-		//output := strings.ReplaceAll(
-		//	strings.ReplaceAll(
-		//		strings.ReplaceAll(
-		//			strings.ReplaceAll(
-		//				strings.ReplaceAll(
-		//					string(jsonStr[1:len(jsonStr)-1]), "\\n", "<br>"),
-		//				"\"", ""),
-		//			" , ", "<br><br><br>"),
-		//		" ,", "<br><br><br>"),
-		//	"<br>,", "<br><br>")
-		//return c.String(http.StatusOK, output)
 		return c.JSON(http.StatusOK, statusResponse)
 	}
 	return echo.NewHTTPError(http.StatusMethodNotAllowed, "invalid method")
