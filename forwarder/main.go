@@ -113,7 +113,7 @@ func main() {
 //var pinging atomic.Bool
 
 func (v *Views) run(config Config, interrupt chan os.Signal) {
-	messageOut := make(chan []byte)
+	messageOut := make(chan commonTransporter.TransporterUnique)
 	errorChannel := make(chan error, 1)
 	done := make(chan struct{})
 	u := url.URL{Scheme: config.StreamerWebsocketScheme, Host: config.StreamerWebAddress, Path: "/" + config.StreamerWebsocketPath}
@@ -212,19 +212,42 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 				close(errorChannel)
 				return
 			}
-			if msgType == websocket.TextMessage && string(message) == specialWSMessage.Ping.String() {
-				//pinging.Store(true)
-				err = c.WriteMessage(websocket.TextMessage, []byte(specialWSMessage.Pong))
-				if err != nil {
-					log.Printf("failed to write pong: %+v", err)
-					close(errorChannel)
-					return
-				}
-				//pinging.Store(false)
-				continue
+			var receivedMessage commonTransporter.TransporterUnique
+			err = json.Unmarshal(message, &receivedMessage)
+			if err != nil {
+
 			}
+			switch receivedMessage.Payload.(type) {
+			case commonTransporter.Transporter:
+				break
+			case string:
+				if msgType == websocket.TextMessage && receivedMessage.Payload.(string) == specialWSMessage.Ping.String() {
+					log.Println("pong")
+					receivedMessage.Payload = specialWSMessage.Pong
+					var responsePing []byte
+					responsePing, err = json.Marshal(receivedMessage)
+					err = c.WriteMessage(websocket.TextMessage, responsePing)
+					if err != nil {
+						log.Printf("failed to write pong: %+v", err)
+						close(errorChannel)
+						return
+					}
+					continue
+				}
+			}
+			//if msgType == websocket.TextMessage && string(message) == specialWSMessage.Ping.String() {
+			//	//pinging.Store(true)
+			//	err = c.WriteMessage(websocket.TextMessage, []byte(specialWSMessage.Pong))
+			//	if err != nil {
+			//		log.Printf("failed to write pong: %+v", err)
+			//		close(errorChannel)
+			//		return
+			//	}
+			//	//pinging.Store(false)
+			//	continue
+			//}
 			log.Printf("Received message: %s", message)
-			messageOut <- message
+			messageOut <- receivedMessage
 		}
 	}()
 
@@ -235,18 +258,18 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 		case <-errorChannel:
 			return
 		case m := <-messageOut:
-			log.Printf("Picked up message %s", m)
+			log.Printf("Picked up message %#v", m)
 
-			var t commonTransporter.Transporter
+			t := m.Payload.(commonTransporter.Transporter)
 
-			err = json.Unmarshal(m, &t)
-			if err != nil {
-				kill := v.errorResponse(fmt.Errorf("failed to unmarshal data: %w", err), c)
-				if kill {
-					return
-				}
-				continue
-			}
+			//err = json.Unmarshal(m, &t)
+			//if err != nil {
+			//	kill := v.errorResponse(fmt.Errorf("failed to unmarshal data: %w", err), c)
+			//	if kill {
+			//		return
+			//	}
+			//	continue
+			//}
 
 			if len(t.Unique) != 10 {
 				kill := v.errorResponse(fmt.Errorf("failed to get unique, length is not equal to 10: %d", len(t.Unique)), c)
@@ -288,6 +311,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 					}
 					continue
 				}
+				break
 			case "status":
 				_, ok := v.cache.Get(fmt.Sprintf("%s_1", t.Unique))
 				if !ok {
@@ -327,6 +351,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 					}
 					continue
 				}
+				break
 			case "stop":
 				_, ok := v.cache.Get(fmt.Sprintf("%s_1", t.Unique))
 				if !ok {
@@ -344,6 +369,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 					}
 					continue
 				}
+				break
 			default:
 				kill := v.errorResponse(fmt.Errorf("failed to get action: %s", t.Action), c)
 				if kill {
@@ -358,8 +384,10 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 				response.Payload = out
 			}
 
+			m.Payload = response
+
 			var resBytes []byte
-			resBytes, err = json.Marshal(response)
+			resBytes, err = json.Marshal(m)
 			if err != nil {
 				log.Printf("failed to marshal response: %+v", err)
 			}

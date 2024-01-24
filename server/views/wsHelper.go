@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/google/uuid"
+
 	commonTransporter "github.com/ystv/streamer/common/transporter"
 	"github.com/ystv/streamer/common/transporter/server"
 )
@@ -14,23 +16,31 @@ func (v *Views) wsHelper(name server.Server, transporter commonTransporter.Trans
 		return commonTransporter.ResponseTransporter{}, fmt.Errorf("channel %s is not valid", name)
 	}
 
-	b, err := json.Marshal(transporter)
-	if err != nil {
-		return commonTransporter.ResponseTransporter{}, fmt.Errorf("failed marshaling transporter: %w", err)
+	returningChannel := make(chan []byte)
+
+	sendingTransporter := commonTransporter.TransporterUnique{
+		ID:               uuid.NewString(),
+		Payload:          transporter,
+		ReturningChannel: returningChannel,
 	}
 
-	out.(chan []byte) <- b
+	//b, err := json.Marshal(sendingTransporter)
+	//if err != nil {
+	//	return commonTransporter.ResponseTransporter{}, fmt.Errorf("failed marshaling transporter: %w", err)
+	//}
 
-	in, valid := v.cache.Get(name.String() + internalChannelNameAppend)
-	if !valid {
-		return commonTransporter.ResponseTransporter{}, fmt.Errorf("channel %s%s is not valid", name, internalChannelNameAppend)
-	}
+	out.(chan commonTransporter.TransporterUnique) <- sendingTransporter
 
-	received := <-in.(chan []byte)
+	//in, valid := v.cache.Get(name.String() + internalChannelNameAppend)
+	//if !valid {
+	//	return commonTransporter.ResponseTransporter{}, fmt.Errorf("channel %s%s is not valid", name, internalChannelNameAppend)
+	//}
+
+	received := <-returningChannel
 
 	var responseTransporter commonTransporter.ResponseTransporter
 
-	err = json.Unmarshal(received, &responseTransporter)
+	err := json.Unmarshal(received, &responseTransporter)
 	if err != nil {
 		return commonTransporter.ResponseTransporter{}, fmt.Errorf("failed to unmarshal response: %w, recieved message: %s", err, string(received))
 	}

@@ -3,6 +3,8 @@ package views
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/google/uuid"
+	commonTransporter "github.com/ystv/streamer/common/transporter"
 	"log"
 	"time"
 
@@ -54,7 +56,7 @@ func (v *Views) Websocket(c echo.Context) error {
 		log.Printf("%s has a version mismatch, server version: %s, %s version: %s", responseTransporter.Server, v.conf.Version, responseTransporter.Server, responseTransporter.Version)
 	}
 
-	clientChannel := make(chan []byte)
+	clientChannel := make(chan commonTransporter.TransporterUnique)
 	internalChannel := make(chan []byte)
 
 	err = v.cache.Add(responseTransporter.Server.String(), clientChannel, cache.NoExpiration)
@@ -89,48 +91,116 @@ func (v *Views) Websocket(c echo.Context) error {
 	for {
 		select {
 		case res := <-clientChannel:
-			err = ws.WriteMessage(websocket.TextMessage, res)
+			var transportUniqueReturning commonTransporter.TransporterUnique
+			err = v.cache.Add(res.ID, res.ReturningChannel, cache.DefaultExpiration)
 			if err != nil {
-				log.Printf("failed to write response: %+v, server %s", err, responseTransporter.Server)
-				close(internalChannel)
-				close(clientChannel)
-				v.cache.Delete(responseTransporter.Server.String())
-				v.cache.Delete(responseTransporter.Server.String() + internalChannelNameAppend)
-				return nil
+				log.Printf("failed to add id to cache: %+v", err)
 			}
 
+			res.ReturningChannel = nil
+
+			var send []byte
+			send, err = json.Marshal(res)
+			if err != nil {
+				log.Printf("failed to marshal payload")
+			}
+
+			switch res.Payload.(type) {
+			case commonTransporter.Transporter:
+				send, err = json.Marshal(res.Payload)
+				if err != nil {
+					log.Printf("failed to marshal payload")
+				}
+				break
+			case string:
+				send = []byte(res.Payload.(string))
+			}
+
+			err = ws.WriteMessage(websocket.TextMessage, send)
+			if err != nil {
+
+			}
 			_, msg, err = ws.ReadMessage()
 			if err != nil {
-				log.Printf("failed to read message: %+v, server: %s", err, responseTransporter.Server)
-				close(internalChannel)
-				close(clientChannel)
-				v.cache.Delete(responseTransporter.Server.String())
-				v.cache.Delete(responseTransporter.Server.String() + internalChannelNameAppend)
-				return nil
+
 			}
-			internalChannel <- msg
+			err = json.Unmarshal(msg, &transportUniqueReturning)
+			if err != nil {
+
+			}
+			returnChannel, ok := v.cache.Get(transportUniqueReturning.ID)
+			if !ok {
+
+			}
+			var receive []byte
+			receive, err = json.Marshal(transportUniqueReturning.Payload)
+			if err != nil {
+
+			}
+			returnChannel.(chan []byte) <- receive
+			//err = ws.WriteMessage(websocket.TextMessage, res)
+			//if err != nil {
+			//	log.Printf("failed to write response: %+v, server %s", err, responseTransporter.Server)
+			//	close(internalChannel)
+			//	close(clientChannel)
+			//	v.cache.Delete(responseTransporter.Server.String())
+			//	v.cache.Delete(responseTransporter.Server.String() + internalChannelNameAppend)
+			//	return nil
+			//}
+			//
+			//_, msg, err = ws.ReadMessage()
+			//if err != nil {
+			//	log.Printf("failed to read message: %+v, server: %s", err, responseTransporter.Server)
+			//	close(internalChannel)
+			//	close(clientChannel)
+			//	v.cache.Delete(responseTransporter.Server.String())
+			//	v.cache.Delete(responseTransporter.Server.String() + internalChannelNameAppend)
+			//	return nil
+			//}
+			//internalChannel <- msg
 			log.Printf("Message received from \"%s\": %s", responseTransporter.Server, msg)
 			break
 		case <-ticker.C:
-			err = ws.WriteMessage(websocket.TextMessage, []byte(specialWSMessage.Ping))
-			if err != nil {
-				log.Printf("failed to write ping for %s: %+v", responseTransporter.Server, err)
-				close(internalChannel)
-				close(clientChannel)
-				v.cache.Delete(responseTransporter.Server.String())
-				v.cache.Delete(responseTransporter.Server.String() + internalChannelNameAppend)
-				return nil
-			}
-			var msgType int
-			msgType, msg, err = ws.ReadMessage()
-			if err != nil || msgType != websocket.TextMessage || string(msg) != specialWSMessage.Pong.String() {
-				log.Printf("failed to read pong for %s: %+v", responseTransporter.Server, err)
-				close(internalChannel)
-				close(clientChannel)
-				v.cache.Delete(responseTransporter.Server.String())
-				v.cache.Delete(responseTransporter.Server.String() + internalChannelNameAppend)
-				return nil
-			}
+			go func() {
+				returningChannel := make(chan []byte)
+
+				sendingTransporter := commonTransporter.TransporterUnique{
+					ID:               uuid.NewString(),
+					Payload:          specialWSMessage.Ping,
+					ReturningChannel: returningChannel,
+				}
+
+				clientChannel <- sendingTransporter
+
+				received := <-returningChannel
+
+				if string(received) != specialWSMessage.Pong.String() {
+					log.Printf("failed to read pong for %s: %+v", responseTransporter.Server, err)
+					close(internalChannel)
+					close(clientChannel)
+					v.cache.Delete(responseTransporter.Server.String())
+					v.cache.Delete(responseTransporter.Server.String() + internalChannelNameAppend)
+				}
+			}()
+			//err = ws.WriteMessage(websocket.TextMessage, []byte(specialWSMessage.Ping))
+			//if err != nil {
+			//	log.Printf("failed to write ping for %s: %+v", responseTransporter.Server, err)
+			//	close(internalChannel)
+			//	close(clientChannel)
+			//	v.cache.Delete(responseTransporter.Server.String())
+			//	v.cache.Delete(responseTransporter.Server.String() + internalChannelNameAppend)
+			//	return nil
+			//}
+			//var msgType int
+			//msgType, msg, err = ws.ReadMessage()
+			//if err != nil || msgType != websocket.TextMessage || string(msg) != specialWSMessage.Pong.String() {
+			//	log.Printf("failed to read pong for %s: %+v", responseTransporter.Server, err)
+			//	close(internalChannel)
+			//	close(clientChannel)
+			//	v.cache.Delete(responseTransporter.Server.String())
+			//	v.cache.Delete(responseTransporter.Server.String() + internalChannelNameAppend)
+			//	return nil
+			//}
 		}
 	}
 }
