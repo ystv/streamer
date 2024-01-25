@@ -260,7 +260,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 		case <-errorChannel:
 			return
 		case m := <-messageOut:
-			log.Printf("Picked up message %s", m)
+			log.Printf("Picked up message %#v", m)
 
 			t := m.Payload.(commonTransporter.Transporter)
 
