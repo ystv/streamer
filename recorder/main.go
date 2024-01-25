@@ -201,27 +201,6 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 		log.Printf("connected to %s://%s", u.Scheme, u.Host)
 
 		for {
-			//var msgType int
-			//var message []byte
-			//msgType, message, err = c.ReadMessage()
-			//if err != nil {
-			//	log.Printf("failed to read: %+v", err)
-			//	close(errorChannel)
-			//	return
-			//}
-			//if msgType == websocket.TextMessage && string(message) == specialWSMessage.Ping.String() {
-			//	//pinging.Store(true)
-			//	err = c.WriteMessage(websocket.TextMessage, []byte(specialWSMessage.Pong))
-			//	if err != nil {
-			//		log.Printf("failed to write pong: %+v", err)
-			//		close(errorChannel)
-			//		return
-			//	}
-			//	//pinging.Store(false)
-			//	continue
-			//}
-			//log.Printf("Received message: %s", message)
-			//messageOut <- message
 			var msgType int
 			var message []byte
 			msgType, message, err = c.ReadMessage()
@@ -280,15 +259,6 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 			log.Printf("Picked up message %s", m)
 
 			t := m.Payload.(commonTransporter.Transporter)
-
-			//err = json.Unmarshal(m, &t)
-			//if err != nil {
-			//	kill := v.errorResponse(fmt.Errorf("failed to unmarshal data: %w", err), c)
-			//	if kill {
-			//		return
-			//	}
-			//	continue
-			//}
 
 			if len(t.Unique) != 10 {
 				kill := v.errorResponse(fmt.Errorf("failed to get unique, length is not equal to 10: %d", len(t.Unique)), c)
