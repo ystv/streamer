@@ -173,9 +173,11 @@ func (v *Views) Websocket(c echo.Context) error {
 			go func() {
 				returningChannel := make(chan []byte)
 
-				sendingTransporter := commonTransporter.TransporterUnique{
-					ID:               uuid.NewString(),
-					Payload:          specialWSMessage.Ping,
+				sendingTransporter := TransporterRouter{
+					TransporterUnique: commonTransporter.TransporterUnique{
+						ID:      uuid.NewString(),
+						Payload: specialWSMessage.Ping,
+					},
 					ReturningChannel: returningChannel,
 				}
 
