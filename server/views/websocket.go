@@ -56,7 +56,7 @@ func (v *Views) Websocket(c echo.Context) error {
 		log.Printf("%s has a version mismatch, server version: %s, %s version: %s", responseTransporter.Server, v.conf.Version, responseTransporter.Server, responseTransporter.Version)
 	}
 
-	clientChannel := make(chan commonTransporter.TransporterUnique)
+	clientChannel := make(chan TransporterRouter)
 	internalChannel := make(chan []byte)
 
 	err = v.cache.Add(responseTransporter.Server.String(), clientChannel, cache.NoExpiration)

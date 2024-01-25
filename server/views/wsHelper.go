@@ -18,9 +18,11 @@ func (v *Views) wsHelper(name server.Server, transporter commonTransporter.Trans
 
 	returningChannel := make(chan []byte)
 
-	sendingTransporter := commonTransporter.TransporterUnique{
-		ID:               uuid.NewString(),
-		Payload:          transporter,
+	sendingTransporter := TransporterRouter{
+		TransporterUnique: commonTransporter.TransporterUnique{
+			ID:      uuid.NewString(),
+			Payload: transporter,
+		},
 		ReturningChannel: returningChannel,
 	}
 
@@ -29,7 +31,7 @@ func (v *Views) wsHelper(name server.Server, transporter commonTransporter.Trans
 	//	return commonTransporter.ResponseTransporter{}, fmt.Errorf("failed marshaling transporter: %w", err)
 	//}
 
-	out.(chan commonTransporter.TransporterUnique) <- sendingTransporter
+	out.(chan TransporterRouter) <- sendingTransporter
 
 	//in, valid := v.cache.Get(name.String() + internalChannelNameAppend)
 	//if !valid {
