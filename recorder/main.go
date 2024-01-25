@@ -221,6 +221,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 			}
 
 			switch receivedMessage.Payload.(type) {
+			case map[string]interface{}:
 			case commonTransporter.Transporter:
 				break
 			case string:
