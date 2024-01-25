@@ -72,7 +72,9 @@ type (
 	}
 
 	TransporterRouter struct {
-		ReturningChannel  chan []byte
+		// ReturningChannel is the channel for returning data on
+		ReturningChannel chan []byte
+		// TransporterUnique is the payload to send to the client
 		TransporterUnique transporter.TransporterUnique
 	}
 )
