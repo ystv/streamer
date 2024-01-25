@@ -120,18 +120,22 @@ func (v *Views) Websocket(c echo.Context) error {
 			if err != nil {
 
 			}
+
 			_, msg, err = ws.ReadMessage()
 			if err != nil {
 
 			}
+
 			err = json.Unmarshal(msg, &transportUniqueReturning)
 			if err != nil {
 
 			}
+
 			returnChannel, ok := v.cache.Get(transportUniqueReturning.ID)
 			if !ok {
 
 			}
+
 			var receive []byte
 			receive, err = json.Marshal(transportUniqueReturning.Payload)
 			if err != nil {
