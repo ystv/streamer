@@ -221,7 +221,6 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 				break
 			case string:
 				if msgType == websocket.TextMessage && receivedMessage.Payload.(string) == specialWSMessage.Ping.String() {
-					log.Println("pong")
 					receivedMessage.Payload = specialWSMessage.Pong
 					var responsePing []byte
 					responsePing, err = json.Marshal(receivedMessage)
@@ -325,12 +324,6 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 				}
 				continue
 			}
-
-			//response := commonTransporter.ResponseTransporter{Status: wsMessages.Okay}
-			//
-			//if len(out) > 0 {
-			//	response.Payload = out
-			//}
 
 			response := commonTransporter.ResponseTransporter{Status: wsMessages.Okay}
 
