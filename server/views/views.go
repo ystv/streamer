@@ -7,6 +7,7 @@ import (
 
 	"github.com/patrickmn/go-cache"
 
+	"github.com/ystv/streamer/common/transporter"
 	"github.com/ystv/streamer/server/store"
 	"github.com/ystv/streamer/server/templates"
 )
@@ -68,6 +69,11 @@ type (
 	Stream struct {
 		XMLName xml.Name `xml:"stream"`
 		Name    string   `xml:"name"`
+	}
+
+	TransporterRouter struct {
+		ReturningChannel  chan []byte
+		TransporterUnique transporter.TransporterUnique
 	}
 )
 
