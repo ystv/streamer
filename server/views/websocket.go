@@ -107,22 +107,38 @@ func (v *Views) Websocket(c echo.Context) error {
 
 			err = ws.WriteMessage(websocket.TextMessage, send)
 			if err != nil {
-
+				log.Printf("failed to write message: %+v, server %s", err, responseTransporter.Server)
+				close(internalChannel)
+				close(clientChannel)
+				v.cache.Delete(responseTransporter.Server.String())
+				v.cache.Delete(responseTransporter.Server.String() + internalChannelNameAppend)
+				return nil
 			}
 
 			_, msg, err = ws.ReadMessage()
 			if err != nil {
-
+				log.Printf("failed to read message: %+v, server %s", err, responseTransporter.Server)
+				close(internalChannel)
+				close(clientChannel)
+				v.cache.Delete(responseTransporter.Server.String())
+				v.cache.Delete(responseTransporter.Server.String() + internalChannelNameAppend)
+				return nil
 			}
 
 			err = json.Unmarshal(msg, &transportUniqueReturning)
 			if err != nil {
-
+				log.Printf("failed to unmarshal message: %+v, server %s", err, responseTransporter.Server)
+				close(internalChannel)
+				close(clientChannel)
+				v.cache.Delete(responseTransporter.Server.String())
+				v.cache.Delete(responseTransporter.Server.String() + internalChannelNameAppend)
+				return nil
 			}
 
 			returnChannel, ok := v.cache.Get(transportUniqueReturning.ID)
 			if !ok {
-
+				log.Printf("failed to find channel for server %s", responseTransporter.Server)
+				continue
 			}
 
 			var receive []byte
@@ -147,7 +163,7 @@ func (v *Views) Websocket(c echo.Context) error {
 				received := <-returningChannel
 
 				if string(received) != specialWSMessage.Pong.String() {
-					log.Printf("failed to read pong for %s: %+v", responseTransporter.Server, err)
+					log.Printf("failed to read pong for %s: %s", responseTransporter.Server, string(received))
 					close(internalChannel)
 					close(clientChannel)
 					v.cache.Delete(responseTransporter.Server.String())
