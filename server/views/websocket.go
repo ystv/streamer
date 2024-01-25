@@ -138,27 +138,6 @@ func (v *Views) Websocket(c echo.Context) error {
 
 			}
 			returnChannel.(chan []byte) <- receive
-			//err = ws.WriteMessage(websocket.TextMessage, res)
-			//if err != nil {
-			//	log.Printf("failed to write response: %+v, server %s", err, responseTransporter.Server)
-			//	close(internalChannel)
-			//	close(clientChannel)
-			//	v.cache.Delete(responseTransporter.Server.String())
-			//	v.cache.Delete(responseTransporter.Server.String() + internalChannelNameAppend)
-			//	return nil
-			//}
-			//
-			//_, msg, err = ws.ReadMessage()
-			//if err != nil {
-			//	log.Printf("failed to read message: %+v, server: %s", err, responseTransporter.Server)
-			//	close(internalChannel)
-			//	close(clientChannel)
-			//	v.cache.Delete(responseTransporter.Server.String())
-			//	v.cache.Delete(responseTransporter.Server.String() + internalChannelNameAppend)
-			//	return nil
-			//}
-			//internalChannel <- msg
-			log.Printf("Message received from \"%s\": %s", responseTransporter.Server, msg)
 			break
 		case <-ticker.C:
 			go func() {
@@ -182,25 +161,6 @@ func (v *Views) Websocket(c echo.Context) error {
 					v.cache.Delete(responseTransporter.Server.String() + internalChannelNameAppend)
 				}
 			}()
-			//err = ws.WriteMessage(websocket.TextMessage, []byte(specialWSMessage.Ping))
-			//if err != nil {
-			//	log.Printf("failed to write ping for %s: %+v", responseTransporter.Server, err)
-			//	close(internalChannel)
-			//	close(clientChannel)
-			//	v.cache.Delete(responseTransporter.Server.String())
-			//	v.cache.Delete(responseTransporter.Server.String() + internalChannelNameAppend)
-			//	return nil
-			//}
-			//var msgType int
-			//msgType, msg, err = ws.ReadMessage()
-			//if err != nil || msgType != websocket.TextMessage || string(msg) != specialWSMessage.Pong.String() {
-			//	log.Printf("failed to read pong for %s: %+v", responseTransporter.Server, err)
-			//	close(internalChannel)
-			//	close(clientChannel)
-			//	v.cache.Delete(responseTransporter.Server.String())
-			//	v.cache.Delete(responseTransporter.Server.String() + internalChannelNameAppend)
-			//	return nil
-			//}
 		}
 	}
 }
