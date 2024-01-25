@@ -209,17 +209,20 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 				close(errorChannel)
 				return
 			}
+
 			var receivedMessage commonTransporter.TransporterUnique
 			err = json.Unmarshal(message, &receivedMessage)
 			if err != nil {
 
 			}
+
 			switch receivedMessage.Payload.(type) {
 			case commonTransporter.Transporter:
 				break
 			case string:
 				if msgType == websocket.TextMessage && receivedMessage.Payload.(string) == specialWSMessage.Ping.String() {
 					receivedMessage.Payload = specialWSMessage.Pong
+
 					var responsePing []byte
 					responsePing, err = json.Marshal(receivedMessage)
 					err = c.WriteMessage(websocket.TextMessage, responsePing)
