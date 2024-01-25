@@ -235,20 +235,14 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 					}
 					continue
 				}
+				log.Printf("invalid string recieved: %s", receivedMessage)
+				continue
+			default:
+				log.Printf("invalid recieved message: %#v", receivedMessage)
+				continue
 			}
-			//if msgType == websocket.TextMessage && string(message) == specialWSMessage.Ping.String() {
-			//	//pinging.Store(true)
-			//	err = c.WriteMessage(websocket.TextMessage, []byte(specialWSMessage.Pong))
-			//	if err != nil {
-			//		log.Printf("failed to write pong: %+v", err)
-			//		close(errorChannel)
-			//		return
-			//	}
-			//	//pinging.Store(false)
-			//	continue
-			//}
-			log.Printf("Received message: %s", message)
-			messageOut <- receivedMessage
+			log.Printf("Received message: %#v", receivedMessage.Payload.(commonTransporter.TransporterUnique))
+			messageOut <- receivedMessage.Payload.(commonTransporter.TransporterUnique)
 		}
 	}()
 
