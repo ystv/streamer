@@ -111,8 +111,6 @@ func main() {
 	}
 }
 
-//var pinging atomic.Bool
-
 func (v *Views) run(config Config, interrupt chan os.Signal) {
 	messageOut := make(chan commonTransporter.TransporterUnique)
 	errorChannel := make(chan error, 1)
@@ -157,7 +155,6 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 		_ = c.Close()
 	}(c)
 	go func() {
-		//pinging.Store(false)
 		defer close(done)
 		defer func() {
 			if r := recover(); r != nil {
@@ -259,14 +256,12 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 				}
 			}
 			//if msgType == websocket.TextMessage && string(message) == specialWSMessage.Ping.String() {
-			//	//pinging.Store(true)
 			//	err = c.WriteMessage(websocket.TextMessage, []byte(specialWSMessage.Pong))
 			//	if err != nil {
 			//		log.Printf("failed to write pong: %+v", err)
 			//		close(errorChannel)
 			//		return
 			//	}
-			//	//pinging.Store(false)
 			//	continue
 			//}
 			log.Printf("Received message: %s", message)
@@ -381,9 +376,6 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 				log.Printf("failed to marshal response: %+v", err)
 			}
 
-			//for pinging.Load() {
-			//	time.Sleep(10 * time.Millisecond)
-			//}
 			err = c.WriteMessage(websocket.TextMessage, resBytes)
 			if err != nil {
 				log.Printf("failed to write okay response : %+v", err)
@@ -405,9 +397,7 @@ func (v *Views) errorResponse(incomingErr error, c *websocket.Conn) bool {
 	if err != nil {
 		log.Printf("failed to marshal response: %+v", err)
 	}
-	//for pinging.Load() {
-	//	time.Sleep(10 * time.Millisecond)
-	//}
+
 	err = c.WriteMessage(websocket.TextMessage, resBytes)
 	if err != nil {
 		log.Printf("failed to write error response : %+v", err)

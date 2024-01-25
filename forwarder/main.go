@@ -110,8 +110,6 @@ func main() {
 	}
 }
 
-//var pinging atomic.Bool
-
 func (v *Views) run(config Config, interrupt chan os.Signal) {
 	messageOut := make(chan commonTransporter.TransporterUnique)
 	errorChannel := make(chan error, 1)
@@ -157,7 +155,6 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 		_ = c.Close()
 	}(c)
 	go func() {
-		//pinging.Store(false)
 		defer close(done)
 		defer func() {
 			if r := recover(); r != nil {
@@ -261,15 +258,6 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 			log.Printf("Picked up message %#v", m)
 
 			t := m.Payload.(commonTransporter.Transporter)
-
-			//err = json.Unmarshal(m, &t)
-			//if err != nil {
-			//	kill := v.errorResponse(fmt.Errorf("failed to unmarshal data: %w", err), c)
-			//	if kill {
-			//		return
-			//	}
-			//	continue
-			//}
 
 			if len(t.Unique) != 10 {
 				kill := v.errorResponse(fmt.Errorf("failed to get unique, length is not equal to 10: %d", len(t.Unique)), c)
@@ -392,9 +380,6 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 				log.Printf("failed to marshal response: %+v", err)
 			}
 
-			//for pinging.Load() {
-			//	time.Sleep(10 * time.Millisecond)
-			//}
 			err = c.WriteMessage(websocket.TextMessage, resBytes)
 			if err != nil {
 				log.Printf("failed to write okay response : %+v", err)
@@ -417,9 +402,7 @@ func (v *Views) errorResponse(incomingErr error, c *websocket.Conn) bool {
 	if err != nil {
 		log.Printf("failed to marshal response: %+v", err)
 	}
-	//for pinging.Load() {
-	//	time.Sleep(10 * time.Millisecond)
-	//}
+
 	err = c.WriteMessage(websocket.TextMessage, resBytes)
 	if err != nil {
 		log.Printf("failed to write error response : %+v", err)
