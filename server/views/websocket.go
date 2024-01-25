@@ -92,7 +92,7 @@ func (v *Views) Websocket(c echo.Context) error {
 		select {
 		case res := <-clientChannel:
 			var transportUniqueReturning commonTransporter.TransporterUnique
-			err = v.cache.Add(res.ID, res.ReturningChannel, cache.DefaultExpiration)
+			err = v.cache.Add(res.TransporterUnique.ID, res.ReturningChannel, cache.DefaultExpiration)
 			if err != nil {
 				log.Printf("failed to add id to cache: %+v", err)
 			}
@@ -100,20 +100,9 @@ func (v *Views) Websocket(c echo.Context) error {
 			res.ReturningChannel = nil
 
 			var send []byte
-			send, err = json.Marshal(res)
+			send, err = json.Marshal(res.TransporterUnique)
 			if err != nil {
-				log.Printf("failed to marshal payload")
-			}
-
-			switch res.Payload.(type) {
-			case commonTransporter.Transporter:
-				send, err = json.Marshal(res.Payload)
-				if err != nil {
-					log.Printf("failed to marshal payload")
-				}
-				break
-			case string:
-				send = []byte(res.Payload.(string))
+				log.Printf("failed to marshal transportUnique: %+v", err)
 			}
 
 			err = ws.WriteMessage(websocket.TextMessage, send)
