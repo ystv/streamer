@@ -197,8 +197,8 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 			close(errorChannel)
 			return
 		}
-		log.Println(specialWSMessage.Acknowledged)
-		log.Printf("connected to  %s://%s", u.Scheme, u.Host)
+
+		log.Printf("connected to %s://%s", u.Scheme, u.Host)
 
 		for {
 			//var msgType int
