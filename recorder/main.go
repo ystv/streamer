@@ -215,7 +215,9 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 			var receivedMessage commonTransporter.TransporterUnique
 			err = json.Unmarshal(message, &receivedMessage)
 			if err != nil {
-
+				log.Printf("failed to unmarshal recieved: %+v", err)
+				close(errorChannel)
+				return
 			}
 
 			switch receivedMessage.Payload.(type) {
