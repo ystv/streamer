@@ -227,7 +227,6 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 			case string:
 				if msgType == websocket.TextMessage && receivedMessage.Payload.(string) == specialWSMessage.Ping.String() {
 					receivedMessage.Payload = specialWSMessage.Pong
-
 					var responsePing []byte
 					responsePing, err = json.Marshal(receivedMessage)
 					err = c.WriteMessage(websocket.TextMessage, responsePing)
