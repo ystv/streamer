@@ -224,16 +224,6 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 
 			log.Printf("%#v", receivedMessage)
 
-			var uniquePayload commonTransporter.Transporter
-			err = mapstructure.Decode(receivedMessage.Payload, &uniquePayload)
-			if err != nil {
-				_ = v.errorResponse(fmt.Errorf("failed to decode payload: %+v", err), c, receivedMessage.ID)
-				//close(errorChannel)
-				return
-			}
-
-			receivedMessage.Payload = uniquePayload
-
 		switchBreak:
 			switch receivedMessage.Payload.(type) {
 			case map[string]interface{}:
