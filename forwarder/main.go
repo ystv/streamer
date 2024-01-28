@@ -153,7 +153,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 		return
 	}
 
-	//When the program closes, close the connection
+	// When the program closes, close the connection
 	defer func(c *websocket.Conn) {
 		_ = c.Close()
 	}(c)
@@ -272,7 +272,9 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 		case m := <-messageOut:
 			log.Printf("Picked up message %#v", m)
 
+			log.Println(10)
 			t := m.Payload.(commonTransporter.Transporter)
+			log.Println(11)
 
 			if len(t.Unique) != 10 {
 				kill := v.errorResponse(fmt.Errorf("failed to get unique, length is not equal to 10: %d", len(t.Unique)), c, m.ID)
