@@ -169,14 +169,14 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 		var resBytes []byte
 		resBytes, err = json.Marshal(response)
 		if err != nil {
-			_ = v.errorResponse(fmt.Errorf("failed to marshal initial: %+v", err), c)
+			_ = v.errorResponse(fmt.Errorf("failed to marshal initial: %+v", err), c, "UNKNOWN ID")
 			close(errorChannel)
 			return
 		}
 
 		err = c.WriteMessage(websocket.TextMessage, resBytes)
 		if err != nil {
-			_ = v.errorResponse(fmt.Errorf("failed to write name and version: %+v", err), c)
+			_ = v.errorResponse(fmt.Errorf("failed to write name and version: %+v", err), c, "UNKNOWN ID")
 			close(errorChannel)
 			return
 		}
@@ -185,13 +185,13 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 
 		_, msg, err = c.ReadMessage()
 		if err != nil {
-			_ = v.errorResponse(fmt.Errorf("failed to read acknowledgement: %+v", err), c)
+			_ = v.errorResponse(fmt.Errorf("failed to read acknowledgement: %+v", err), c, "UNKNOWN ID")
 			close(errorChannel)
 			return
 		}
 
 		if string(msg) != specialWSMessage.Acknowledged.String() {
-			_ = v.errorResponse(fmt.Errorf("failed to read acknowledgement: %s", string(msg)), c)
+			_ = v.errorResponse(fmt.Errorf("failed to read acknowledgement: %s", string(msg)), c, "UNKNOWN ID")
 			close(errorChannel)
 			return
 		}
@@ -203,7 +203,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 			var message []byte
 			msgType, message, err = c.ReadMessage()
 			if err != nil {
-				_ = v.errorResponse(fmt.Errorf("failed to read message: %+v, message type: %d, message contents: %s", err, msgType, string(message)), c)
+				_ = v.errorResponse(fmt.Errorf("failed to read message: %+v, message type: %d, message contents: %s", err, msgType, string(message)), c, "UNKNOWN ID")
 				close(errorChannel)
 				return
 			}
@@ -213,7 +213,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 			var receivedMessage commonTransporter.TransporterUnique
 			err = json.Unmarshal(message, &receivedMessage)
 			if err != nil {
-				_ = v.errorResponse(fmt.Errorf("failed to unmarshal recieved: %+v", err), c)
+				_ = v.errorResponse(fmt.Errorf("failed to unmarshal recieved: %+v", err), c, receivedMessage.ID)
 				close(errorChannel)
 				return
 			}
@@ -231,17 +231,17 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 					responsePing, err = json.Marshal(receivedMessage)
 					err = c.WriteMessage(websocket.TextMessage, responsePing)
 					if err != nil {
-						_ = v.errorResponse(fmt.Errorf("failed to write pong: %+v", err), c)
+						_ = v.errorResponse(fmt.Errorf("failed to write pong: %+v", err), c, receivedMessage.ID)
 						close(errorChannel)
 						return
 					}
 					continue
 				}
-				_ = v.errorResponse(fmt.Errorf("invalid string recieved: %s", receivedMessage), c)
+				_ = v.errorResponse(fmt.Errorf("invalid string recieved: %s", receivedMessage), c, receivedMessage.ID)
 				close(errorChannel)
 				return
 			default:
-				_ = v.errorResponse(fmt.Errorf("invalid recieved message: %#v", receivedMessage), c)
+				_ = v.errorResponse(fmt.Errorf("invalid recieved message: %#v", receivedMessage), c, receivedMessage.ID)
 				close(errorChannel)
 				return
 			}
@@ -262,7 +262,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 			t := m.Payload.(commonTransporter.Transporter)
 
 			if len(t.Unique) != 10 {
-				kill := v.errorResponse(fmt.Errorf("failed to get unique, length is not equal to 10: %d", len(t.Unique)), c)
+				kill := v.errorResponse(fmt.Errorf("failed to get unique, length is not equal to 10: %d", len(t.Unique)), c, m.ID)
 				if kill {
 					return
 				}
@@ -276,7 +276,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 
 				err = mapstructure.Decode(t.Payload, &t1)
 				if err != nil {
-					kill := v.errorResponse(fmt.Errorf("failed to decode: %w", err), c)
+					kill := v.errorResponse(fmt.Errorf("failed to decode: %w", err), c, m.ID)
 					if kill {
 						return
 					}
@@ -284,7 +284,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 				}
 
 				if len(t1.StreamIn) == 0 || len(t1.Streams) == 0 {
-					kill := v.errorResponse(fmt.Errorf("failed to get payload for start: %+v", t1), c)
+					kill := v.errorResponse(fmt.Errorf("failed to get payload for start: %+v", t1), c, m.ID)
 					if kill {
 						return
 					}
@@ -295,7 +295,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 
 				err = v.start(t)
 				if err != nil {
-					kill := v.errorResponse(fmt.Errorf("failed to start forwarder: %w", err), c)
+					kill := v.errorResponse(fmt.Errorf("failed to start forwarder: %w", err), c, m.ID)
 					if kill {
 						return
 					}
@@ -306,7 +306,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 				_, ok := v.cache.Get(fmt.Sprintf("%s_1", t.Unique))
 				if !ok {
 					log.Println(v.cache.Items())
-					kill := v.errorResponse(fmt.Errorf("failed to get status, invalid unique: %s", t.Unique), c)
+					kill := v.errorResponse(fmt.Errorf("failed to get status, invalid unique: %s", t.Unique), c, m.ID)
 					if kill {
 						return
 					}
@@ -316,7 +316,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 
 				err = mapstructure.Decode(t.Payload, &t1)
 				if err != nil {
-					kill := v.errorResponse(fmt.Errorf("failed to decode: %w", err), c)
+					kill := v.errorResponse(fmt.Errorf("failed to decode: %w", err), c, m.ID)
 					if kill {
 						return
 					}
@@ -324,7 +324,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 				}
 
 				if t1.Streams == 0 {
-					kill := v.errorResponse(fmt.Errorf("failed to payload for status: %+v", t1), c)
+					kill := v.errorResponse(fmt.Errorf("failed to payload for status: %+v", t1), c, m.ID)
 					if kill {
 						return
 					}
@@ -335,7 +335,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 
 				out, err = v.status(t)
 				if err != nil {
-					kill := v.errorResponse(fmt.Errorf("failed to status forwarder: %w", err), c)
+					kill := v.errorResponse(fmt.Errorf("failed to status forwarder: %w", err), c, m.ID)
 					if kill {
 						return
 					}
@@ -345,7 +345,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 			case "stop":
 				_, ok := v.cache.Get(fmt.Sprintf("%s_1", t.Unique))
 				if !ok {
-					kill := v.errorResponse(fmt.Errorf("failed to stop forward, invalid unique: %s", t.Unique), c)
+					kill := v.errorResponse(fmt.Errorf("failed to stop forward, invalid unique: %s", t.Unique), c, m.ID)
 					if kill {
 						return
 					}
@@ -353,7 +353,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 				}
 				err = v.stop(t)
 				if err != nil {
-					kill := v.errorResponse(fmt.Errorf("failed to stop forwarder: %w", err), c)
+					kill := v.errorResponse(fmt.Errorf("failed to stop forwarder: %w", err), c, m.ID)
 					if kill {
 						return
 					}
@@ -361,7 +361,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 				}
 				break
 			default:
-				kill := v.errorResponse(fmt.Errorf("failed to get action: %s", t.Action), c)
+				kill := v.errorResponse(fmt.Errorf("failed to get action: %s", t.Action), c, m.ID)
 				if kill {
 					return
 				}
@@ -379,7 +379,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 			var resBytes []byte
 			resBytes, err = json.Marshal(m)
 			if err != nil {
-				kill := v.errorResponse(fmt.Errorf("failed to marshal response: %s", t.Action), c)
+				kill := v.errorResponse(fmt.Errorf("failed to marshal response: %s", t.Action), c, m.ID)
 				if kill {
 					return
 				}
@@ -396,11 +396,14 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 	}
 }
 
-func (v *Views) errorResponse(incomingErr error, c *websocket.Conn) bool {
-	log.Print(incomingErr)
-	response := commonTransporter.ResponseTransporter{
-		Status:  wsMessages.Error,
-		Payload: incomingErr.Error(),
+func (v *Views) errorResponse(incomingErr error, c *websocket.Conn, id string) bool {
+	log.Printf("error: %#v", incomingErr)
+	response := commonTransporter.TransporterUnique{
+		ID: id,
+		Payload: commonTransporter.ResponseTransporter{
+			Status:  wsMessages.Error,
+			Payload: incomingErr.Error(),
+		},
 	}
 
 	var resBytes []byte
