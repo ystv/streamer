@@ -224,6 +224,16 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 
 			log.Printf("%#v", receivedMessage)
 
+			var uniquePayload commonTransporter.Transporter
+			err = mapstructure.Decode(receivedMessage.Payload, &uniquePayload)
+			if err != nil {
+				_ = v.errorResponse(fmt.Errorf("failed to decode payload: %+v", err), c, receivedMessage.ID)
+				//close(errorChannel)
+				return
+			}
+
+			receivedMessage.Payload = uniquePayload
+
 		switchBreak:
 			switch receivedMessage.Payload.(type) {
 			case map[string]interface{}:
@@ -273,7 +283,34 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 			log.Printf("Picked up message %#v", m)
 
 			log.Println(10)
-			t := m.Payload.(commonTransporter.Transporter)
+			//var tempBytes []byte
+			//tempBytes, err = json.Marshal(m.Payload)
+			//if err != nil {
+			//	kill := v.errorResponse(fmt.Errorf("failed to marshal payload: %+v", err), c, m.ID)
+			//	if kill {
+			//		return
+			//	}
+			//	continue
+			//}
+			var t commonTransporter.Transporter
+			//err = json.Unmarshal(tempBytes, &t)
+			//if err != nil {
+			//	kill := v.errorResponse(fmt.Errorf("failed to unmarshal payload: %+v", err), c, m.ID)
+			//	if kill {
+			//		return
+			//	}
+			//	continue
+			//}
+
+			err = mapstructure.Decode(t.Payload, &t)
+			if err != nil {
+				kill := v.errorResponse(fmt.Errorf("failed to decode payload: %+v", err), c, m.ID)
+				if kill {
+					return
+				}
+				continue
+			}
+			//t := m.Payload.(commonTransporter.Transporter)
 			log.Println(11)
 
 			if len(t.Unique) != 10 {
