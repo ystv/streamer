@@ -3,6 +3,7 @@ package views
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 
 	"github.com/google/uuid"
 
@@ -25,6 +26,8 @@ func (v *Views) wsHelper(name server.Server, transporter commonTransporter.Trans
 		},
 		ReturningChannel: returningChannel,
 	}
+
+	log.Printf("sending message to %s: %#v", name, transporter)
 
 	//b, err := json.Marshal(sendingTransporter)
 	//if err != nil {
