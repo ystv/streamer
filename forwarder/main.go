@@ -254,8 +254,8 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 				return
 			}
 			log.Println(7)
-			log.Printf("received message: %#v", receivedMessage.Payload.(commonTransporter.TransporterUnique))
-			messageOut <- receivedMessage.Payload.(commonTransporter.TransporterUnique)
+			log.Printf("received message: %#v", receivedMessage.Payload.(commonTransporter.Transporter))
+			messageOut <- receivedMessage
 		}
 	}()
 
