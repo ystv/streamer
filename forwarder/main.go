@@ -303,6 +303,8 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 			//t := m.Payload.(commonTransporter.Transporter)
 			log.Println(11)
 
+			log.Printf("%#v", t)
+
 			if len(t.Unique) != 10 {
 				kill := v.errorResponse(fmt.Errorf("failed to get unique, length is not equal to 10: %d", len(t.Unique)), c, m.ID)
 				if kill {
