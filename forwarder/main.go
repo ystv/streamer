@@ -291,7 +291,9 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 			//	continue
 			//}
 
-			err = mapstructure.Decode(t.Payload, &t)
+			log.Printf("%#v", m.Payload)
+
+			err = mapstructure.Decode(m.Payload, &t)
 			if err != nil {
 				kill := v.errorResponse(fmt.Errorf("failed to decode payload: %+v", err), c, m.ID)
 				if kill {
