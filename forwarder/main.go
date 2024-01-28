@@ -220,13 +220,14 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 
 			log.Printf("%#v", receivedMessage)
 
+		switchBreak:
 			switch receivedMessage.Payload.(type) {
 			case map[string]interface{}:
 				log.Println(1)
-				break
+				break switchBreak
 			case commonTransporter.Transporter:
 				log.Println(2)
-				break
+				break switchBreak
 			case string:
 				log.Println(3)
 				if msgType == websocket.TextMessage && receivedMessage.Payload.(string) == specialWSMessage.Ping.String() {
@@ -252,6 +253,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 				close(errorChannel)
 				return
 			}
+			log.Println(7)
 			log.Printf("received message: %#v", receivedMessage.Payload.(commonTransporter.TransporterUnique))
 			messageOut <- receivedMessage.Payload.(commonTransporter.TransporterUnique)
 		}
