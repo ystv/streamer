@@ -169,14 +169,14 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 		var resBytes []byte
 		resBytes, err = json.Marshal(response)
 		if err != nil {
-			log.Printf("failed to marshal initial: %+v", err)
+			_ = v.errorResponse(fmt.Errorf("failed to marshal initial: %+v", err), c)
 			close(errorChannel)
 			return
 		}
 
 		err = c.WriteMessage(websocket.TextMessage, resBytes)
 		if err != nil {
-			log.Printf("failed to write name and version: %+v", err)
+			_ = v.errorResponse(fmt.Errorf("failed to write name and version: %+v", err), c)
 			close(errorChannel)
 			return
 		}
@@ -185,13 +185,13 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 
 		_, msg, err = c.ReadMessage()
 		if err != nil {
-			log.Printf("failed to read acknowledgement: %+v", err)
+			_ = v.errorResponse(fmt.Errorf("failed to read acknowledgement: %+v", err), c)
 			close(errorChannel)
 			return
 		}
 
 		if string(msg) != specialWSMessage.Acknowledged.String() {
-			log.Printf("failed to read acknowledgement: %s", string(msg))
+			_ = v.errorResponse(fmt.Errorf("failed to read acknowledgement: %s", string(msg)), c)
 			close(errorChannel)
 			return
 		}
@@ -203,9 +203,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 			var message []byte
 			msgType, message, err = c.ReadMessage()
 			if err != nil {
-				log.Printf("failed to read: %+v", err)
-				log.Printf("message type: %d", msgType)
-				log.Printf("message contents: %s", string(message))
+				_ = v.errorResponse(fmt.Errorf("failed to read message: %+v, message type: %d, message contents: %s", err, msgType, string(message)), c)
 				close(errorChannel)
 				return
 			}
@@ -213,7 +211,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 			var receivedMessage commonTransporter.TransporterUnique
 			err = json.Unmarshal(message, &receivedMessage)
 			if err != nil {
-				log.Printf("failed to unmarshal recieved: %+v", err)
+				_ = v.errorResponse(fmt.Errorf("failed to unmarshal recieved: %+v", err), c)
 				close(errorChannel)
 				return
 			}
@@ -230,17 +228,19 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 					responsePing, err = json.Marshal(receivedMessage)
 					err = c.WriteMessage(websocket.TextMessage, responsePing)
 					if err != nil {
-						log.Printf("failed to write pong: %+v", err)
+						_ = v.errorResponse(fmt.Errorf("failed to write pong: %+v", err), c)
 						close(errorChannel)
 						return
 					}
 					continue
 				}
-				log.Printf("invalid string recieved: %s", receivedMessage)
-				continue
+				_ = v.errorResponse(fmt.Errorf("invalid string recieved: %s", receivedMessage), c)
+				close(errorChannel)
+				return
 			default:
-				log.Printf("invalid recieved message: %#v", receivedMessage)
-				continue
+				_ = v.errorResponse(fmt.Errorf("invalid recieved message: %#v", receivedMessage), c)
+				close(errorChannel)
+				return
 			}
 			log.Printf("Received message: %#v", receivedMessage.Payload.(commonTransporter.TransporterUnique))
 			messageOut <- receivedMessage.Payload.(commonTransporter.TransporterUnique)
@@ -376,7 +376,11 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 			var resBytes []byte
 			resBytes, err = json.Marshal(m)
 			if err != nil {
-				log.Printf("failed to marshal response: %+v", err)
+				kill := v.errorResponse(fmt.Errorf("failed to marshal response: %s", t.Action), c)
+				if kill {
+					return
+				}
+				continue
 			}
 
 			err = c.WriteMessage(websocket.TextMessage, resBytes)
