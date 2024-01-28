@@ -117,6 +117,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 
 	defer func() {
 		if r := recover(); r != nil {
+			log.Printf("%#v", r)
 			log.Printf("Restarting...")
 			select {
 			case <-messageOut:
@@ -148,9 +149,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 		if resp != nil {
 			log.Printf("handshake failed with status %d", resp.StatusCode)
 		}
-		log.Printf("failed to dial url: %+v", err)
-		log.Printf("Restarting...")
-		return
+		panic(fmt.Sprintf("failed to dial url: %+v", err))
 	}
 
 	// When the program closes, close the connection
