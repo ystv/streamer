@@ -114,15 +114,6 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 	messageOut := make(chan commonTransporter.TransporterUnique)
 	errorChannel := make(chan error, 1)
 	done := make(chan struct{})
-	u := url.URL{Scheme: config.StreamerWebsocketScheme, Host: config.StreamerWebAddress, Path: "/" + config.StreamerWebsocketPath}
-	log.Printf("connecting to %s://%s", u.Scheme, u.Host)
-	c, resp, err := websocket.DefaultDialer.Dial(u.String(), nil)
-	if err != nil {
-		if resp != nil {
-			log.Printf("handshake failed with status %d", resp.StatusCode)
-		}
-		log.Printf("failed to dial url: %+v", err)
-	}
 
 	defer func() {
 		if r := recover(); r != nil {
@@ -149,6 +140,18 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 			return
 		}
 	}()
+
+	u := url.URL{Scheme: config.StreamerWebsocketScheme, Host: config.StreamerWebAddress, Path: "/" + config.StreamerWebsocketPath}
+	log.Printf("connecting to %s://%s", u.Scheme, u.Host)
+	c, resp, err := websocket.DefaultDialer.Dial(u.String(), nil)
+	if err != nil {
+		if resp != nil {
+			log.Printf("handshake failed with status %d", resp.StatusCode)
+		}
+		log.Printf("failed to dial url: %+v", err)
+		log.Printf("Restarting...")
+		return
+	}
 
 	//When the program closes, close the connection
 	defer func(c *websocket.Conn) {
