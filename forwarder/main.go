@@ -223,6 +223,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 			switch receivedMessage.Payload.(type) {
 			case map[string]interface{}:
 				log.Println(1)
+				break
 			case commonTransporter.Transporter:
 				log.Println(2)
 				break
@@ -251,7 +252,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 				close(errorChannel)
 				return
 			}
-			log.Printf("Received message: %#v", receivedMessage.Payload.(commonTransporter.TransporterUnique))
+			log.Printf("received message: %#v", receivedMessage.Payload.(commonTransporter.TransporterUnique))
 			messageOut <- receivedMessage.Payload.(commonTransporter.TransporterUnique)
 		}
 	}()
