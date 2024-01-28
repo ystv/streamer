@@ -146,6 +146,18 @@ func (v *Views) Websocket(c echo.Context) error {
 			case string:
 				receive = []byte(transportUniqueReturning.Payload.(string))
 				break
+			case map[string]interface{}:
+				receive, err = json.Marshal(transportUniqueReturning.Payload)
+				if err != nil {
+					log.Printf("failed to unmarshal response: %+v, server %s", err, responseTransporter.Server)
+					close(internalChannel)
+					close(clientChannel)
+					v.cache.Delete(responseTransporter.Server.String())
+					v.cache.Delete(responseTransporter.Server.String() + internalChannelNameAppend)
+					return nil
+				}
+				log.Printf("Message received from %s: %s", responseTransporter.Server, msg)
+				break
 			case commonTransporter.ResponseTransporter:
 				receive, err = json.Marshal(transportUniqueReturning.Payload)
 				if err != nil {
