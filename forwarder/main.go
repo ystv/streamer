@@ -171,14 +171,14 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 		resBytes, err = json.Marshal(response)
 		if err != nil {
 			_ = v.errorResponse(fmt.Errorf("failed to marshal initial: %+v", err), c, "UNKNOWN ID")
-			close(errorChannel)
+			//close(errorChannel)
 			return
 		}
 
 		err = c.WriteMessage(websocket.TextMessage, resBytes)
 		if err != nil {
 			_ = v.errorResponse(fmt.Errorf("failed to write name and version: %+v", err), c, "UNKNOWN ID")
-			close(errorChannel)
+			//close(errorChannel)
 			return
 		}
 
@@ -187,13 +187,13 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 		_, msg, err = c.ReadMessage()
 		if err != nil {
 			_ = v.errorResponse(fmt.Errorf("failed to read acknowledgement: %+v", err), c, "UNKNOWN ID")
-			close(errorChannel)
+			//close(errorChannel)
 			return
 		}
 
 		if string(msg) != specialWSMessage.Acknowledged.String() {
 			_ = v.errorResponse(fmt.Errorf("failed to read acknowledgement: %s", string(msg)), c, "UNKNOWN ID")
-			close(errorChannel)
+			//close(errorChannel)
 			return
 		}
 
@@ -205,7 +205,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 			msgType, message, err = c.ReadMessage()
 			if err != nil {
 				_ = v.errorResponse(fmt.Errorf("failed to read message: %+v, message type: %d, message contents: %s", err, msgType, string(message)), c, "UNKNOWN ID")
-				close(errorChannel)
+				//close(errorChannel)
 				return
 			}
 
@@ -215,7 +215,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 			err = json.Unmarshal(message, &receivedMessage)
 			if err != nil {
 				_ = v.errorResponse(fmt.Errorf("failed to unmarshal recieved: %+v", err), c, receivedMessage.ID)
-				close(errorChannel)
+				//close(errorChannel)
 				return
 			}
 
@@ -240,18 +240,18 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 					if err != nil {
 						log.Println(6)
 						_ = v.errorResponse(fmt.Errorf("failed to write pong: %+v", err), c, receivedMessage.ID)
-						close(errorChannel)
+						//close(errorChannel)
 						return
 					}
 					continue
 				}
 				_ = v.errorResponse(fmt.Errorf("invalid string recieved: %s", receivedMessage), c, receivedMessage.ID)
-				close(errorChannel)
+				//close(errorChannel)
 				return
 			default:
 				log.Println(4)
 				_ = v.errorResponse(fmt.Errorf("invalid recieved message: %#v", receivedMessage), c, receivedMessage.ID)
-				close(errorChannel)
+				//close(errorChannel)
 				return
 			}
 			log.Println(7)
