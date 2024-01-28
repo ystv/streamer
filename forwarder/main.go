@@ -158,6 +158,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 		defer close(done)
 		defer func() {
 			if r := recover(); r != nil {
+				log.Printf("panic recovery: %#v", r)
 				close(errorChannel)
 			}
 		}()
