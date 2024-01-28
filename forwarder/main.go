@@ -208,6 +208,8 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 				return
 			}
 
+			log.Printf("%#v", string(message))
+
 			var receivedMessage commonTransporter.TransporterUnique
 			err = json.Unmarshal(message, &receivedMessage)
 			if err != nil {
@@ -215,6 +217,8 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 				close(errorChannel)
 				return
 			}
+
+			log.Printf("%#v", receivedMessage)
 
 			switch receivedMessage.Payload.(type) {
 			case map[string]interface{}:
