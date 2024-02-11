@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"log"
 	"os/exec"
 
 	commonTransporter "github.com/ystv/streamer/common/transporter"
@@ -17,8 +18,10 @@ func (v *Views) status(transporter commonTransporter.Transporter) (commonTranspo
 	}
 
 	fStatusResponse := commonTransporter.ForwarderStatusResponse{}
+	log.Println(1)
 
 	for i := start; i <= transporter.Payload.(commonTransporter.ForwarderStatus).Streams; i++ {
+		log.Println("i", i)
 		c := exec.Command("tail", "-n", "19", fmt.Sprintf("\"logs/%s_%d.txt\"", transporter.Unique, i), "|", "sed", "-e", "\"s/\r$//\"")
 
 		var stdout bytes.Buffer

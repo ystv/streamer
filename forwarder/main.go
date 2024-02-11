@@ -320,6 +320,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 				}
 				break
 			case "status":
+				log.Println(1)
 				_, ok := v.cache.Get(fmt.Sprintf("%s_1", t.Unique))
 				if !ok {
 					log.Println(v.cache.Items())
@@ -329,6 +330,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 					}
 					continue
 				}
+				log.Println(2)
 				var t1 commonTransporter.ForwarderStatus
 
 				err = mapstructure.Decode(t.Payload, &t1)
@@ -339,6 +341,8 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 					}
 					continue
 				}
+				log.Println(3)
+				log.Printf("%#v", t1)
 
 				if t1.Streams == 0 {
 					kill := v.errorResponse(fmt.Errorf("failed to payload for status: %+v", t1), c, m.ID)
@@ -347,6 +351,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 					}
 					continue
 				}
+				log.Println(4)
 
 				t.Payload = t1
 
@@ -358,6 +363,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 					}
 					continue
 				}
+				log.Println(5)
 				break
 			case "stop":
 				_, ok := v.cache.Get(fmt.Sprintf("%s_1", t.Unique))
