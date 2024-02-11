@@ -18,6 +18,7 @@ func (v *Views) status(transporter commonTransporter.Transporter) (commonTranspo
 	}
 
 	fStatusResponse := commonTransporter.ForwarderStatusResponse{}
+	fStatusResponse.Streams = make(map[uint64]string)
 	log.Println(10)
 
 	for i := start; i <= transporter.Payload.(commonTransporter.ForwarderStatus).Streams; i++ {
@@ -25,7 +26,7 @@ func (v *Views) status(transporter commonTransporter.Transporter) (commonTranspo
 		//c := exec.Command("tail", "-n", "19", fmt.Sprintf("\"logs/%s_%d.txt\"", transporter.Unique, i), "|", "sed", "-e", "\"s/\r$//\"")
 
 		c1 := exec.Command("tail", "-n", "19", fmt.Sprintf("\"logs/%s_%d.txt\"", transporter.Unique, i))
-		c2 := exec.Command("sed", "-e", "s/\r$//")
+		c2 := exec.Command("sed", "-e", "'s/\r$//'")
 
 		var stdout, stderr bytes.Buffer
 		c2.Stdout = &stdout
