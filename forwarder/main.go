@@ -207,7 +207,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 			if err != nil {
 				_ = v.errorResponse(fmt.Errorf("failed to read message: %+v, message type: %d, message contents: %s", err, msgType, string(message)), c, "UNKNOWN ID")
 				//close(errorChannel)
-				return
+				panic(fmt.Sprintf("failed to read message: %+v, message type: %d, message contents: %s", err, msgType, string(message)))
 			}
 
 			log.Printf("%#v", string(message))
@@ -217,7 +217,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 			if err != nil {
 				_ = v.errorResponse(fmt.Errorf("failed to unmarshal recieved: %+v", err), c, receivedMessage.ID)
 				//close(errorChannel)
-				return
+				panic(fmt.Sprintf("failed to unmarshal recieved: %+v", err))
 			}
 
 			log.Printf("%#v", receivedMessage)
