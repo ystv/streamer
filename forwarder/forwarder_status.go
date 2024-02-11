@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"bytes"
 	"fmt"
 	"log"
@@ -24,8 +23,9 @@ func (v *Views) status(transporter commonTransporter.Transporter) (commonTranspo
 		log.Println("i", i)
 		c := exec.Command("tail", "-n", "19", fmt.Sprintf("\"logs/%s_%d.txt\"", transporter.Unique, i), "|", "sed", "-e", "\"s/\r$//\"")
 
-		var stdout bytes.Buffer
+		var stdout, stderr bytes.Buffer
 		c.Stdout = &stdout
+		c.Stderr = &stderr
 		log.Println(11)
 
 		var errOut string
@@ -36,11 +36,12 @@ func (v *Views) status(transporter commonTransporter.Transporter) (commonTranspo
 		}
 
 		log.Println(12)
-		stderr, _ := c.StderrPipe()
-		scanner := bufio.NewScanner(stderr)
-		for scanner.Scan() {
-			errOut += "\n" + scanner.Text()
-		}
+		//stderr, err := c.StderrPipe()
+		errOut += stderr.String()
+		//scanner := bufio.NewScanner(stderr)
+		//for scanner.Scan() {
+		//	errOut += "\n" + scanner.Text()
+		//}
 		log.Println(13)
 
 		if len(errOut) != 0 {
