@@ -47,6 +47,7 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 					cmd, ok := v.cache.Get(fmt.Sprintf("%s_0", transporter.Unique))
 					if !ok {
 						log.Println("unable to get cmd from cache")
+						return
 					}
 					c1 := cmd.(*exec.Cmd)
 					err = c1.Process.Kill()
@@ -96,7 +97,7 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 					cmd, ok := v.cache.Get(fmt.Sprintf("%s_%d", transporter.Unique, k))
 					if !ok {
 						log.Println("unable to get cmd from cache")
-						break
+						return
 					}
 					c1 := cmd.(*exec.Cmd)
 					err = c1.Process.Kill()
