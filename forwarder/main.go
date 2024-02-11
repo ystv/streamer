@@ -226,21 +226,16 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 		switchBreak:
 			switch receivedMessage.Payload.(type) {
 			case map[string]interface{}:
-				log.Println(1)
 				break switchBreak
 			case commonTransporter.Transporter:
-				log.Println(2)
 				break switchBreak
 			case string:
-				log.Println(3)
 				if msgType == websocket.TextMessage && receivedMessage.Payload.(string) == specialWSMessage.Ping.String() {
-					log.Println(5)
 					receivedMessage.Payload = specialWSMessage.Pong
 					var responsePing []byte
 					responsePing, err = json.Marshal(receivedMessage)
 					err = c.WriteMessage(websocket.TextMessage, responsePing)
 					if err != nil {
-						log.Println(6)
 						_ = v.errorResponse(fmt.Errorf("failed to write pong: %+v", err), c, receivedMessage.ID)
 						//close(errorChannel)
 						return
@@ -251,12 +246,10 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 				//close(errorChannel)
 				return
 			default:
-				log.Println(4)
 				_ = v.errorResponse(fmt.Errorf("invalid recieved message: %#v", receivedMessage), c, receivedMessage.ID)
 				//close(errorChannel)
 				return
 			}
-			log.Println(7)
 			log.Printf("received message: %#v", receivedMessage)
 			messageOut <- receivedMessage
 		}
@@ -271,25 +264,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 		case m := <-messageOut:
 			log.Printf("Picked up message %#v", m)
 
-			log.Println(10)
-			//var tempBytes []byte
-			//tempBytes, err = json.Marshal(m.Payload)
-			//if err != nil {
-			//	kill := v.errorResponse(fmt.Errorf("failed to marshal payload: %+v", err), c, m.ID)
-			//	if kill {
-			//		return
-			//	}
-			//	continue
-			//}
 			var t commonTransporter.Transporter
-			//err = json.Unmarshal(tempBytes, &t)
-			//if err != nil {
-			//	kill := v.errorResponse(fmt.Errorf("failed to unmarshal payload: %+v", err), c, m.ID)
-			//	if kill {
-			//		return
-			//	}
-			//	continue
-			//}
 
 			log.Printf("%#v", m.Payload)
 
@@ -301,8 +276,6 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 				}
 				continue
 			}
-			//t := m.Payload.(commonTransporter.Transporter)
-			log.Println(11)
 
 			log.Printf("%#v", t)
 
