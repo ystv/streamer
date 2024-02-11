@@ -3,10 +3,9 @@ package main
 import (
 	"bytes"
 	"fmt"
+	commonTransporter "github.com/ystv/streamer/common/transporter"
 	"log"
 	"os/exec"
-
-	commonTransporter "github.com/ystv/streamer/common/transporter"
 )
 
 func (v *Views) status(transporter commonTransporter.Transporter) (commonTransporter.ForwarderStatusResponse, error) {
@@ -17,7 +16,7 @@ func (v *Views) status(transporter commonTransporter.Transporter) (commonTranspo
 	}
 
 	fStatusResponse := commonTransporter.ForwarderStatusResponse{}
-	fStatusResponse.Streams = make(map[uint64]string)
+	fStatusResponse.Streams = make(map[string]string)
 	log.Println(10)
 
 	for i := start; i <= transporter.Payload.(commonTransporter.ForwarderStatus).Streams; i++ {
@@ -70,7 +69,7 @@ func (v *Views) status(transporter commonTransporter.Transporter) (commonTranspo
 		if i == 0 {
 			fStatusResponse.Website = stdout.String()
 		} else {
-			fStatusResponse.Streams[uint64(i)] = stdout.String()
+			fStatusResponse.Streams[fmt.Sprintf("%d", i)] = stdout.String()
 		}
 		log.Println(16)
 	}

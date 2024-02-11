@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strconv"
 	"sync"
 
 	"github.com/labstack/echo/v4"
@@ -173,7 +172,7 @@ func (v *Views) StatusFunc(c echo.Context) error {
 
 			for index, streamOut := range forwarderStatus.Streams {
 				individualResponse := StatusResponseIndividual{
-					Name:     strconv.Itoa(int(index)),
+					Name:     index,
 					Response: streamOut,
 				}
 				statusResponse.Status = append(statusResponse.Status, individualResponse)
