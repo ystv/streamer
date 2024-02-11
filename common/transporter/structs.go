@@ -63,6 +63,6 @@ type (
 		// Website contains the log data of the website stream
 		Website string `json:"website" mapstructure:"website"`
 		// Streams contain the log data of all the forwarded streams
-		Streams map[uint64]string `json:"streams" mapstructure:"streams"`
+		Streams map[string]string `json:"streams" mapstructure:"streams"`
 	}
 )
