@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"log"
 	"os/exec"
 
@@ -21,42 +22,57 @@ func (v *Views) status(transporter commonTransporter.Transporter) (commonTranspo
 
 	for i := start; i <= transporter.Payload.(commonTransporter.ForwarderStatus).Streams; i++ {
 		log.Println("i", i)
-		c := exec.Command("tail", "-n", "19", fmt.Sprintf("\"logs/%s_%d.txt\"", transporter.Unique, i), "|", "sed", "-e", "\"s/\r$//\"")
+		//c := exec.Command("tail", "-n", "19", fmt.Sprintf("\"logs/%s_%d.txt\"", transporter.Unique, i), "|", "sed", "-e", "\"s/\r$//\"")
+
+		c1 := exec.Command("tail", "-n", "19", fmt.Sprintf("\"logs/%s_%d.txt\"", transporter.Unique, i))
+		c2 := exec.Command("sed", "-e", "\"s/\r$//\"")
 
 		var stdout, stderr bytes.Buffer
-		c.Stdout = &stdout
-		c.Stderr = &stderr
+		c2.Stdout = &stdout
+		c2.Stderr = &stderr
 		log.Println(11)
 
-		var errOut string
-
-		err := c.Run()
-		if err != nil {
-			errOut = fmt.Sprintf("could not run command: %+v", err)
-		}
+		r, w := io.Pipe()
+		c1.Stdout = w
+		c2.Stdin = r
 
 		log.Println(12)
+
+		_ = c1.Start()
+		_ = c2.Start()
+		_ = c1.Wait()
+		_ = w.Close()
+		_ = c2.Wait()
+
+		//var errOut string
+
+		//err := c.Run()
+		//if err != nil {
+		//	errOut = fmt.Sprintf("could not run command: %+v", err)
+		//}
+
+		log.Println(13)
 		//stderr, err := c.StderrPipe()
-		errOut += stderr.String()
+		errOut := stderr.String()
 		//scanner := bufio.NewScanner(stderr)
 		//for scanner.Scan() {
 		//	errOut += "\n" + scanner.Text()
 		//}
-		log.Println(13)
+		log.Println(14)
 
 		if len(errOut) != 0 {
 			return commonTransporter.ForwarderStatusResponse{}, fmt.Errorf(errOut)
 		}
 
-		log.Println(14)
+		log.Println(15)
 		if i == 0 {
 			fStatusResponse.Website = stdout.String()
 		} else {
 			fStatusResponse.Streams[uint64(i)] = stdout.String()
 		}
-		log.Println(15)
+		log.Println(16)
 	}
-	log.Println(16)
+	log.Println(17)
 	log.Printf("%#v", fStatusResponse)
 
 	return fStatusResponse, nil
