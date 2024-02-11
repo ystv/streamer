@@ -18,7 +18,7 @@ func (v *Views) status(transporter commonTransporter.Transporter) (commonTranspo
 	}
 
 	fStatusResponse := commonTransporter.ForwarderStatusResponse{}
-	log.Println(1)
+	log.Println(10)
 
 	for i := start; i <= transporter.Payload.(commonTransporter.ForwarderStatus).Streams; i++ {
 		log.Println("i", i)
@@ -26,6 +26,7 @@ func (v *Views) status(transporter commonTransporter.Transporter) (commonTranspo
 
 		var stdout bytes.Buffer
 		c.Stdout = &stdout
+		log.Println(11)
 
 		var errOut string
 
@@ -34,22 +35,28 @@ func (v *Views) status(transporter commonTransporter.Transporter) (commonTranspo
 			errOut = fmt.Sprintf("could not run command: %+v", err)
 		}
 
+		log.Println(12)
 		stderr, _ := c.StderrPipe()
 		scanner := bufio.NewScanner(stderr)
 		for scanner.Scan() {
 			errOut += "\n" + scanner.Text()
 		}
+		log.Println(13)
 
 		if len(errOut) != 0 {
 			return commonTransporter.ForwarderStatusResponse{}, fmt.Errorf(errOut)
 		}
 
+		log.Println(14)
 		if i == 0 {
 			fStatusResponse.Website = stdout.String()
 		} else {
 			fStatusResponse.Streams[uint64(i)] = stdout.String()
 		}
+		log.Println(15)
 	}
+	log.Println(16)
+	log.Printf("%#v", fStatusResponse)
 
 	return fStatusResponse, nil
 }

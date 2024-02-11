@@ -357,13 +357,14 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 
 				out, err = v.status(t)
 				if err != nil {
+					log.Println(6)
 					kill := v.errorResponse(fmt.Errorf("failed to status forwarder: %w", err), c, m.ID)
 					if kill {
 						return
 					}
 					continue
 				}
-				log.Println(5)
+				log.Println(7)
 				break
 			case "stop":
 				_, ok := v.cache.Get(fmt.Sprintf("%s_1", t.Unique))
