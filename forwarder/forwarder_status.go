@@ -24,7 +24,7 @@ func (v *Views) status(transporter commonTransporter.Transporter) (commonTranspo
 		log.Println("i", i)
 		//c := exec.Command("tail", "-n", "19", fmt.Sprintf("\"logs/%s_%d.txt\"", transporter.Unique, i), "|", "sed", "-e", "\"s/\r$//\"")
 
-		c1 := exec.Command("tail", "-n", "19", fmt.Sprintf("\"logs/%s_%d.txt\"", transporter.Unique, i))
+		c1 := exec.Command("tail", "-n", "19", fmt.Sprintf("/logs/%s_%d.txt", transporter.Unique, i))
 		//c2 := exec.Command("sed", "-e", "'s/\r$//'")
 
 		var stdout, stderr bytes.Buffer
