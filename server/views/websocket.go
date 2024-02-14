@@ -145,7 +145,6 @@ func (v *Views) Websocket(c echo.Context) error {
 			switch transportUniqueReturning.Payload.(type) {
 			case string:
 				receive = []byte(transportUniqueReturning.Payload.(string))
-				break
 			case map[string]interface{}:
 				receive, err = json.Marshal(transportUniqueReturning.Payload)
 				if err != nil {
@@ -157,7 +156,6 @@ func (v *Views) Websocket(c echo.Context) error {
 					return nil
 				}
 				log.Printf("Message received from %s: %s", responseTransporter.Server, msg)
-				break
 			case commonTransporter.ResponseTransporter:
 				receive, err = json.Marshal(transportUniqueReturning.Payload)
 				if err != nil {
@@ -169,7 +167,6 @@ func (v *Views) Websocket(c echo.Context) error {
 					return nil
 				}
 				log.Printf("Message received from %s: %s", responseTransporter.Server, msg)
-				break
 			default:
 				log.Printf("invalid returning message: %#v, server %s", transportUniqueReturning.Payload, responseTransporter.Server)
 				close(internalChannel)

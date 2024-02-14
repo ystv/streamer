@@ -318,7 +318,6 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 					}
 					continue
 				}
-				break
 			case "status":
 				log.Println(1)
 				_, ok := v.cache.Get(fmt.Sprintf("%s_1", t.Unique))
@@ -365,7 +364,6 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 					continue
 				}
 				log.Println(7)
-				break
 			case "stop":
 				_, ok := v.cache.Get(fmt.Sprintf("%s_1", t.Unique))
 				if !ok {
@@ -383,7 +381,6 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 					}
 					continue
 				}
-				break
 			default:
 				kill := v.errorResponse(fmt.Errorf("failed to get action: %s", t.Action), c, m.ID)
 				if kill {
