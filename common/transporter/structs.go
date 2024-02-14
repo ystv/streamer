@@ -39,7 +39,7 @@ type (
 		// Website indicates if the website needs to be accounted for in the log collection
 		Website bool `json:"website" mapstructure:"website"`
 		// Streams is the number of forwarded streams are to be collected
-		Streams int `json:"streams" mapstructure:"website"`
+		Streams int `json:"streams" mapstructure:"streams"`
 	}
 
 	// RecorderStart is the payload in the Transporter for starting stream recording
