@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"sync"
 
 	"github.com/labstack/echo/v4"
@@ -162,18 +163,43 @@ func (v *Views) StatusFunc(c echo.Context) error {
 			}
 
 			if len(forwarderStatus.Website) > 0 {
-				individualResponse := StatusResponseIndividual{
-					Name:     "website",
-					Response: response.Payload.(string),
+				tempResp := response.Payload.(string)
+				tempRespArr := strings.Split(tempResp, "\r")
+				var individualResponse StatusResponseIndividual
+				if len(tempRespArr) == 0 {
+					individualResponse = StatusResponseIndividual{
+						Name:  "website",
+						Error: "failed to get message response from forwarder for website",
+					}
+				} else {
+					responseBuild := strings.ReplaceAll(tempRespArr[0], "\n", "<br>")
+					responseBuild += "<br>"
+					responseBuild += tempRespArr[len(tempRespArr)-1]
+					individualResponse = StatusResponseIndividual{
+						Name:     "website",
+						Response: responseBuild,
+					}
 				}
 				statusResponse.Status = append(statusResponse.Status, individualResponse)
 				//m["website"] = forwarderStatus.Website
 			}
 
 			for index, streamOut := range forwarderStatus.Streams {
-				individualResponse := StatusResponseIndividual{
-					Name:     index,
-					Response: streamOut,
+				tempRespArr := strings.Split(streamOut, "\r")
+				var individualResponse StatusResponseIndividual
+				if len(tempRespArr) == 0 {
+					individualResponse = StatusResponseIndividual{
+						Name:  index,
+						Error: "failed to get message response from forwarder for stream " + index,
+					}
+				} else {
+					responseBuild := strings.ReplaceAll(tempRespArr[0], "\n", "<br>")
+					responseBuild += "<br>"
+					responseBuild += tempRespArr[len(tempRespArr)-1]
+					individualResponse = StatusResponseIndividual{
+						Name:     index,
+						Response: responseBuild,
+					}
 				}
 				statusResponse.Status = append(statusResponse.Status, individualResponse)
 				//m[strconv.Itoa(int(index))] = streamOut
