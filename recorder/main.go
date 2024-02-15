@@ -253,7 +253,9 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 	for {
 		select {
 		case <-done:
+			return
 		case <-interrupt:
+			return
 		case <-errorChannel:
 			return
 		case m := <-messageOut:
