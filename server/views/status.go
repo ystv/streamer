@@ -164,7 +164,7 @@ func (v *Views) StatusFunc(c echo.Context) error {
 			}
 
 			if len(forwarderStatus.Website) > 0 {
-				tempRespArr := strings.Split(strings.TrimRight(response.Payload.(string), "\r"), "\r")
+				tempRespArr := strings.Split(strings.TrimRight(forwarderStatus.Website, "\r"), "\r")
 				var individualResponse StatusResponseIndividual
 				if len(tempRespArr) == 0 {
 					individualResponse = StatusResponseIndividual{
