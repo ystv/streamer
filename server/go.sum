@@ -33,10 +33,8 @@ github.com/valyala/bytebufferpool v1.0.0 h1:GqA5TC/0021Y/b9FG4Oi9Mr3q7XYx6Kllzaw
 github.com/valyala/bytebufferpool v1.0.0/go.mod h1:6bBcMArwyJ5K/AmCkWv1jt77kVWyCJ6HpOuEn7z0Csc=
 github.com/valyala/fasttemplate v1.2.2 h1:lxLXG0uE3Qnshl9QyaK6XJxMXlQZELvChBOCmQD0Loo=
 github.com/valyala/fasttemplate v1.2.2/go.mod h1:KHLXt3tVN2HBp8eijSv/kGJopbvo7S+qRAEEKiv+SiQ=
-github.com/ystv/streamer/common v0.0.0-20240211154853-ef5cff3cc0f2 h1:xfkQ7XyZKBXBc7o9JXcHxfOpVMbv4IM2tMYgten+t/4=
-github.com/ystv/streamer/common v0.0.0-20240211154853-ef5cff3cc0f2/go.mod h1:z6ngpeQPvzjqpPqWDwQsXE7rY4cEzhgQugL2P0OaKKw=
-github.com/ystv/streamer/common v0.0.0-20240214201740-1775d53a1a24 h1:TO0A0p9kLTTeUbGyIAmW5IXZh69zPr81KyT8Ue9SlFI=
-github.com/ystv/streamer/common v0.0.0-20240214201740-1775d53a1a24/go.mod h1:z6ngpeQPvzjqpPqWDwQsXE7rY4cEzhgQugL2P0OaKKw=
+github.com/ystv/streamer/common v0.0.0-20240214233956-8447f6611cb8 h1:yIx6so3SrTTGhx//eFagLZ4V8J13rlfy9k9N35agh6c=
+github.com/ystv/streamer/common v0.0.0-20240214233956-8447f6611cb8/go.mod h1:z6ngpeQPvzjqpPqWDwQsXE7rY4cEzhgQugL2P0OaKKw=
 golang.org/x/crypto v0.19.0 h1:ENy+Az/9Y1vSrlrvBSyna3PITt4tiZLf7sgCjZBX7Wo=
 golang.org/x/crypto v0.19.0/go.mod h1:Iy9bg/ha4yyC70EfRS8jz+B6ybOBKMaSxLj6P6oBDfU=
 golang.org/x/net v0.21.0 h1:AQyQV4dYCvJ7vGmJyKki9+PBdyvhkSd8EIx/qb0AYv4=
