@@ -152,6 +152,7 @@ func (v *Views) StatusFunc(c echo.Context) error {
 			}
 
 			var forwarderStatus commonTransporter.ForwarderStatusResponse
+			forwarderStatus.Streams = map[string]string{}
 
 			err = mapstructure.Decode(response.Payload, &forwarderStatus)
 			if err != nil {
@@ -163,8 +164,7 @@ func (v *Views) StatusFunc(c echo.Context) error {
 			}
 
 			if len(forwarderStatus.Website) > 0 {
-				tempResp := response.Payload.(string)
-				tempRespArr := strings.Split(tempResp, "\r")
+				tempRespArr := strings.Split(strings.TrimRight(response.Payload.(string), "\r"), "\r")
 				var individualResponse StatusResponseIndividual
 				if len(tempRespArr) == 0 {
 					individualResponse = StatusResponseIndividual{
@@ -185,7 +185,7 @@ func (v *Views) StatusFunc(c echo.Context) error {
 			}
 
 			for index, streamOut := range forwarderStatus.Streams {
-				tempRespArr := strings.Split(streamOut, "\r")
+				tempRespArr := strings.Split(strings.TrimRight(streamOut, "\r"), "\r")
 				var individualResponse StatusResponseIndividual
 				if len(tempRespArr) == 0 {
 					individualResponse = StatusResponseIndividual{
