@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"bytes"
 	"fmt"
 	"os/exec"
@@ -11,22 +10,20 @@ import (
 )
 
 func (v *Views) status(transporter commonTransporter.Transporter) (string, error) {
-	c := exec.Command("tail", "-n", "26", fmt.Sprintf("\"logs/%s.txt\"", transporter.Unique), "|", "sed", "-e", "\"s/\r$//\"")
+	cmd := exec.Command("tail", "-n", "26", fmt.Sprintf("/logs/%s.txt", transporter.Unique))
 
-	var stdout bytes.Buffer
-	c.Stdout = &stdout
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
 
 	var errOut string
 
-	if err := c.Run(); err != nil {
+	err := cmd.Run()
+	if err != nil {
 		errOut = fmt.Sprintf("could not run command: %+v", err)
 	}
 
-	stderr, _ := c.StderrPipe()
-	scanner := bufio.NewScanner(stderr)
-	for scanner.Scan() {
-		errOut += "\n" + scanner.Text()
-	}
+	errOut += stderr.String()
 
 	if len(errOut) != 0 {
 		return "", fmt.Errorf(errOut)
