@@ -84,7 +84,7 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 			default:
 				log.Println(15)
 				// Checking if file exists
-				_, err = os.Stat(fmt.Sprintf("\"%s%s_%d.mkv\"", path, baseFileName, i))
+				_, err = os.Stat(fmt.Sprintf("'%s%s_%d.mkv'", path, baseFileName, i))
 				if err == nil {
 					break
 				}
@@ -132,7 +132,7 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 }
 
 func (v *Views) helperStart(transporter commonTransporter.Transporter, streamIn, path, baseFileName string, i uint64) error {
-	c := exec.Command("ffmpeg", "-i", streamIn, "-c", "copy", fmt.Sprintf("\"%s%s_%d.mkv\"", path, baseFileName, i))
+	c := exec.Command("ffmpeg", "-i", streamIn, "-c", "copy", fmt.Sprintf("'%s%s_%d.mkv'", path, baseFileName, i))
 	err := v.cache.Add(transporter.Unique, c, cache.NoExpiration)
 	if err != nil {
 		return fmt.Errorf("failed to add command to cache: %w", err)
