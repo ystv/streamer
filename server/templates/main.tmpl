@@ -401,17 +401,17 @@
                         unique = jsonData.unique;
                         let tableStatus = $('#tableStatus');
                         if (document.getElementById('record').checked) {
-                            tableStatus.append('<tr><td><p class="subtitle">Recording status</p></td><td><p id="recording_status"></p><br></td></tr>');
+                            tableStatus.append('<tr><td><p class="subtitle">Recording status</p><pre id="recording_status"></pre><br></td></tr>');
                         }
                         if (document.getElementById('website_stream').checked) {
-                            tableStatus.append('<tr><td><p class="subtitle">Website status</p></td><td><p id="website_status"></p><br></td></tr>');
+                            tableStatus.append('<tr><td><p class="subtitle">Website status</p><pre id="website_status"></pre><br></td></tr>');
                         }
-                        tableStatus.append('<tr><td><p class="subtitle">Stream 1 status</p></td><td><p id="1_status"></p><br></td></tr>');
+                        tableStatus.append('<tr><td><p class="subtitle">Stream 1 status</p><pre id="1_status"></pre><br></td></tr>');
                         let k = 2;
                         for (let j = 1; j < i; j++) {
                             try {
                                 document.getElementById('row_' + j)
-                                tableStatus.append('<tr><td><p class="subtitle">Stream ' + k + ' status</p></td><td><p id="' + k + '_status"></p><br></td></tr>');
+                                tableStatus.append('<tr><td><p class="subtitle">Stream ' + k + ' status</p><pre id="' + k + '_status"></pre><br></td></tr>');
                                 k++;
                             } catch (e) {
 

@@ -117,14 +117,14 @@
                         $('#unique_code').html(uniqueField.val());
                         let tableStatus = $('#tableStatus');
                         if (jsonData1.recording) {
-                            tableStatus.append('<tr><td><p class="subtitle">Recording status</p><p id="recording_status"></p><br></td></tr>');
+                            tableStatus.append('<tr><td><p class="subtitle">Recording status</p><pre id="recording_status"></pre><br></td></tr>');
                         }
                         if (jsonData1.website) {
-                            tableStatus.append('<tr><td><p class="subtitle">Website status</p><p id="website_status"></p><br></td></tr>');
+                            tableStatus.append('<tr><td><p class="subtitle">Website status</p><pre id="website_status"></pre><br></td></tr>');
                         }
                         let streams = jsonData1.streams
                         for (let i = 1; i <= streams; i++) {
-                            tableStatus.append('<tr><td><p class="subtitle">Stream ' + i + ' status</p><p id="' + i + '_status"></p><br></td></tr>');
+                            tableStatus.append('<tr><td><p class="subtitle">Stream ' + i + ' status</p><pre id="' + i + '_status"></pre><br></td></tr>');
                         }
                         statusInterval = setInterval(function () {
                             $.ajax({
