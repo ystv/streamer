@@ -63,10 +63,10 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 		}()
 	}
 
-	for i := 0; i < len(transporter.Payload.(commonTransporter.ForwarderStart).Streams); i++ {
+	for i := 1; i <= len(transporter.Payload.(commonTransporter.ForwarderStart).Streams); i++ {
 		finish := make(chan bool)
 
-		err := v.cache.Add(fmt.Sprintf("%s_%d_%s", transporter.Unique, i+1, finishChannelNameAppend), finish, cache.NoExpiration)
+		err := v.cache.Add(fmt.Sprintf("%s_%d_%s", transporter.Unique, i, finishChannelNameAppend), finish, cache.NoExpiration)
 		if err != nil {
 			return fmt.Errorf("failed to add finishing channel to cache: %w", err)
 		}
@@ -75,12 +75,12 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 		go func() {
 			j := k
 			for {
-				v.cache.Delete(fmt.Sprintf("%s_%d", transporter.Unique, j+1))
+				v.cache.Delete(fmt.Sprintf("%s_%d", transporter.Unique, j))
 				select {
 				case <-finish:
 					return
 				default:
-					err = v.helperStart(transporter, streamIn, transporter.Payload.(commonTransporter.ForwarderStart).Streams[j], j+1)
+					err = v.helperStart(transporter, streamIn, transporter.Payload.(commonTransporter.ForwarderStart).Streams[j-1], j)
 					if err != nil {
 						log.Printf("failed to stream: %+v", err)
 						return
