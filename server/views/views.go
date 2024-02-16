@@ -92,6 +92,6 @@ func New(conf Config, store *store.Store) *Views {
 		cache:    cache.New(cache.NoExpiration, 1*time.Hour),
 		conf:     conf,
 		store:    store,
-		template: templates.NewTemplate(),
+		template: templates.NewTemplate(conf.Version),
 	}
 }

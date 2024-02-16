@@ -12,7 +12,9 @@ import (
 //go:embed *.tmpl
 var tmpls embed.FS
 
-type Templater struct{}
+type Templater struct {
+	Version string
+}
 
 type Template string
 
@@ -32,8 +34,10 @@ func (t Template) String() string {
 	return string(t)
 }
 
-func NewTemplate() *Templater {
-	return &Templater{}
+func NewTemplate(version string) *Templater {
+	return &Templater{
+		Version: version,
+	}
 }
 
 func (t *Templater) RenderTemplate(w io.Writer, data interface{}, mainTmpl Template) error {
@@ -57,6 +61,9 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 	return template.FuncMap{
 		"thisYear": func() int {
 			return time.Now().Year()
+		},
+		"getVersion": func() string {
+			return t.Version
 		},
 	}
 }
