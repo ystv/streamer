@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"strconv"
 	"strings"
 	"time"
 
@@ -85,12 +84,12 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 			default:
 				log.Println(15)
 				// Checking if file exists
-				_, err = os.Stat(fmt.Sprintf("\"%s%s_%d.mkv", path, baseFileName, i))
+				_, err = os.Stat(fmt.Sprintf("\"%s%s_%d.mkv\"", path, baseFileName, i))
 				if err == nil {
 					break
 				}
 				log.Println(16)
-				err = v.helperStart(transporter, fmt.Sprintf("\"%s\"", streamIn), path, baseFileName, i)
+				err = v.helperStart(transporter, streamIn, path, baseFileName, i)
 				log.Println(17)
 				if err != nil {
 					log.Printf("failed to record: %+v", err)
@@ -134,7 +133,7 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 
 func (v *Views) helperStart(transporter commonTransporter.Transporter, streamIn, path, baseFileName string, i uint64) error {
 	c := exec.Command("ffmpeg", "-i", streamIn, "-c", "copy", fmt.Sprintf("\"%s%s_%d.mkv\"", path, baseFileName, i))
-	err := v.cache.Add(transporter.Unique+strconv.FormatUint(i, 10), c, cache.NoExpiration)
+	err := v.cache.Add(transporter.Unique, c, cache.NoExpiration)
 	if err != nil {
 		return fmt.Errorf("failed to add command to cache: %w", err)
 	}
