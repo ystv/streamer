@@ -96,9 +96,16 @@
                     contentType: 'application/x-www-form-urlencoded',
                     data: $('#resume').serialize(),
                     success: function (data) {
-                        let dataPart = data.split('~');
-                        if (dataPart[0] !== "ACCEPTED!") {
+                        const jsonData1 = JSON.parse(data);
+                        if (jsonData1.error !== "") {
                             error.html("Unique code not accepted");
+                            console.log(jsonData1.error);
+                            return;
+                        }
+
+                        if (jsonData1.response !== "ACCEPTED!") {
+                            error.html("Unique code not accepted");
+                            console.log(jsonData1.response);
                             return;
                         }
                         document.getElementById('enter').hidden = true;
@@ -109,13 +116,13 @@
                         unique = uniqueField.val();
                         $('#unique_code').html(uniqueField.val());
                         let tableStatus = $('#tableStatus');
-                        if (dataPart[1] === "true") {
+                        if (jsonData1.website) {
                             tableStatus.append('<tr><td><p class="subtitle">Recording status</p><p id="recording_status"></p><br></td></tr>');
                         }
-                        if (dataPart[2] === "true") {
+                        if (jsonData1.recording) {
                             tableStatus.append('<tr><td><p class="subtitle">Website status</p><p id="website_status"></p><br></td></tr>');
                         }
-                        let streams = parseInt(dataPart[3])
+                        let streams = jsonData1.streams
                         for (let i = 1; i <= streams; i++) {
                             tableStatus.append('<tr><td><p class="subtitle">Stream ' + i + ' status</p><p id="' + i + '_status"></p><br></td></tr>');
                         }
@@ -127,12 +134,27 @@
                                 contentType: 'application/x-www-form-urlencoded',
                                 data: ({"unique_code": unique}),
                                 success: function (data) {
-                                    let statusData = data.split('<br><br><br>');
-                                    for (let j = 0; j < statusData.length; j++) {
-                                        let tempStatus = statusData[j].split(":");
-                                        let tempStatus1 = tempStatus[0].trim() + "_status";
-                                        let first = statusData[j].indexOf(":") + 1;
-                                        document.getElementById(tempStatus1).innerHTML = statusData[j].substring(first);
+                                    // let statusData = data.split('<br><br><br>');
+                                    // for (let j = 0; j < statusData.length; j++) {
+                                    //     let tempStatus = statusData[j].split(":");
+                                    //     let tempStatus1 = tempStatus[0].trim() + "_status";
+                                    //     let first = statusData[j].indexOf(":") + 1;
+                                    //     document.getElementById(tempStatus1).innerHTML = statusData[j].substring(first);
+                                    // }
+
+
+                                    const jsonData2 = JSON.parse(data);
+                                    if (jsonData2.error !== "") {
+                                        document.getElementById("statusError").innerHTML = jsonData2.error
+                                    } else {
+                                        for (let j = 0; j < jsonData2.status.length; j++) {
+                                            let status1 = jsonData2.status[j]
+                                            if (status1.error.length > 0) {
+                                                document.getElementById(status1.name + "_status").innerHTML = status1.error;
+                                            } else {
+                                                document.getElementById(status1.name + "_status").innerHTML = status1.response;
+                                            }
+                                        }
                                     }
                                 },
                             })
