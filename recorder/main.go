@@ -177,14 +177,14 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 		if err != nil {
 			_ = v.errorResponse(fmt.Errorf("failed to marshal initial: %+v", err), c, "UNKNOWN ID")
 			//close(errorChannel)
-			panic(fmt.Sprintf("failed to marshal initial: %+v", err))
+			return
 		}
 
 		err = c.WriteMessage(websocket.TextMessage, resBytes)
 		if err != nil {
 			_ = v.errorResponse(fmt.Errorf("failed to write name and version: %+v", err), c, "UNKNOWN ID")
 			//close(errorChannel)
-			panic(fmt.Sprintf("failed to write name and version: %+v", err))
+			return
 		}
 
 		var msg []byte
@@ -192,13 +192,13 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 		if err != nil {
 			_ = v.errorResponse(fmt.Errorf("failed to read acknowledgement: %+v", err), c, "UNKNOWN ID")
 			//close(errorChannel)
-			panic(fmt.Sprintf("failed to read acknowledgement: %+v", err))
+			return
 		}
 
 		if string(msg) != specialWSMessage.Acknowledged.String() {
 			_ = v.errorResponse(fmt.Errorf("failed to read acknowledgement: %s", string(msg)), c, "UNKNOWN ID")
 			//close(errorChannel)
-			panic(fmt.Sprintf("failed to read acknowledgement: %s", string(msg)))
+			return
 		}
 
 		log.Printf("connected to %s://%s", u.Scheme, u.Host)
