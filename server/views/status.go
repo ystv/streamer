@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strings"
 	"sync"
 
 	"github.com/labstack/echo/v4"
@@ -164,43 +163,43 @@ func (v *Views) StatusFunc(c echo.Context) error {
 			}
 
 			if len(forwarderStatus.Website) > 0 {
-				tempRespArr := strings.Split(strings.TrimRight(forwarderStatus.Website, "\r"), "\r")
+				//tempRespArr := strings.Split(strings.TrimRight(forwarderStatus.Website, "\r"), "\r")
 				var individualResponse StatusResponseIndividual
-				if len(tempRespArr) == 0 {
-					individualResponse = StatusResponseIndividual{
-						Name:  "website",
-						Error: "failed to get message response from forwarder for website",
-					}
-				} else {
-					responseBuild := strings.ReplaceAll(tempRespArr[0], "\n", "<br>")
-					responseBuild += "<br>"
-					responseBuild += tempRespArr[len(tempRespArr)-1]
-					individualResponse = StatusResponseIndividual{
-						Name:     "website",
-						Response: responseBuild,
-					}
+				//if len(tempRespArr) == 0 {
+				//	individualResponse = StatusResponseIndividual{
+				//		Name:  "website",
+				//		Error: "failed to get message response from forwarder for website",
+				//	}
+				//} else {
+				//responseBuild := strings.ReplaceAll(tempRespArr[0], "\n", "<br>")
+				//responseBuild += "<br>"
+				//responseBuild += tempRespArr[len(tempRespArr)-1]
+				individualResponse = StatusResponseIndividual{
+					Name:     "website",
+					Response: forwarderStatus.Website,
 				}
+				//}
 				statusResponse.Status = append(statusResponse.Status, individualResponse)
 				//m["website"] = forwarderStatus.Website
 			}
 
 			for index, streamOut := range forwarderStatus.Streams {
-				tempRespArr := strings.Split(strings.TrimRight(streamOut, "\r"), "\r")
+				//tempRespArr := strings.Split(strings.TrimRight(streamOut, "\r"), "\r")
 				var individualResponse StatusResponseIndividual
-				if len(tempRespArr) == 0 {
-					individualResponse = StatusResponseIndividual{
-						Name:  index,
-						Error: "failed to get message response from forwarder for stream " + index,
-					}
-				} else {
-					responseBuild := strings.ReplaceAll(tempRespArr[0], "\n", "<br>")
-					responseBuild += "<br>"
-					responseBuild += tempRespArr[len(tempRespArr)-1]
-					individualResponse = StatusResponseIndividual{
-						Name:     index,
-						Response: responseBuild,
-					}
+				//if len(tempRespArr) == 0 {
+				//	individualResponse = StatusResponseIndividual{
+				//		Name:  index,
+				//		Error: "failed to get message response from forwarder for stream " + index,
+				//	}
+				//} else {
+				//	responseBuild := strings.ReplaceAll(tempRespArr[0], "\n", "<br>")
+				//	responseBuild += "<br>"
+				//	responseBuild += tempRespArr[len(tempRespArr)-1]
+				individualResponse = StatusResponseIndividual{
+					Name:     index,
+					Response: streamOut,
 				}
+				//}
 				statusResponse.Status = append(statusResponse.Status, individualResponse)
 				//m[strconv.Itoa(int(index))] = streamOut
 			}

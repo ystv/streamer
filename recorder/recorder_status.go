@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"os/exec"
+	"strings"
 
 	commonTransporter "github.com/ystv/streamer/common/transporter"
 )
@@ -31,5 +32,14 @@ func (v *Views) status(transporter commonTransporter.Transporter) (string, error
 		return "", fmt.Errorf(errOut)
 	}
 
-	return stdout.String(), nil
+	var response string
+	tempRespArr := strings.Split(strings.TrimRight(stdout.String(), "\r"), "\r")
+	if len(tempRespArr) == 0 {
+		response = "failed to get message response from recorder"
+	} else {
+		response = strings.ReplaceAll(tempRespArr[0], "\n", "<br>")
+		response += "<br>"
+		response += tempRespArr[len(tempRespArr)-1]
+	}
+	return response, nil
 }

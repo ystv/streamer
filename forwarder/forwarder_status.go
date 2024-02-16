@@ -3,9 +3,11 @@ package main
 import (
 	"bytes"
 	"fmt"
-	commonTransporter "github.com/ystv/streamer/common/transporter"
 	"log"
 	"os/exec"
+	"strings"
+
+	commonTransporter "github.com/ystv/streamer/common/transporter"
 )
 
 func (v *Views) status(transporter commonTransporter.Transporter) (commonTransporter.ForwarderStatusResponse, error) {
@@ -66,10 +68,19 @@ func (v *Views) status(transporter commonTransporter.Transporter) (commonTranspo
 		}
 
 		log.Println(15)
-		if i == 0 {
-			fStatusResponse.Website = stdout.String()
+		var response string
+		tempRespArr := strings.Split(strings.TrimRight(stdout.String(), "\r"), "\r")
+		if len(tempRespArr) == 0 {
+			response = fmt.Sprintf("failed to get message response from forwarder for stream %d", i)
 		} else {
-			fStatusResponse.Streams[fmt.Sprintf("%d", i)] = stdout.String()
+			response = strings.ReplaceAll(tempRespArr[0], "\n", "<br>")
+			response += "<br>"
+			response += tempRespArr[len(tempRespArr)-1]
+		}
+		if i == 0 {
+			fStatusResponse.Website = response
+		} else {
+			fStatusResponse.Streams[fmt.Sprintf("%d", i)] = response
 		}
 		log.Println(16)
 	}
