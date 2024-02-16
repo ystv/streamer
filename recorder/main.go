@@ -118,6 +118,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 
 	defer func() {
 		if r := recover(); r != nil {
+			log.Printf("%#v", r)
 			log.Printf("Restarting...")
 			select {
 			case <-messageOut:
@@ -152,6 +153,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 		panic(fmt.Sprintf("failed to dial url: %+v", err))
 	}
 
+	// When the program closes, close the connection
 	defer func(c *websocket.Conn) {
 		_ = c.Close()
 	}(c)
@@ -219,10 +221,14 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 				return
 			}
 
+			log.Printf("%#v", receivedMessage)
+
+		switchBreak:
 			switch receivedMessage.Payload.(type) {
 			case map[string]interface{}:
+				break switchBreak
 			case commonTransporter.Transporter:
-				break
+				break switchBreak
 			case string:
 				if msgType == websocket.TextMessage && receivedMessage.Payload.(string) == specialWSMessage.Ping.String() {
 					receivedMessage.Payload = specialWSMessage.Pong
@@ -245,7 +251,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 				//close(errorChannel)
 				return
 			}
-			log.Printf("Received message: %#v", receivedMessage.Payload.(commonTransporter.TransporterUnique))
+			log.Printf("received message: %#v", receivedMessage.Payload.(commonTransporter.TransporterUnique))
 			messageOut <- receivedMessage.Payload.(commonTransporter.TransporterUnique)
 		}
 	}()
@@ -259,7 +265,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 		case <-errorChannel:
 			return
 		case m := <-messageOut:
-			log.Printf("Picked up message %#v", m)
+			log.Printf("picked up message %#v", m)
 
 			var t commonTransporter.Transporter
 
