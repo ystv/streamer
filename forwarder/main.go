@@ -210,8 +210,6 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 				panic(fmt.Sprintf("failed to read message: %+v, message type: %d, message contents: %s", err, msgType, string(message)))
 			}
 
-			log.Printf("%#v", string(message))
-
 			var receivedMessage commonTransporter.TransporterUnique
 			err = json.Unmarshal(message, &receivedMessage)
 			if err != nil {
@@ -219,8 +217,6 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 				//close(errorChannel)
 				panic(fmt.Sprintf("failed to unmarshal recieved: %+v", err))
 			}
-
-			log.Printf("%#v", receivedMessage)
 
 		switchBreak:
 			switch receivedMessage.Payload.(type) {
