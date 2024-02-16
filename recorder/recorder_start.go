@@ -138,9 +138,13 @@ func (v *Views) helperStart(transporter commonTransporter.Transporter, streamIn,
 	//	return fmt.Errorf("failed to run ffmpeg: %w", err)
 	//}
 	_ = ffmpeg.Stream{}
+	_, err := os.OpenFile(fmt.Sprintf("'%s%s_%d.mkv'", path, baseFileName, i), os.O_WRONLY|os.O_CREATE, 0666)
+	if err != nil {
+		return fmt.Errorf("failed to touch file: %w", err)
+	}
 	c := exec.Command("ffmpeg", "-i", streamIn, "-f", "matroska", "-c", "copy", fmt.Sprintf("'%s%s_%d.mkv'", path, baseFileName, i))
 	log.Println(c.String())
-	err := v.cache.Add(transporter.Unique, c, cache.NoExpiration)
+	err = v.cache.Add(transporter.Unique, c, cache.NoExpiration)
 	if err != nil {
 		return fmt.Errorf("failed to add command to cache: %w", err)
 	}
