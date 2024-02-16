@@ -49,7 +49,7 @@ pipeline {
             script {
               dir("recorder") {
                 docker.withRegistry('https://' + registryEndpoint, 'docker-registry') {
-                  recorderImage = docker.build(recorderImageName, "--build-arg STREAMER_VERSION_ARG=${env.BRANCH_NAME}-${env.BUILD_ID} STREAMER_RECORDER_USER_UID=$STREAMER_RECORDER_USER_UID --no-cache .")
+                  recorderImage = docker.build(recorderImageName, "--build-arg STREAMER_VERSION_ARG=${env.BRANCH_NAME}-${env.BUILD_ID} --build-arg STREAMER_RECORDER_USER_UID=${STREAMER_RECORDER_USER_UID} --no-cache .")
                 }
               }
             }
