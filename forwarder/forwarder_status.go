@@ -20,7 +20,7 @@ func (v *Views) status(transporter commonTransporter.Transporter) (commonTranspo
 	fStatusResponse.Streams = make(map[string]string)
 
 	for i := start; i <= transporter.Payload.(commonTransporter.ForwarderStatus).Streams; i++ {
-		cmd := exec.Command("tail", "-n", "19", fmt.Sprintf("/logs/%s_%d.txt", transporter.Unique, i))
+		cmd := exec.Command("tail", "-n", "26", fmt.Sprintf("/logs/%s_%d.txt", transporter.Unique, i))
 
 		var stdout, stderr bytes.Buffer
 		cmd.Stdout = &stdout
