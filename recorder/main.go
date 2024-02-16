@@ -226,8 +226,10 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 		switchBreak:
 			switch receivedMessage.Payload.(type) {
 			case map[string]interface{}:
+				log.Println(100)
 				break switchBreak
 			case commonTransporter.Transporter:
+				log.Println(101)
 				break switchBreak
 			case string:
 				if msgType == websocket.TextMessage && receivedMessage.Payload.(string) == specialWSMessage.Ping.String() {
@@ -247,12 +249,14 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 				//close(errorChannel)
 				return
 			default:
+				log.Println(102)
 				_ = v.errorResponse(fmt.Errorf("invalid recieved message: %#v", receivedMessage), c, receivedMessage.ID)
 				//close(errorChannel)
 				return
 			}
-			log.Printf("received message: %#v", receivedMessage.Payload.(commonTransporter.TransporterUnique))
-			messageOut <- receivedMessage.Payload.(commonTransporter.TransporterUnique)
+			log.Println(103)
+			log.Printf("received message: %#v", receivedMessage)
+			messageOut <- receivedMessage
 		}
 	}()
 
