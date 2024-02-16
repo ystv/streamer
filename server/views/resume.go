@@ -10,6 +10,14 @@ import (
 	"github.com/ystv/streamer/server/templates"
 )
 
+type ResumeResponse struct {
+	Response  string `json:"response"`
+	Error     string `json:"error"`
+	Website   bool   `json:"website"`
+	Recording bool   `json:"recording"`
+	Streams   uint64 `json:"streams"`
+}
+
 // ResumeFunc is used if the user decides to return at a later date then they can, by inputting the unique code that they were given then they can go to the resume page and enter the code
 func (v *Views) ResumeFunc(c echo.Context) error {
 	if c.Request().Method == "GET" {
@@ -25,19 +33,29 @@ func (v *Views) ResumeFunc(c echo.Context) error {
 
 		unique := c.FormValue("unique")
 
+		var response ResumeResponse
+
 		stream, err := v.store.FindStream(unique)
 		if err != nil {
-			return fmt.Errorf("failed to get stream: %w, unique: %s", err, unique)
+			log.Printf("failed to get stream: %+v, unique: %s", err, unique)
+			response.Error = fmt.Sprintf("failed to get stream: %+v, unique: %s", err, unique)
+			return c.JSON(http.StatusOK, response)
 		}
 
 		if stream == nil {
 			log.Println("No data")
 			log.Printf("rejected resume: %s", unique)
-			return c.String(http.StatusOK, "REJECTED!")
+			response.Error = "REJECTED!"
+			return c.JSON(http.StatusOK, response)
 		}
 
 		log.Printf("accepted resume: %s", unique)
-		return c.String(http.StatusOK, "ACCEPTED!")
+
+		response.Response = "ACCEPTED!"
+		response.Website = stream.Website
+		response.Recording = stream.Recording
+		response.Streams = stream.Streams
+		return c.JSON(http.StatusOK, response)
 	}
 	return echo.NewHTTPError(http.StatusMethodNotAllowed, "invalid method")
 }
