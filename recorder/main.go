@@ -221,8 +221,6 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 				return
 			}
 
-			log.Printf("%#v", receivedMessage)
-
 		switchBreak:
 			switch receivedMessage.Payload.(type) {
 			case map[string]interface{}:
@@ -249,12 +247,10 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 				//close(errorChannel)
 				return
 			default:
-				log.Println(102)
 				_ = v.errorResponse(fmt.Errorf("invalid recieved message: %#v", receivedMessage), c, receivedMessage.ID)
 				//close(errorChannel)
 				return
 			}
-			log.Println(103)
 			log.Printf("received message: %#v", receivedMessage)
 			messageOut <- receivedMessage
 		}
@@ -269,11 +265,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 		case <-errorChannel:
 			return
 		case m := <-messageOut:
-			log.Printf("picked up message %#v", m)
-
 			var t commonTransporter.Transporter
-
-			log.Printf("%#v", m.Payload)
 
 			err = mapstructure.Decode(m.Payload, &t)
 			if err != nil {
@@ -283,8 +275,6 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 				}
 				continue
 			}
-
-			log.Printf("%#v", t)
 
 			if len(t.Unique) != 10 {
 				kill := v.errorResponse(fmt.Errorf("failed to get unique, length is not equal to 10: %d", len(t.Unique)), c, m.ID)

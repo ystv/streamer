@@ -259,11 +259,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 		case <-errorChannel:
 			return
 		case m := <-messageOut:
-			log.Printf("picked up message %#v", m)
-
 			var t commonTransporter.Transporter
-
-			log.Printf("%#v", m.Payload)
 
 			err = mapstructure.Decode(m.Payload, &t)
 			if err != nil {
@@ -273,8 +269,6 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 				}
 				continue
 			}
-
-			log.Printf("%#v", t)
 
 			if len(t.Unique) != 10 {
 				kill := v.errorResponse(fmt.Errorf("failed to get unique, length is not equal to 10: %d", len(t.Unique)), c, m.ID)
@@ -317,17 +311,14 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 					continue
 				}
 			case "status":
-				log.Println(1)
 				_, ok := v.cache.Get(fmt.Sprintf("%s_1", t.Unique))
 				if !ok {
-					log.Println(v.cache.Items())
 					kill := v.errorResponse(fmt.Errorf("failed to get status, invalid unique: %s", t.Unique), c, m.ID)
 					if kill {
 						return
 					}
 					continue
 				}
-				log.Println(2)
 				var t1 commonTransporter.ForwarderStatus
 
 				err = mapstructure.Decode(t.Payload, &t1)
@@ -338,8 +329,6 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 					}
 					continue
 				}
-				log.Println(3)
-				log.Printf("%#v", t1)
 
 				if t1.Streams == 0 {
 					kill := v.errorResponse(fmt.Errorf("failed to payload for status: %+v", t1), c, m.ID)
@@ -348,20 +337,17 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 					}
 					continue
 				}
-				log.Println(4)
 
 				t.Payload = t1
 
 				out, err = v.status(t)
 				if err != nil {
-					log.Println(6)
 					kill := v.errorResponse(fmt.Errorf("failed to status forwarder: %w", err), c, m.ID)
 					if kill {
 						return
 					}
 					continue
 				}
-				log.Println(7)
 			case "stop":
 				_, ok := v.cache.Get(fmt.Sprintf("%s_1", t.Unique))
 				if !ok {
