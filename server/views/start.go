@@ -47,6 +47,7 @@ func (v *Views) StartFunc(c echo.Context) error {
 
 		recording := false
 		websiteStream := false
+
 		if c.FormValue("website_stream") == "on" {
 			websiteStream = true
 			if v.websiteCheck(c.FormValue("website_stream_endpoint")) {
@@ -211,10 +212,10 @@ func (v *Views) StartFunc(c echo.Context) error {
 
 			response.Unique = string(b)
 			return c.JSON(http.StatusOK, response)
-		} else {
-			response.Error = strings.Join(errorMessages, ",")
-			return c.JSON(http.StatusOK, response)
 		}
+
+		response.Error = strings.Join(errorMessages, ",")
+		return c.JSON(http.StatusOK, response)
 	}
 	return echo.NewHTTPError(http.StatusMethodNotAllowed, "invalid method")
 }

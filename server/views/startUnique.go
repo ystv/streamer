@@ -55,6 +55,11 @@ func (v *Views) StartUniqueFunc(c echo.Context) error {
 			PathOut:  c.FormValue("save_path"),
 		}
 
+		var response struct {
+			Unique string `json:"unique"`
+			Error  string `json:"error"`
+		}
+
 		recording := false
 		websiteStream := false
 
@@ -63,7 +68,8 @@ func (v *Views) StartUniqueFunc(c echo.Context) error {
 			if v.websiteCheck(c.FormValue("website_stream_endpoint")) {
 				fStart.WebsiteOut = c.FormValue("website_stream_endpoint")
 			} else {
-				return fmt.Errorf("website key check has failed")
+				response.Error = "website key check has failed"
+				return c.JSON(http.StatusOK, response)
 			}
 		}
 
@@ -95,29 +101,28 @@ func (v *Views) StartUniqueFunc(c echo.Context) error {
 
 		var wg sync.WaitGroup
 		wg.Add(2)
-		errors := false
+		var errorMessages []string
 		go func() {
 			defer wg.Done()
 			if c.FormValue("record") == "on" {
 				recording = true
 				recorderTransporter := transporter
 				recorderTransporter.Payload = rStart
-
-				var response commonTransporter.ResponseTransporter
-				response, err = v.wsHelper(server.Recorder, recorderTransporter)
+				var wsResponse commonTransporter.ResponseTransporter
+				wsResponse, err = v.wsHelper(server.Recorder, recorderTransporter)
 				if err != nil {
-					log.Println(err, "Error sending to Recorder for start")
-					errors = true
+					log.Printf("failed sending to Recorder for start: %+v", err)
+					errorMessages = append(errorMessages, fmt.Sprintf("failed sending to Recorder for start: %+v", err))
 					return
 				}
-				if response.Status == wsMessages.Error {
-					log.Printf("Error sending to Recorder for start: %s", response)
-					errors = true
+				if wsResponse.Status == wsMessages.Error {
+					log.Printf("failed sending to Recorder for start: %s", wsResponse.Payload)
+					errorMessages = append(errorMessages, fmt.Sprintf("failed sending to Recorder for start: %s", wsResponse.Payload))
 					return
 				}
-				if response.Status != wsMessages.Okay {
-					log.Printf("invalid response from Recorder for start: %s", response)
-					errors = true
+				if wsResponse.Status != wsMessages.Okay {
+					log.Printf("invalid response from Recorder for start: %s", wsResponse.Status)
+					errorMessages = append(errorMessages, fmt.Sprintf("invalid response from Recorder for start: %s", wsResponse.Status))
 					return
 				}
 			}
@@ -126,31 +131,30 @@ func (v *Views) StartUniqueFunc(c echo.Context) error {
 			defer wg.Done()
 			forwarderTransporter := transporter
 			forwarderTransporter.Payload = fStart
-
-			var response commonTransporter.ResponseTransporter
-			response, err = v.wsHelper(server.Forwarder, forwarderTransporter)
+			var wsResponse commonTransporter.ResponseTransporter
+			wsResponse, err = v.wsHelper(server.Forwarder, forwarderTransporter)
 			if err != nil {
-				log.Println(err, "Error sending to Forwarder for start")
-				errors = true
+				log.Printf("failed sending to Forwarder for start: %+v", err)
+				errorMessages = append(errorMessages, fmt.Sprintf("failed sending to Forwarder for start: %+v", err))
 				return
 			}
-			if response.Status == wsMessages.Error {
-				log.Printf("Error sending to Forwarder for start: %s", response)
-				errors = true
+			if wsResponse.Status == wsMessages.Error {
+				log.Printf("failed sending to Forwarder for start: %s", response)
+				errorMessages = append(errorMessages, fmt.Sprintf("failed sending to Forwarder for start: %s", response))
 				return
 			}
-			if response.Status != wsMessages.Okay {
+			if wsResponse.Status != wsMessages.Okay {
 				log.Printf("invalid response from Forwarder for start: %s", response)
-				errors = true
+				errorMessages = append(errorMessages, fmt.Sprintf("invalid response from Forwarder for start: %s", response))
 				return
 			}
 		}()
 		wg.Wait()
 
-		if !errors {
+		if len(errorMessages) == 0 {
 			err = v.HandleTXLight(v.conf.TransmissionLight, tx.TransmissionOn)
 			if err != nil {
-				log.Println(err)
+				log.Printf("failed to turn transmission light on: %+v, ignoring and continuing", err)
 			}
 
 			var s *storage.Stream
@@ -162,15 +166,25 @@ func (v *Views) StartUniqueFunc(c echo.Context) error {
 				Streams:   uint64(len(streams)),
 			})
 			if err != nil {
-				return fmt.Errorf("failed to add stream for startUnique: %w", err)
+				log.Printf("invalid response from Forwarder for start: %s", response)
+				errorMessages = append(errorMessages, fmt.Sprintf("invalid response from Forwarder for start: %s", response))
+				response.Error = strings.Join(errorMessages, ",")
+				return c.JSON(http.StatusOK, response)
 			}
 
 			if s == nil {
-				return fmt.Errorf("failed to add stream, data is empty")
+				log.Printf("failed to add stream, data is empty")
+				errorMessages = append(errorMessages, "failed to add stream, data is empty")
+				response.Error = strings.Join(errorMessages, ",")
+				return c.JSON(http.StatusOK, response)
 			}
 
-			return c.String(http.StatusOK, unique)
+			response.Unique = unique
+			return c.JSON(http.StatusOK, response)
 		}
+
+		response.Error = strings.Join(errorMessages, ",")
+		return c.JSON(http.StatusOK, response)
 	}
 	return echo.NewHTTPError(http.StatusMethodNotAllowed, "invalid method")
 }
