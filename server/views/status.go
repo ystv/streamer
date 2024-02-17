@@ -106,7 +106,7 @@ func (v *Views) StatusFunc(c echo.Context) error {
 				individualResponse.Response = response.Payload.(string)
 				statusResponse.Status = append(statusResponse.Status, individualResponse)
 
-				log.Println("Recorder status success")
+				log.Println("recorder status success")
 			}()
 		} else {
 			wg.Add(1)
@@ -169,7 +169,7 @@ func (v *Views) StatusFunc(c echo.Context) error {
 				statusResponse.Status = append(statusResponse.Status, individualResponse)
 			}
 
-			log.Println("Forwarder status success")
+			log.Println("forwarder status success")
 		}()
 		wg.Wait()
 
