@@ -67,84 +67,85 @@
         </div>
     </div>
     <script>
-        document.getElementById('stop_checkbox').onchange = function () {
-            document.getElementById('stop_button').disabled = !this.checked;
-            document.getElementById('stop_button').hidden = !this.checked;
+        document.getElementById("stop_checkbox").onchange = function () {
+            document.getElementById("stop_button").disabled = !this.checked;
+            document.getElementById("stop_button").hidden = !this.checked;
             if (this.checked) {
-                document.getElementById('stop_button').style.visibility = "visible";
+                document.getElementById("stop_button").style.visibility = "visible";
             } else {
-                document.getElementById('stop_button').style.visibility = "hidden";
+                document.getElementById("stop_button").style.visibility = "hidden";
             }
         };
 
         let unique;
         let statusInterval;
 
-        let error = $('#error');
+        let error = $("#error");
 
         $(document).ready(function () {
-            $('#submit_unique').click(function () {
-                error.html("")
-                if ($('#unique').val().length === 0) {
+            $("#submit_unique").click(function () {
+                error.html("");
+                if ($("#unique").val().length === 0) {
                     error.html("The code field cannot be empty");
                     return;
                 }
                 $.ajax({
-                    url: 'resume',
-                    type: 'post',
-                    dataType: 'text',
-                    contentType: 'application/x-www-form-urlencoded',
-                    data: $('#resume').serialize(),
+                    url: "resume",
+                    type: "post",
+                    dataType: "text",
+                    contentType: "application/x-www-form-urlencoded",
+                    data: $("#resume").serialize(),
                     success: function (data) {
-                        const jsonData1 = JSON.parse(data);
-                        if (jsonData1.error !== "") {
+                        const resumeResponseJson = JSON.parse(data);
+                        if (resumeResponseJson.error !== "") {
                             error.html("Unique code not accepted");
-                            console.log(jsonData1.error);
+                            console.log(resumeResponseJson.error);
                             return;
                         }
 
-                        if (jsonData1.response !== "ACCEPTED!") {
+                        if (resumeResponseJson.response !== "ACCEPTED!") {
                             error.html("Unique code not accepted");
-                            console.log(jsonData1.response);
+                            console.log(resumeResponseJson.response);
                             return;
                         }
-                        document.getElementById('enter').hidden = true;
-                        document.getElementById('enter').style.visibility = "hidden";
-                        document.getElementById('resumed').hidden = false;
-                        document.getElementById('resumed').style.visibility = "visible";
-                        let uniqueField = $('#unique');
+                        document.getElementById("enter").hidden = true;
+                        document.getElementById("enter").style.visibility = "hidden";
+                        document.getElementById("resumed").hidden = false;
+                        document.getElementById("resumed").style.visibility = "visible";
+                        let uniqueField = $("#unique");
                         unique = uniqueField.val();
-                        $('#unique_code').html(uniqueField.val());
-                        let tableStatus = $('#tableStatus');
-                        if (jsonData1.recording) {
-                            tableStatus.append('<tr><td><p class="subtitle">Recording status</p><pre id="recording_status"></pre><br></td></tr>');
+                        $("#unique_code").html(uniqueField.val());
+                        let tableStatus = $("#tableStatus");
+                        if (resumeResponseJson.recording) {
+                            tableStatus.append("<tr><td><p class='subtitle'>Recording status</p><pre id'recording_status'></pre><br></td></tr>");
                         }
-                        if (jsonData1.website) {
-                            tableStatus.append('<tr><td><p class="subtitle">Website status</p><pre id="website_status"></pre><br></td></tr>');
+                        if (resumeResponseJson.website) {
+                            tableStatus.append("<tr><td><p class='subtitle'>Website status</p><pre id='website_status'></pre><br></td></tr>");
                         }
-                        let streams = jsonData1.streams
+                        let streams = resumeResponseJson.streams;
                         for (let i = 1; i <= streams; i++) {
-                            tableStatus.append('<tr><td><p class="subtitle">Stream ' + i + ' status</p><pre id="' + i + '_status"></pre><br></td></tr>');
+                            tableStatus.append("<tr><td><p class='subtitle'>Stream " + i + " status</p><pre id='" + i + "_status'></pre><br></td></tr>");
                         }
                         statusInterval = setInterval(function () {
                             $.ajax({
-                                url: 'status',
-                                type: 'post',
-                                dataType: 'text',
-                                contentType: 'application/x-www-form-urlencoded',
+                                url: "status",
+                                type: "post",
+                                dataType: "text",
+                                contentType: "application/x-www-form-urlencoded",
                                 data: ({"unique_code": unique}),
                                 success: function (data) {
-                                    const jsonData2 = JSON.parse(data);
-                                    if (jsonData2.error !== "") {
-                                        document.getElementById("statusError").innerHTML = jsonData2.error
-                                    } else {
-                                        for (let j = 0; j < jsonData2.status.length; j++) {
-                                            let status1 = jsonData2.status[j]
-                                            if (status1.error.length > 0) {
-                                                document.getElementById(status1.name + "_status").innerHTML = status1.error;
-                                            } else {
-                                                document.getElementById(status1.name + "_status").innerHTML = status1.response;
-                                            }
+                                    const statusResponseJson = JSON.parse(data);
+                                    if (statusResponseJson.error !== "") {
+                                        document.getElementById("statusError").innerHTML = statusResponseJson.error;
+                                        console.log(statusResponseJson.error);
+                                        return
+                                    }
+                                    for (let j = 0; j < statusResponseJson.status.length; j++) {
+                                        let positionalStatus = statusResponseJson.status[j]
+                                        if (positionalStatus.error.length > 0) {
+                                            document.getElementById(positionalStatus.name + "_status").innerHTML = positionalStatus.error;
+                                        } else {
+                                            document.getElementById(positionalStatus.name + "_status").innerHTML = positionalStatus.response;
                                         }
                                     }
                                 },
@@ -154,23 +155,23 @@
                 })
             });
 
-            let stopButton = $('#stop_button');
+            let stopButton = $("#stop_button");
 
             stopButton.click(function () {
                 stopButton.disabled = true;
                 console.log("Stop pressed")
                 $.ajax({
-                    url: 'stop',
-                    type: 'post',
-                    dataType: 'text',
-                    contentType: 'application/x-www-form-urlencoded',
+                    url: "stop",
+                    type: "post",
+                    dataType: "text",
+                    contentType: "application/x-www-form-urlencoded",
                     data: ({"unique_code": unique}),
                     success: function (data) {
                         if (data === "STOPPED!") {
-                            document.getElementById('resumed').hidden = true;
-                            document.getElementById('resumed').style.visibility = "hidden";
-                            document.getElementById('stopped_window').hidden = false;
-                            document.getElementById('stopped_window').style.visibility = "visible";
+                            document.getElementById("resumed").hidden = true;
+                            document.getElementById("resumed").style.visibility = "hidden";
+                            document.getElementById("stopped_window").hidden = false;
+                            document.getElementById("stopped_window").style.visibility = "visible";
                             unique = "";
                             clearInterval(statusInterval);
                         }

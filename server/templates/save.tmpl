@@ -129,27 +129,27 @@
         </div>
     </div>
     <script>
-        document.getElementById('website_stream').onchange = function () {
-            document.getElementById('website_stream_endpoint').disabled = !this.checked;
-            document.getElementById('website_stream_endpoint').hidden = !this.checked;
+        document.getElementById("website_stream").onchange = function () {
+            document.getElementById("website_stream_endpoint").disabled = !this.checked;
+            document.getElementById("website_stream_endpoint").hidden = !this.checked;
             if (this.checked) {
-                document.getElementById('website_stream_endpoint').style.visibility = "visible";
-                document.getElementById('website_stream_endpoint').setAttribute('required', 'required');
+                document.getElementById("website_stream_endpoint").style.visibility = "visible";
+                document.getElementById("website_stream_endpoint").setAttribute("required", "required");
             } else {
-                document.getElementById('website_stream_endpoint').style.visibility = "hidden";
-                document.getElementById('website_stream_endpoint').removeAttribute('required');
+                document.getElementById("website_stream_endpoint").style.visibility = "hidden";
+                document.getElementById("website_stream_endpoint").removeAttribute("required");
             }
         };
 
-        document.getElementById('record').onchange = function () {
-            document.getElementById('save_path').disabled = !this.checked;
-            document.getElementById('save_path').hidden = !this.checked;
+        document.getElementById("record").onchange = function () {
+            document.getElementById("save_path").disabled = !this.checked;
+            document.getElementById("save_path").hidden = !this.checked;
             if (this.checked) {
-                document.getElementById('save_path').style.visibility = "visible";
-                document.getElementById('save_path').setAttribute('required', 'required');
+                document.getElementById("save_path").style.visibility = "visible";
+                document.getElementById("save_path").setAttribute("required", "required");
             } else {
-                document.getElementById('save_path').style.visibility = "hidden";
-                document.getElementById('save_path').removeAttribute('required');
+                document.getElementById("save_path").style.visibility = "hidden";
+                document.getElementById("save_path").removeAttribute("required");
             }
         };
 
@@ -157,23 +157,23 @@
 
         $(document).ready(function () {
             $.ajax({
-                url: 'endpoints',
-                type: 'post',
-                dataType: 'text',
-                contentType: 'application/x-www-form-urlencoded',
+                url: "endpoints",
+                type: "post",
+                dataType: "text",
+                contentType: "application/x-www-form-urlencoded",
                 data: ({"unique": unique}),
                 success: function (data) {
                     let endpoints = data.split(" ");
                     for (let endpoint of endpoints) {
                         let endpointName = endpoint.split("~");
-                        $('#endpointTable').append('<tr>\n' +
-                            '<td>\n' +
-                            '<label for="endpointsTable">Endpoint: ' + endpointName[1] + '</label>\n' +
-                            '</td>\n' +
-                            '<td>\n' +
-                            '<input name="endpointsTable" id="' + endpoint + '" value="' + endpoint + '" type="radio" ' + ((endpointName[1] === "internal") ? 'checked' : '') + '/>\n' +
-                            '</td>' +
-                            '</tr>');
+                        $("#endpointTable").append("<tr>\n" +
+                            "<td>\n" +
+                            "<label for='endpointsTable'>Endpoint: " + endpointName[1] + "</label>\n" +
+                            "</td>\n" +
+                            "<td>\n" +
+                            "<input name='endpointsTable' id='" + endpoint + "' value='" + endpoint + "' type='radio' " + ((endpointName[1] === "internal") ? "checked" : "") + "/>\n" +
+                            "</td>" +
+                            "</tr>");
                     }
                 },
             });
@@ -181,25 +181,25 @@
 
         let i = 1;
 
-        $('#add').click(function () {
-            $('#dynamic_field').append('<tr id="row_' + i + '" class="dynamic-added"><td><label for="stream_server_' + i + '">Enter the stream server - ' + (i + 1) + ' </label><br><input type="text" name="stream_server_' + i + '" id="stream_server_' + i + '" placeholder="Enter stream server" class="input" required/><br><br>\n' +
-                '                <label for="stream_key_' + i + '">Enter the stream key - ' + (i + 1) + ' </label><br><input type="text" name="stream_key_' + i + '" id="stream_key_' + i + '" placeholder="Enter stream key" class="input" required/><br><br></td><td><button type="button" name="remove" id="' + i + '" class="btn btn-danger btn_remove button">X</button></td></tr><br>');
+        $("#add").click(function () {
+            $("#dynamic_field").append("<tr id='row_" + i + "' class='dynamic-added'><td><label for='stream_server_" + i + "'>Enter the stream server - " + (i + 1) + " </label><br><input type='text' name='stream_server_" + i + "' id='stream_server_" + i + "' placeholder='Enter stream server' class='input' required/><br><br>\n" +
+                "                <label for='stream_key_" + i + "'>Enter the stream key - " + (i + 1) + " </label><br><input type='text' name='stream_key_" + i + "' id='stream_key_" + i + "' placeholder='Enter stream key' class='input' required/><br><br></td><td><button type='button' name='remove' id='" + i + "' class='btn btn-danger btn_remove button'>X</button></td></tr><br>");
             i++;
         });
 
-        $(document).on('click', '.btn_remove', function () {
+        $(document).on("click", ".btn_remove", function () {
             let button_id = $(this).attr("id");
-            $('#row_' + button_id + '').remove();
+            $("#row_" + button_id + "").remove();
         });
 
-        let saveButton = $('#save_button');
-        let error = $('#error');
+        let saveButton = $("#save_button");
+        let error = $("#error");
 
         saveButton.click(function () {
             saveButton.disabled = true;
             error.html("")
-            let savePath = $('#save_path');
-            if (savePath.val().length > 0 && document.getElementById('record').checked) {
+            let savePath = $("#save_path");
+            if (savePath.val().length > 0 && document.getElementById("record").checked) {
                 if (savePath.val().length === 0) {
                     console.log("SAVE PATH");
                     error.html("The save path cannot be empty");
@@ -212,9 +212,9 @@
                 }
             }
 
-            let websiteStreamEndpoint = $('#website_stream_endpoint');
+            let websiteStreamEndpoint = $("#website_stream_endpoint");
 
-            if (document.getElementById('website_stream').checked) {
+            if (document.getElementById("website_stream").checked) {
                 if (websiteStreamEndpoint.val().length === 0 || !websiteStreamEndpoint.val().includes("?pwd=")) {
                     console.log("PWD");
                     error.html("The website stream must contain \"?pwd=\"")
@@ -222,7 +222,7 @@
                 }
             }
 
-            let streamServer0 = $('#stream_server_0');
+            let streamServer0 = $("#stream_server_0");
 
             if (streamServer0.val().length === 0 || streamServer0.val().length === 0) {
                 console.log("ADDITIONAL");
@@ -236,7 +236,7 @@
             }
             let j = 1;
             while (true) {
-                let streamServerJ = $('#stream_server_' + j);
+                let streamServerJ = $("#stream_server_" + j);
                 if (streamServerJ.length === 0) {
                     if (j < i) {
                         j++
@@ -245,7 +245,7 @@
                     }
                     continue;
                 }
-                if (streamServerJ.val().length === 0 || $('#stream_key_' + j).val().length === 0) {
+                if (streamServerJ.val().length === 0 || $("#stream_key_" + j).val().length === 0) {
                     console.log("ADDITIONAL - " + j);
                     error.html("The stream server and stream key cannot be empty")
                     return;
@@ -263,21 +263,21 @@
             }
 
             $.ajax({
-                url: 'save',
-                type: 'post',
-                dataType: 'text',
-                contentType: 'application/x-www-form-urlencoded',
-                data: $('#save_form').serialize(),
+                url: "save",
+                type: "post",
+                dataType: "text",
+                contentType: "application/x-www-form-urlencoded",
+                data: $("#save_form").serialize(),
                 success: function (data) {
                     if (data.includes("An error has occurred...\n")) {
                         error.html(data)
                         return;
                     }
-                    $('#unique_code').html(data);
-                    document.getElementById('save_window').hidden = true;
-                    document.getElementById('save_window').style.visibility = "hidden";
-                    document.getElementById('saved').hidden = false;
-                    document.getElementById('saved').style.visibility = "visible";
+                    $("#unique_code").html(data);
+                    document.getElementById("save_window").hidden = true;
+                    document.getElementById("save_window").style.visibility = "hidden";
+                    document.getElementById("saved").hidden = false;
+                    document.getElementById("saved").style.visibility = "visible";
                     unique = data;
                 },
             });
@@ -285,12 +285,12 @@
         });
 
         function validURL(str) {
-            let pattern = new RegExp('^(rtmps?:\\/\\/)?' + // protocol
-                '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' + // domain name
-                '((\\d{1,3}\\.){3}\\d{1,3}))' + // OR ip (v4) address
-                '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*' + // port and path
-                '(\\?[;&a-z\\d%_.~+=-]*)?' + // query string
-                '(\\#[-a-z\\d_]*)?$', 'i'); // fragment locator
+            let pattern = new RegExp("^(rtmps?:\\/\\/)?" + // protocol
+                "((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|" + // domain name
+                "((\\d{1,3}\\.){3}\\d{1,3}))" + // OR ip (v4) address
+                "(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*" + // port and path
+                "(\\?[;&a-z\\d%_.~+=-]*)?" + // query string
+                "(\\#[-a-z\\d_]*)?$", "i"); // fragment locator
             return !!pattern.test(str);
         }
     </script>

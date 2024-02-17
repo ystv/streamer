@@ -167,47 +167,47 @@
         </div>
     </div>
     <script>
-        document.getElementById('website_stream').onchange = function () {
-            document.getElementById('website_stream_endpoint').disabled = !this.checked;
-            document.getElementById('website_stream_endpoint').hidden = !this.checked;
+        document.getElementById("website_stream").onchange = function () {
+            document.getElementById("website_stream_endpoint").disabled = !this.checked;
+            document.getElementById("website_stream_endpoint").hidden = !this.checked;
             if (this.checked) {
-                document.getElementById('website_stream_endpoint').style.visibility = "visible";
-                document.getElementById('website_stream_endpoint').setAttribute('required', 'required');
+                document.getElementById("website_stream_endpoint").style.visibility = "visible";
+                document.getElementById("website_stream_endpoint").setAttribute("required", "required");
             } else {
-                document.getElementById('website_stream_endpoint').style.visibility = "hidden";
-                document.getElementById('website_stream_endpoint').removeAttribute('required');
+                document.getElementById("website_stream_endpoint").style.visibility = "hidden";
+                document.getElementById("website_stream_endpoint").removeAttribute("required");
             }
         };
 
-        document.getElementById('record').onchange = function () {
-            document.getElementById('save_path').disabled = !this.checked;
-            document.getElementById('save_path').hidden = !this.checked;
+        document.getElementById("record").onchange = function () {
+            document.getElementById("save_path").disabled = !this.checked;
+            document.getElementById("save_path").hidden = !this.checked;
             if (this.checked) {
-                document.getElementById('save_path').style.visibility = "visible";
-                document.getElementById('save_path').setAttribute('required', 'required');
+                document.getElementById("save_path").style.visibility = "visible";
+                document.getElementById("save_path").setAttribute("required", "required");
             } else {
-                document.getElementById('save_path').style.visibility = "hidden";
-                document.getElementById('save_path').removeAttribute('required');
+                document.getElementById("save_path").style.visibility = "hidden";
+                document.getElementById("save_path").removeAttribute("required");
             }
         };
 
-        document.getElementById('stop_checkbox').onchange = function () {
-            document.getElementById('stop_button').disabled = !this.checked;
-            document.getElementById('stop_button').hidden = !this.checked;
+        document.getElementById("stop_checkbox").onchange = function () {
+            document.getElementById("stop_button").disabled = !this.checked;
+            document.getElementById("stop_button").hidden = !this.checked;
             if (this.checked) {
-                document.getElementById('stop_button').style.visibility = "visible";
+                document.getElementById("stop_button").style.visibility = "visible";
             } else {
-                document.getElementById('stop_button').style.visibility = "hidden";
+                document.getElementById("stop_button").style.visibility = "hidden";
             }
         };
 
-        document.getElementById('delete_checkbox').onchange = function () {
-            document.getElementById('delete_button').disabled = !this.checked;
-            document.getElementById('delete_button').hidden = !this.checked;
+        document.getElementById("delete_checkbox").onchange = function () {
+            document.getElementById("delete_button").disabled = !this.checked;
+            document.getElementById("delete_button").hidden = !this.checked;
             if (this.checked) {
-                document.getElementById('delete_button').style.visibility = "visible";
+                document.getElementById("delete_button").style.visibility = "visible";
             } else {
-                document.getElementById('delete_button').style.visibility = "hidden";
+                document.getElementById("delete_button").style.visibility = "hidden";
             }
         };
 
@@ -216,85 +216,83 @@
         let i = 1;
 
         function addStream() {
-            $('#dynamic_field').append('<tr id="row_' + i + '" class="dynamic-added"><td><label for="stream_server_' + i + '">Enter the stream server - ' + (i + 1) + ' </label><br><input type="text" name="stream_server_' + i + '" id="stream_server_' + i + '" placeholder="Enter stream server" class="input" required/><br><br>\n' +
-                '                <label for="stream_key_' + i + '">Enter the stream key - ' + (i + 1) + ' </label><br><input type="text" name="stream_key_' + i + '" id="stream_key_' + i + '" placeholder="Enter stream key" class="input" required/><br><br></td><td><button type="button" name="remove" id="' + i + '" class="btn btn-danger btn_remove button">X</button></td></tr><br>');
+            $("#dynamic_field").append("<tr id='row_" + i + "' class='dynamic-added'><td><label for='stream_server_" + i + "'>Enter the stream server - " + (i + 1) + " </label><br><input type='text' name='stream_server_" + i + "' id='stream_server_" + i + "' placeholder='Enter stream server' class='input' required/><br><br>\n" +
+                "                <label for='stream_key_" + i + "'>Enter the stream key - " + (i + 1) + " </label><br><input type='text' name='stream_key_" + i + "' id='stream_key_" + i + "' placeholder='Enter stream key' class='input' required/><br><br></td><td><button type='button' name='remove' id='" + i + "' class='btn btn-danger btn_remove button'>X</button></td></tr><br>");
             i++;
         }
 
-        document.getElementById("add").addEventListener('click', () => {
-            addStream();
-        })
+        document.getElementById("add").addEventListener("click", () => addStream());
 
-        $(document).on('click', '.btn_remove', function () {
+        $(document).on("click", ".btn_remove", function () {
             let button_id = $(this).attr("id");
-            $('#row_' + button_id + '').remove();
+            $("#row_" + button_id + "").remove();
         });
 
         $(document).ready(function () {
             $.ajax({
-                url: 'endpoints',
-                type: 'post',
-                dataType: 'text',
-                contentType: 'application/x-www-form-urlencoded',
+                url: "endpoints",
+                type: "post",
+                dataType: "text",
+                contentType: "application/x-www-form-urlencoded",
                 data: ({"unique": unique}),
                 success: function (data) {
                     let endpoints = data.split(" ");
                     for (let endpoint of endpoints) {
                         let endpointName = endpoint.split("~");
-                        $('#endpointTable').append('<tr>\n' +
-                            '<td>\n' +
-                            '<label for="endpointsTable">Endpoint: ' + endpointName[1] + '</label>\n' +
-                            '</td>\n' +
-                            '<td>\n' +
-                            '<input name="endpointsTable" id="' + endpoint + '" type="radio" ' + ((endpointName[1] === "internal") ? 'checked' : '') + '/>\n' +
-                            '</td>' +
-                            '</tr>');
+                        $("#endpointTable").append("<tr>\n" +
+                            "<td>\n" +
+                            "<label for='endpointsTable'>Endpoint: " + endpointName[1] + "</label>\n" +
+                            "</td>\n" +
+                            "<td>\n" +
+                            "<input name='endpointsTable' id='" + endpoint + "' type='radio' " + ((endpointName[1] === "internal") ? "checked" : "") + "/>\n" +
+                            "</td>" +
+                            "</tr>");
                     }
                 },
             });
 
-            let error = $('#error');
+            let error = $("#error");
 
-            $('#submit_unique').click(function () {
+            $("#submit_unique").click(function () {
                 error.html("")
-                if ($('#unique').val().length === 0) {
-                    $('#error').html("The code field cannot be empty");
+                if ($("#unique").val().length === 0) {
+                    $("#error").html("The code field cannot be empty");
                     return;
                 }
                 $.ajax({
-                    url: 'recall',
-                    type: 'post',
-                    dataType: 'text',
-                    contentType: 'application/x-www-form-urlencoded',
-                    data: $('#recall').serialize(),
+                    url: "recall",
+                    type: "post",
+                    dataType: "text",
+                    contentType: "application/x-www-form-urlencoded",
+                    data: $("#recall").serialize(),
                     success: function (data) {
-                        let dataPart = data.split('~');
+                        let dataPart = data.split("~");
                         if (dataPart[0] !== "ACCEPTED!") {
-                            $('#error').html("Unique code not accepted");
+                            $("#error").html("Unique code not accepted");
                             return;
                         }
-                        document.getElementById('enter').hidden = true;
-                        document.getElementById('enter').style.visibility = "hidden";
-                        document.getElementById('recalled').hidden = false;
-                        document.getElementById('recalled').style.visibility = "visible";
-                        unique = $('#unique').val();
+                        document.getElementById("enter").hidden = true;
+                        document.getElementById("enter").style.visibility = "hidden";
+                        document.getElementById("recalled").hidden = false;
+                        document.getElementById("recalled").style.visibility = "visible";
+                        unique = $("#unique").val();
                         console.log(unique);
                         document.getElementById("unique_code").value = unique;
                         let input = dataPart[1].split("/");
                         document.getElementById("stream_input").value = input[1];
                         if (dataPart[2] !== "§") {
-                            document.getElementById('record').checked = true;
-                            document.getElementById('save_path').style.visibility = "visible";
-                            document.getElementById('save_path').setAttribute('required', 'required');
+                            document.getElementById("record").checked = true;
+                            document.getElementById("save_path").style.visibility = "visible";
+                            document.getElementById("save_path").setAttribute("required", "required");
                             document.getElementById("save_path").value = dataPart[2];
-                            // $('#tableStatus').append('<tr><td><p class="subtitle">Recording status</p><p id="recording_status"></p><br></td></tr>');
+                            // $("#tableStatus").append("<tr><td><p class='subtitle'>Recording status</p><p id='recording_status'></p><br></td></tr>");
                         }
                         if (dataPart[3] !== "§") {
-                            document.getElementById('website_stream').checked = true;
-                            document.getElementById('website_stream_endpoint').style.visibility = "visible";
-                            document.getElementById('website_stream_endpoint').setAttribute('required', 'required');
+                            document.getElementById("website_stream").checked = true;
+                            document.getElementById("website_stream_endpoint").style.visibility = "visible";
+                            document.getElementById("website_stream_endpoint").setAttribute("required", "required");
                             document.getElementById("website_stream_endpoint").value = dataPart[3];
-                            // $('#tableStatus').append('<tr><td><p class="subtitle">Website status</p><p id="website_status"></p><br></td></tr>');
+                            // $("#tableStatus").append("<tr><td><p class='subtitle'>Website status</p><p id='website_status'></p><br></td></tr>");
                         }
                         let streams = dataPart[4].split("±");
                         let noStreams = streams.length;
@@ -305,7 +303,7 @@
                             let parts = streams[i].split("|")
                             document.getElementById("stream_server_" + i).value = parts[0];
                             document.getElementById("stream_key_" + i).value = parts[1];
-                            // $('#tableStatus').append('<tr><td><p class="subtitle">Stream ' + i + ' status</p><p id="' + i + '_status"></p><br></td></tr>');
+                            // $("#tableStatus").append("<tr><td><p class='subtitle'>Stream " + i + " status</p><p id='" + i + "_status'></p><br></td></tr>");
                         }
 
                         let endpointTable = document.getElementById("endpointTable");
@@ -315,7 +313,7 @@
                             let row = endpointTable.rows[i];
                             for (let j = 0; j < row.cells.length; j++) {
                                 let col = row.cells[j];
-                                let temp = col.getElementsByTagName('input');
+                                let temp = col.getElementsByTagName("input");
                                 if (temp.length > 0) {
                                     let element = temp[0];
                                     // console.log(element.id);
@@ -337,7 +335,7 @@
 
             let startPressed = false;
 
-            let startButton = $('#start');
+            let startButton = $("#start");
 
             startButton.click(function () {
                 if (startPressed) {
@@ -349,9 +347,9 @@
 
                 error.html("")
 
-                let savePath = $('#save_path');
+                let savePath = $("#save_path");
 
-                if (savePath.val().length > 0 && document.getElementById('record').checked) {
+                if (savePath.val().length > 0 && document.getElementById("record").checked) {
                     if (savePath.val().length === 0) {
                         console.log("SAVE PATH");
                         error.html("The save path cannot be empty");
@@ -365,9 +363,9 @@
                         return;
                     }
                 }
-                let websiteStreamEndpoint = $('#website_stream_endpoint');
+                let websiteStreamEndpoint = $("#website_stream_endpoint");
 
-                if (document.getElementById('website_stream').checked) {
+                if (document.getElementById("website_stream").checked) {
                     if (websiteStreamEndpoint.val().length === 0 || !websiteStreamEndpoint.val().includes("?pwd=")) {
                         console.log("PWD");
                         error.html("The website stream must contain \"?pwd=\"");
@@ -375,10 +373,10 @@
                         return;
                     }
                 }
-                let streamServer0 = $('#stream_server_0');
-                if (streamServer0.val().length === 0 || $('#stream_key_0').val().length === 0) {
+                let streamServer0 = $("#stream_server_0");
+                if (streamServer0.val().length === 0 || $("#stream_key_0").val().length === 0) {
                     console.log("ADDITIONAL");
-                    $('#error').html("The stream server and stream key cannot be empty");
+                    $("#error").html("The stream server and stream key cannot be empty");
                     startPressed = false;
                     return;
                 }
@@ -390,7 +388,7 @@
                 }
                 let j = 1;
                 while (true) {
-                    let streamServerJ = $('#stream_server_' + j);
+                    let streamServerJ = $("#stream_server_" + j);
                     if (streamServerJ.length === 0) {
                         if (j < i) {
                             j++
@@ -399,7 +397,7 @@
                         }
                         continue;
                     }
-                    if (streamServerJ.val().length === 0 || $('#stream_key_' + j).val().length === 0) {
+                    if (streamServerJ.val().length === 0 || $("#stream_key_" + j).val().length === 0) {
                         console.log("ADDITIONAL - " + j);
                         error.html("The stream server and stream key cannot be empty");
                         startPressed = false;
@@ -419,11 +417,11 @@
                 }
 
                 $.ajax({
-                    url: 'startUnique',
-                    type: 'post',
-                    dataType: 'text',
-                    contentType: 'application/x-www-form-urlencoded',
-                    data: $('#recall_form').serialize(),
+                    url: "startUnique",
+                    type: "post",
+                    dataType: "text",
+                    contentType: "application/x-www-form-urlencoded",
+                    data: $("#recall_form").serialize(),
                     success: function (data) {
                         if (data.includes("An error has occurred...\n")) {
                             error.html(data);
@@ -431,25 +429,25 @@
                             return;
                         }
                         console.log(data);
-                        $('#unique1').html(data);
-                        document.getElementById('recalled').hidden = true;
-                        document.getElementById('recalled').style.visibility = "hidden";
-                        document.getElementById('started_window').hidden = false;
-                        document.getElementById('started_window').style.visibility = "visible";
+                        $("#unique1").html(data);
+                        document.getElementById("recalled").hidden = true;
+                        document.getElementById("recalled").style.visibility = "hidden";
+                        document.getElementById("started_window").hidden = false;
+                        document.getElementById("started_window").style.visibility = "visible";
                         unique = data;
-                        let tableStatus = $('#tableStatus');
-                        if (document.getElementById('record').checked) {
-                            tableStatus.append('<tr><td><p class="subtitle">Recording status</p></td><td><p id="recording_status"></p><br></td></tr>');
+                        let tableStatus = $("#tableStatus");
+                        if (document.getElementById("record").checked) {
+                            tableStatus.append("<tr><td><p class='subtitle'>Recording status</p></td><td><p id='recording_status'></p><br></td></tr>");
                         }
-                        if (document.getElementById('website_stream').checked) {
-                            tableStatus.append('<tr><td><p class="subtitle">Website status</p></td><td><p id="website_status"></p><br></td></tr>');
+                        if (document.getElementById("website_stream").checked) {
+                            tableStatus.append("<tr><td><p class='subtitle'>Website status</p></td><td><p id='website_status'></p><br></td></tr>");
                         }
-                        tableStatus.append('<tr><td><p class="subtitle">Stream 1 status</p></td><td><p id="1_status"></p><br></td></tr>');
+                        tableStatus.append("<tr><td><p class='subtitle'>Stream 1 status</p></td><td><p id='1_status'></p><br></td></tr>");
                         let k = 2;
                         for (let j = 1; j < i; j++) {
                             try {
-                                document.getElementById('row_' + j)
-                                tableStatus.append('<tr><td><p class="subtitle">Stream ' + k + ' status</p></td><td><p id="' + k + '_status"></p><br></td></tr>');
+                                document.getElementById("row_" + j)
+                                tableStatus.append("<tr><td><p class='subtitle'>Stream " + k + " status</p></td><td><p id='" + k + "_status'></p><br></td></tr>");
                                 k++;
                             } catch (e) {
 
@@ -458,13 +456,13 @@
                         statusInterval = setInterval(function () {
                             console.log("Status")
                             $.ajax({
-                                url: 'status',
-                                type: 'post',
-                                dataType: 'text',
-                                contentType: 'application/x-www-form-urlencoded',
+                                url: "status",
+                                type: "post",
+                                dataType: "text",
+                                contentType: "application/x-www-form-urlencoded",
                                 data: ({"unique_code": unique}),
                                 success: function (data) {
-                                    let statusData = data.split('<br><br><br>');
+                                    let statusData = data.split("<br><br><br>");
                                     for (let j = 0; j < statusData.length; j++) {
                                         let tempStatus = statusData[j].split(":");
                                         let tempStatus1 = tempStatus[0].trim() + "_status";
@@ -479,23 +477,23 @@
                 startButton.disabled = false;
             });
 
-            let stopButton = $('#stop_button');
+            let stopButton = $("#stop_button");
 
             stopButton.click(function () {
                 stopButton.disabled = true;
                 console.log("Stop pressed")
                 $.ajax({
-                    url: 'stop',
-                    type: 'post',
-                    dataType: 'text',
-                    contentType: 'application/x-www-form-urlencoded',
+                    url: "stop",
+                    type: "post",
+                    dataType: "text",
+                    contentType: "application/x-www-form-urlencoded",
                     data: ({"unique_code": unique}),
                     success: function (data) {
                         if (data === "STOPPED!") {
-                            document.getElementById('started_window').hidden = true;
-                            document.getElementById('started_window').style.visibility = "hidden";
-                            document.getElementById('stopped_window').hidden = false;
-                            document.getElementById('stopped_window').style.visibility = "visible";
+                            document.getElementById("started_window").hidden = true;
+                            document.getElementById("started_window").style.visibility = "hidden";
+                            document.getElementById("stopped_window").hidden = false;
+                            document.getElementById("stopped_window").style.visibility = "visible";
                             unique = "";
                             clearInterval(statusInterval);
                         }
@@ -504,23 +502,23 @@
                 stopButton.disabled = false;
             });
 
-            let deleteButton = $('#delete_button');
+            let deleteButton = $("#delete_button");
 
             deleteButton.click(function () {
                 deleteButton.disabled = true;
                 console.log("Delete pressed")
                 $.ajax({
-                    url: 'delete',
-                    type: 'post',
-                    dataType: 'text',
-                    contentType: 'application/x-www-form-urlencoded',
+                    url: "delete",
+                    type: "post",
+                    dataType: "text",
+                    contentType: "application/x-www-form-urlencoded",
                     data: ({"unique": unique}),
                     success: function (data) {
                         if (data === "DELETED!") {
-                            document.getElementById('recalled').hidden = true;
-                            document.getElementById('recall').style.visibility = "hidden";
-                            document.getElementById('deleted_window').hidden = false;
-                            document.getElementById('deleted_window').style.visibility = "visible";
+                            document.getElementById("recalled").hidden = true;
+                            document.getElementById("recall").style.visibility = "hidden";
+                            document.getElementById("deleted_window").hidden = false;
+                            document.getElementById("deleted_window").style.visibility = "visible";
                             unique = "";
                             clearInterval(statusInterval);
                         }
@@ -531,12 +529,12 @@
         });
 
         function validURL(str) {
-            let pattern = new RegExp('^(rtmps?:\\/\\/)?' + // protocol
-                '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' + // domain name
-                '((\\d{1,3}\\.){3}\\d{1,3}))' + // OR ip (v4) address
-                '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*' + // port and path
-                '(\\?[;&a-z\\d%_.~+=-]*)?' + // query string
-                '(\\#[-a-z\\d_]*)?$', 'i'); // fragment locator
+            let pattern = new RegExp("^(rtmps?:\\/\\/)?" + // protocol
+                "((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|" + // domain name
+                "((\\d{1,3}\\.){3}\\d{1,3}))" + // OR ip (v4) address
+                "(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*" + // port and path
+                "(\\?[;&a-z\\d%_.~+=-]*)?" + // query string
+                "(\\#[-a-z\\d_]*)?$", "i"); // fragment locator
             return !!pattern.test(str);
         }
     </script>

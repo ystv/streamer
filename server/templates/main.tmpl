@@ -43,7 +43,7 @@
                 <p style="color: red">{{.Error}}</p><br>
                 <p class="title">Stream endpoint selector</p>
                 <p class="subtitle">Endpoints</p>
-                <p id='result'></p><br>
+                <p id="result"></p><br>
                 <p class="subtitle">Selection</p>
                 <form id="endpoint_selector">
                     <table class="table table-bordered" id="endpointTable"></table>
@@ -134,7 +134,7 @@
                             </tr>
                         </table>
                         <p id="error" style="color: red"></p><br>
-                        <input id="start" type='button' class="button" value='Start'/>
+                        <input id="start" type="button" class="button" value="Start"/>
                     </div>
                 </form>
             </div>
@@ -168,56 +168,56 @@
         </div>
     </div>
     <script>
-        document.getElementById('website_stream').onchange = function () {
-            document.getElementById('website_stream_endpoint').disabled = !this.checked;
-            document.getElementById('website_stream_endpoint').hidden = !this.checked;
+        document.getElementById("website_stream").onchange = function () {
+            document.getElementById("website_stream_endpoint").disabled = !this.checked;
+            document.getElementById("website_stream_endpoint").hidden = !this.checked;
             if (this.checked) {
-                document.getElementById('website_stream_endpoint').style.visibility = "visible";
-                document.getElementById('website_stream_endpoint').setAttribute('required', 'required');
+                document.getElementById("website_stream_endpoint").style.visibility = "visible";
+                document.getElementById("website_stream_endpoint").setAttribute("required", "required");
             } else {
-                document.getElementById('website_stream_endpoint').style.visibility = "hidden";
-                document.getElementById('website_stream_endpoint').removeAttribute('required');
+                document.getElementById("website_stream_endpoint").style.visibility = "hidden";
+                document.getElementById("website_stream_endpoint").removeAttribute("required");
             }
         };
 
-        document.getElementById('record').onchange = function () {
-            document.getElementById('save_path').disabled = !this.checked;
-            document.getElementById('save_path').hidden = !this.checked;
+        document.getElementById("record").onchange = function () {
+            document.getElementById("save_path").disabled = !this.checked;
+            document.getElementById("save_path").hidden = !this.checked;
             if (this.checked) {
-                document.getElementById('save_path').style.visibility = "visible";
-                document.getElementById('save_path').setAttribute('required', 'required');
+                document.getElementById("save_path").style.visibility = "visible";
+                document.getElementById("save_path").setAttribute("required", "required");
             } else {
-                document.getElementById('save_path').style.visibility = "hidden";
-                document.getElementById('save_path').removeAttribute('required');
+                document.getElementById("save_path").style.visibility = "hidden";
+                document.getElementById("save_path").removeAttribute("required");
             }
         };
 
-        document.getElementById('stop_checkbox').onchange = function () {
-            document.getElementById('stop_button').disabled = !this.checked;
-            document.getElementById('stop_button').hidden = !this.checked;
+        document.getElementById("stop_checkbox").onchange = function () {
+            document.getElementById("stop_button").disabled = !this.checked;
+            document.getElementById("stop_button").hidden = !this.checked;
             if (this.checked) {
-                document.getElementById('stop_button').style.visibility = "visible";
+                document.getElementById("stop_button").style.visibility = "visible";
             } else {
-                document.getElementById('stop_button').style.visibility = "hidden";
+                document.getElementById("stop_button").style.visibility = "hidden";
             }
         };
 
         let unique;
         let statusInterval;
 
-        let endpointSelector = $('#endpoint_selector');
+        let endpointSelector = $("#endpoint_selector");
 
         let streamsCheck = function () {
             $.ajax({
-                url: 'streams',
-                type: 'post',
-                dataType: 'text',
-                contentType: 'application/x-www-form-urlencoded',
+                url: "streams",
+                type: "post",
+                dataType: "text",
+                contentType: "application/x-www-form-urlencoded",
                 data: endpointSelector.serialize(),
                 success: function (data) {
-                    let result = $('#result');
+                    let result = $("#result");
 
-                    let streamFurther = $('#stream_further_1');
+                    let streamFurther = $("#stream_further_1");
 
                     if (data === "No active streams with the current selection") {
                         result.html(data);
@@ -250,61 +250,61 @@
             });
         }
 
-        document.getElementById("stream_check").addEventListener('click', () => {
+        document.getElementById("stream_check").addEventListener("click", () => {
             streamsCheck();
         });
 
         $(document).ready(function () {
             $.ajax({
-                url: 'endpoints',
-                type: 'post',
-                dataType: 'text',
-                contentType: 'application/x-www-form-urlencoded',
+                url: "endpoints",
+                type: "post",
+                dataType: "text",
+                contentType: "application/x-www-form-urlencoded",
                 data: ({"unique": unique}),
                 success: function (data) {
                     let endpoints = data.split(" ");
                     for (let endpoint of endpoints) {
                         let endpointName = endpoint.split("~");
-                        $('#endpointTable').append('<tr>\n' +
-                            '<td>\n' +
-                            '<label for="' + endpoint + '">Endpoint: ' + endpointName[1] + '</label>\n' +
-                            '</td>\n' +
-                            '<td>\n' +
-                            '<input name="' + endpoint + '" id="' + endpoint + '" type="checkbox" ' + ((endpointName[1] === "internal") ? 'checked' : '') + '/>\n' +
-                            '</td>' +
-                            '</tr>');
+                        $("#endpointTable").append("<tr>\n" +
+                            "<td>\n" +
+                            "<label for='" + endpoint + "'>Endpoint: " + endpointName[1] + "</label>\n" +
+                            "</td>\n" +
+                            "<td>\n" +
+                            "<input name='" + endpoint + "' id='" + endpoint + "' type='checkbox' " + ((endpointName[1] === "internal") ? "checked" : "") + "/>\n" +
+                            "</td>" +
+                            "</tr>");
                     }
                     streamsCheck();
                 },
             });
 
-            $('#stream_selector').change(function () {
-                if ($(this).val() === 'please_select') {
-                    $('#stream_further_1').hide();
+            $("#stream_selector").change(function () {
+                if ($(this).val() === "please_select") {
+                    $("#stream_further_1").hide();
                 } else {
-                    $('#stream_further_1').show();
-                    $('#input').val($(this).val())
+                    $("#stream_further_1").show();
+                    $("#input").val($(this).val())
                 }
             });
 
             let i = 1;
 
-            $('#add').click(function () {
-                $('#dynamic_field').append('<tr id="row_' + i + '" class="dynamic-added"><td><label for="stream_server_' + i + '">Enter the stream server - ' + (i + 1) + ' </label><br><input type="text" name="stream_server_' + i + '" id="stream_server_' + i + '" placeholder="Enter stream server" class="input" required/><br><br>\n' +
-                    '                <label for="stream_key_' + i + '">Enter the stream key - ' + (i + 1) + ' </label><br><input type="text" name="stream_key_' + i + '" id="stream_key_' + i + '" placeholder="Enter stream key" class="input" required/><br><br></td><td><button type="button" name="remove" id="' + i + '" class="btn btn-danger btn_remove button">X</button></td></tr><br>');
+            $("#add").click(function () {
+                $("#dynamic_field").append("<tr id='row_" + i + "' class='dynamic-added'><td><label for='stream_server_" + i + "'>Enter the stream server - " + (i + 1) + " </label><br><input type='text' name='stream_server_" + i + "' id='stream_server_" + i + "' placeholder='Enter stream server' class='input' required/><br><br>\n" +
+                    "                <label for='stream_key_" + i + "'>Enter the stream key - " + (i + 1) + " </label><br><input type='text' name='stream_key_" + i + "' id='stream_key_" + i + "' placeholder='Enter stream key' class='input' required/><br><br></td><td><button type='button' name='remove' id='" + i + "' class='btn btn-danger btn_remove button'>X</button></td></tr><br>");
                 i++;
             });
 
-            $(document).on('click', '.btn_remove', function () {
+            $(document).on("click", ".btn_remove", function () {
                 let button_id = $(this).attr("id");
-                $('#row_' + button_id + '').remove();
+                $("#row_" + button_id + "").remove();
             });
 
             let startPressed = false;
 
-            let startButton = $('#start');
-            let error = $('#error');
-            let savePath = $('#save_path');
+            let startButton = $("#start");
+            let error = $("#error");
+            let savePath = $("#save_path");
 
             startButton.click(function () {
                 if (startPressed) {
@@ -314,7 +314,7 @@
                 startPressed = true;
                 startButton.disabled = true;
                 error.html("")
-                if (savePath.val().length > 0 && document.getElementById('record').checked) {
+                if (savePath.val().length > 0 && document.getElementById("record").checked) {
                     if (savePath.val().length === 0) {
                         console.log("SAVE PATH");
                         error.html("The save path cannot be empty");
@@ -328,8 +328,8 @@
                         return;
                     }
                 }
-                let websiteStreamEndpoint = $('#website_stream_endpoint');
-                if (document.getElementById('website_stream').checked) {
+                let websiteStreamEndpoint = $("#website_stream_endpoint");
+                if (document.getElementById("website_stream").checked) {
                     if (websiteStreamEndpoint.val().length === 0 || !websiteStreamEndpoint.val().includes("?pwd=")) {
                         console.log("PWD");
                         error.html("The website stream must contain \"?pwd=\"");
@@ -337,8 +337,8 @@
                         return;
                     }
                 }
-                let streamServer0 = $('#stream_server_0');
-                if (streamServer0.val().length === 0 || $('#stream_key_0').val().length === 0) {
+                let streamServer0 = $("#stream_server_0");
+                if (streamServer0.val().length === 0 || $("#stream_key_0").val().length === 0) {
                     console.log("ADDITIONAL");
                     error.html("The stream server and stream key cannot be empty");
                     startPressed = false;
@@ -352,7 +352,7 @@
                 }
                 let j = 1;
                 while (true) {
-                    let streamServerJ = $('#stream_server_' + j);
+                    let streamServerJ = $("#stream_server_" + j);
                     if (streamServerJ.length === 0) {
                         if (j < i) {
                             j++
@@ -361,7 +361,7 @@
                         }
                         continue;
                     }
-                    if (streamServerJ.val().length === 0 || $('#stream_key_' + j).val().length === 0) {
+                    if (streamServerJ.val().length === 0 || $("#stream_key_" + j).val().length === 0) {
                         console.log("ADDITIONAL - " + j);
                         error.html("The stream server and stream key cannot be empty");
                         startPressed = false;
@@ -381,11 +381,11 @@
                 }
 
                 $.ajax({
-                    url: 'start',
-                    type: 'post',
-                    dataType: 'text',
-                    contentType: 'application/x-www-form-urlencoded',
-                    data: $('#stream_outs').serialize(),
+                    url: "start",
+                    type: "post",
+                    dataType: "text",
+                    contentType: "application/x-www-form-urlencoded",
+                    data: $("#stream_outs").serialize(),
                     success: function (data) {
                         const jsonData = JSON.parse(data);
                         if (jsonData.error !== "") {
@@ -393,25 +393,25 @@
                             startPressed = false;
                             return;
                         }
-                        $('#unique').html(jsonData.unique);
-                        document.getElementById('start_window').hidden = true;
-                        document.getElementById('start_window').style.visibility = "hidden";
-                        document.getElementById('started_window').hidden = false;
-                        document.getElementById('started_window').style.visibility = "visible";
+                        $("#unique").html(jsonData.unique);
+                        document.getElementById("start_window").hidden = true;
+                        document.getElementById("start_window").style.visibility = "hidden";
+                        document.getElementById("started_window").hidden = false;
+                        document.getElementById("started_window").style.visibility = "visible";
                         unique = jsonData.unique;
-                        let tableStatus = $('#tableStatus');
-                        if (document.getElementById('record').checked) {
-                            tableStatus.append('<tr><td><p class="subtitle">Recording status</p><pre id="recording_status"></pre><br></td></tr>');
+                        let tableStatus = $("#tableStatus");
+                        if (document.getElementById("record").checked) {
+                            tableStatus.append("<tr><td><p class='subtitle'>Recording status</p><pre id='recording_status'></pre><br></td></tr>");
                         }
-                        if (document.getElementById('website_stream').checked) {
-                            tableStatus.append('<tr><td><p class="subtitle">Website status</p><pre id="website_status"></pre><br></td></tr>');
+                        if (document.getElementById("website_stream").checked) {
+                            tableStatus.append("<tr><td><p class='subtitle'>Website status</p><pre id='website_status'></pre><br></td></tr>");
                         }
-                        tableStatus.append('<tr><td><p class="subtitle">Stream 1 status</p><pre id="1_status"></pre><br></td></tr>');
+                        tableStatus.append("<tr><td><p class='subtitle'>Stream 1 status</p><pre id='1_status'></pre><br></td></tr>");
                         let k = 2;
                         for (let j = 1; j < i; j++) {
                             try {
-                                document.getElementById('row_' + j)
-                                tableStatus.append('<tr><td><p class="subtitle">Stream ' + k + ' status</p><pre id="' + k + '_status"></pre><br></td></tr>');
+                                document.getElementById("row_" + j)
+                                tableStatus.append("<tr><td><p class='subtitle'>Stream " + k + " status</p><pre id='" + k + "_status'></pre><br></td></tr>");
                                 k++;
                             } catch (e) {
 
@@ -420,10 +420,10 @@
                         statusInterval = setInterval(function () {
                             console.log("Status")
                             $.ajax({
-                                url: 'status',
-                                type: 'post',
-                                dataType: 'text',
-                                contentType: 'application/x-www-form-urlencoded',
+                                url: "status",
+                                type: "post",
+                                dataType: "text",
+                                contentType: "application/x-www-form-urlencoded",
                                 data: ({"unique_code": unique}),
                                 success: function (data) {
                                     const jsonData1 = JSON.parse(data);
@@ -447,39 +447,39 @@
                 startButton.disabled = false;
             });
 
-            let stopButton = $('#stop_button');
+            let stopButton = $("#stop_button");
 
             stopButton.click(function () {
                 stopButton.disabled = true;
                 console.log("Stop pressed")
                 $.ajax({
-                    url: 'stop',
-                    type: 'post',
-                    dataType: 'text',
-                    contentType: 'application/x-www-form-urlencoded',
+                    url: "stop",
+                    type: "post",
+                    dataType: "text",
+                    contentType: "application/x-www-form-urlencoded",
                     data: ({"unique_code": unique}),
                     success: function (data) {
                         if (data === "STOPPED!") {
-                            document.getElementById('started_window').hidden = true;
-                            document.getElementById('started_window').style.visibility = "hidden";
-                            document.getElementById('stopped_window').hidden = false;
-                            document.getElementById('stopped_window').style.visibility = "visible";
+                            document.getElementById("started_window").hidden = true;
+                            document.getElementById("started_window").style.visibility = "hidden";
+                            document.getElementById("stopped_window").hidden = false;
+                            document.getElementById("stopped_window").style.visibility = "visible";
                             unique = "";
                             clearInterval(statusInterval)
                         }
                     },
                 });
-                $('#stop_button').disabled = false;
+                $("#stop_button").disabled = false;
             });
         });
 
         function validURL(str) {
-            let pattern = new RegExp('^(rtmps?:\\/\\/)?' + // protocol
-                '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' + // domain name
-                '((\\d{1,3}\\.){3}\\d{1,3}))' + // OR ip (v4) address
-                '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*' + // port and path
-                '(\\?[;&a-z\\d%_.~+=-]*)?' + // query string
-                '(\\#[-a-z\\d_]*)?$', 'i'); // fragment locator
+            let pattern = new RegExp("^(rtmps?:\\/\\/)?" + // protocol
+                "((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|" + // domain name
+                "((\\d{1,3}\\.){3}\\d{1,3}))" + // OR ip (v4) address
+                "(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*" + // port and path
+                "(\\?[;&a-z\\d%_.~+=-]*)?" + // query string
+                "(\\#[-a-z\\d_]*)?$", "i"); // fragment locator
             return !!pattern.test(str);
         }
     </script>

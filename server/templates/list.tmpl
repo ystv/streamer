@@ -41,15 +41,15 @@
     </div>
     <script>
         $(document).ready(function () {
-            $('#refresh').click(function () {
-                $('#error').html("")
+            $("#refresh").click(function () {
+                $("#error").html("");
                 $.ajax({
-                    url: 'list',
-                    type: 'post',
-                    dataType: 'text',
-                    contentType: 'application/x-www-form-urlencoded',
+                    url: "list",
+                    type: "post",
+                    dataType: "text",
+                    contentType: "application/x-www-form-urlencoded",
                     success: function (data) {
-                        $('#listing').html(data)
+                        $("#listing").html(data);
                     },
                 })
             }).trigger("click");
