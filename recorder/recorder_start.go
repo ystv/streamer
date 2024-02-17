@@ -34,7 +34,7 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 		for i := 0; i < len(array)-1; i++ {
 			path += array[i] + "/"
 		}
-		err := os.MkdirAll(v.Config.RecordingLocation+path, 0666)
+		err := os.MkdirAll(v.Config.RecordingLocation+path, os.FileMode(0777))
 		if err != nil {
 			return fmt.Errorf("error creating %s: %w", v.Config.RecordingLocation+path, err)
 		}
@@ -138,7 +138,7 @@ func (v *Views) helperStart(transporter commonTransporter.Transporter, streamIn,
 	//	return fmt.Errorf("failed to run ffmpeg: %w", err)
 	//}
 	_ = ffmpeg.Stream{}
-	_, err := os.OpenFile(fmt.Sprintf("%s%s_%d.mkv", path, baseFileName, i), os.O_RDONLY|os.O_CREATE, 0666)
+	_, err := os.OpenFile(fmt.Sprintf("%s%s_%d.mkv", path, baseFileName, i), os.O_RDWR|os.O_CREATE, os.FileMode(0777))
 	if err != nil {
 		return fmt.Errorf("failed to touch file: %w", err)
 	}
@@ -149,7 +149,7 @@ func (v *Views) helperStart(transporter commonTransporter.Transporter, streamIn,
 		return fmt.Errorf("failed to add command to cache: %w", err)
 	}
 	var f *os.File
-	f, err = os.OpenFile(fmt.Sprintf("/logs/%s.txt", transporter.Unique), os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	f, err = os.OpenFile(fmt.Sprintf("/logs/%s.txt", transporter.Unique), os.O_APPEND|os.O_WRONLY|os.O_CREATE, os.FileMode(0600))
 	if err != nil {
 		panic(fmt.Errorf("failed to open file: %w", err))
 	}
