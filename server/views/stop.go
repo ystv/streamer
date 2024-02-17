@@ -126,8 +126,8 @@ func (v *Views) StopFunc(c echo.Context) error {
 
 			err = v.store.DeleteStream(unique)
 			if err != nil {
-				log.Printf("failed to delete stream: %w, unique: %s", err, unique)
-				errorMessages = append(errorMessages, fmt.Sprintf("failed to delete stream: %w, unique: %s", err, unique))
+				log.Printf("failed to delete stream: %+v, unique: %s", err, unique)
+				errorMessages = append(errorMessages, fmt.Sprintf("failed to delete stream: %+v, unique: %s", err, unique))
 				response.Error = strings.Join(errorMessages, ",")
 				return c.JSON(http.StatusOK, response)
 			}
