@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"sync"
 
 	"github.com/labstack/echo/v4"
@@ -23,18 +24,29 @@ func (v *Views) StopFunc(c echo.Context) error {
 			log.Println("Stop POST called")
 		}
 
+		var response struct {
+			Stopped bool   `json:"stopped"`
+			Error   string `json:"error"`
+		}
+
 		unique := c.FormValue("unique_code")
 		if len(unique) != 10 {
-			return fmt.Errorf("unique key invalid: %s", unique)
+			log.Printf("unique key invalid: %s", unique)
+			response.Error = fmt.Sprintf("unique key invalid: %s", unique)
+			return c.JSON(http.StatusOK, response)
 		}
 
 		stream, err := v.store.FindStream(unique)
 		if err != nil {
-			return fmt.Errorf("failed to get stream: %w, unique: %s", err, unique)
+			log.Printf("unable to find unique code for stop: %s, %+v", unique, err)
+			response.Error = fmt.Sprintf("unable to find unique code for stop: %s, %+v", unique, err)
+			return c.JSON(http.StatusOK, response)
 		}
 
 		if stream == nil {
-			return fmt.Errorf("no data in stream stop")
+			log.Printf("failed to get stream as data is empty")
+			response.Error = "failed to get stream as data is empty"
+			return c.JSON(http.StatusOK, response)
 		}
 
 		transporter := commonTransporter.Transporter{
@@ -53,110 +65,79 @@ func (v *Views) StopFunc(c echo.Context) error {
 		} else if !fow {
 			err = fmt.Errorf("no forwarder available")
 		}
-		if stream.Recording {
-			wg.Add(2)
-			go func() {
-				defer wg.Done()
-				//var client *ssh.Client
-				//var session *ssh.Session
-				//if recorderAuth == "PEM" {
-				//	client, session, err = connectToHostPEM(recorder, recorderUsername, recorderPrivateKey, recorderPassphrase)
-				//} else if recorderAuth == "PASS" {
-				//client, session, err = helper.ConnectToHostPassword(v.conf.Recorder, v.conf.RecorderUsername, v.conf.RecorderPassword, v.conf.Verbose)
-				//}
-				//if err != nil {
-				//	fmt.Println("Error connecting to Recorder for stop")
-				//	fmt.Println(err)
-				//}
-				//_, err = session.CombinedOutput("./recorder_stop " + c.FormValue("unique") + " | bash")
-				//if err != nil {
-				//	fmt.Println("Error executing on Recorder for stop")
-				//	fmt.Println(err)
-				//}
-				//err = client.Close()
-				//if err != nil {
-				//	fmt.Println(err)
-				//}
-
+		var errorMessages []string
+		wg.Add(2)
+		go func() {
+			defer wg.Done()
+			if stream.Recording {
 				recorderTransporter := transporter
-
-				var response commonTransporter.ResponseTransporter
-				response, err = v.wsHelper(server.Recorder, recorderTransporter)
+				var wsResponse commonTransporter.ResponseTransporter
+				wsResponse, err = v.wsHelper(server.Recorder, recorderTransporter)
 				if err != nil {
-					log.Println(err, "Error sending to Recorder for stop")
+					log.Printf("failed sending to Recorder for stop: %+v", err)
+					errorMessages = append(errorMessages, fmt.Sprintf("failed sending to Recorder for stop: %+v", err))
 					return
 				}
-				if response.Status == wsMessages.Error {
-					log.Printf("Error sending to Recorder for stop: %s", response)
+				if wsResponse.Status == wsMessages.Error {
+					log.Printf("failed sending to Recorder for stop: %s", wsResponse.Payload)
+					errorMessages = append(errorMessages, fmt.Sprintf("failed sending to Recorder for stop: %s", wsResponse.Payload))
 					return
 				}
-				if response.Status != wsMessages.Okay {
-					log.Printf("invalid response from Recorder for stop: %s", response)
+				if wsResponse.Status != wsMessages.Okay {
+					log.Printf("invalid response from Recorder for stop: %s", wsResponse.Status)
+					errorMessages = append(errorMessages, fmt.Sprintf("invalid response from Recorder for start: %s", wsResponse.Status))
 					return
 				}
 
-				log.Println("Recorder stop success")
-			}()
-		} else {
-			wg.Add(1)
-		}
+				log.Println("recorder stop success")
+			}
+		}()
 		go func() {
 			defer wg.Done()
 			forwarderTransporter := transporter
 
-			var response commonTransporter.ResponseTransporter
-			response, err = v.wsHelper(server.Forwarder, forwarderTransporter)
+			var wsResponse commonTransporter.ResponseTransporter
+			wsResponse, err = v.wsHelper(server.Forwarder, forwarderTransporter)
 			if err != nil {
-				log.Println(err, "Error sending to Forwarder for stop")
+				log.Printf("failed sending to Forwarder for stop: %+v", err)
+				errorMessages = append(errorMessages, fmt.Sprintf("failed sending to Forwarder for stop: %+v", err))
 				return
 			}
-			if response.Status == wsMessages.Error {
-				log.Printf("Error sending to Forwarder for stop: %s", response)
+			if wsResponse.Status == wsMessages.Error {
+				log.Printf("failed sending to Forwarder for stop: %s", wsResponse.Payload)
+				errorMessages = append(errorMessages, fmt.Sprintf("failed sending to Forwarder for stop: %s", wsResponse.Payload))
 				return
 			}
-			if response.Status != wsMessages.Okay {
-				log.Printf("invalid response from Forwarder for stop: %s", response)
+			if wsResponse.Status != wsMessages.Okay {
+				log.Printf("invalid response from Forwarder for stop: %s", wsResponse.Status)
+				errorMessages = append(errorMessages, fmt.Sprintf("invalid response from Forwarder for stop: %s", wsResponse.Status))
 				return
 			}
 
-			log.Println("Forwarder stop success")
-			//var client *ssh.Client
-			//var session *ssh.Session
-			//if forwarderAuth == "PEM" {
-			//	client, session, err = connectToHostPEM(forwarder, forwarderUsername, forwarderPrivateKey, forwarderPassphrase)
-			//} else if forwarderAuth == "PASS" {
-			//client, session, err = helper.ConnectToHostPassword(v.conf.Forwarder, v.conf.ForwarderUsername, v.conf.ForwarderPassword, v.conf.Verbose)
-			//}
-			//if err != nil {
-			//	fmt.Println("Error connecting to Forwarder for stop")
-			//	fmt.Println(err)
-			//}
-			//_, err = session.CombinedOutput("./forwarder_stop " + c.FormValue("unique") + " | bash")
-			//if err != nil {
-			//	fmt.Println("Error executing on Forwarder for stop")
-			//	fmt.Println(err)
-			//}
-			//err = client.Close()
-			//if err != nil {
-			//	fmt.Println(err)
-			//}
-
-			log.Println("Forwarder stop success")
+			log.Println("forwarder stop success")
 		}()
 		wg.Wait()
-		log.Printf("stopped stream: %s", unique)
 
-		err = v.store.DeleteStream(unique)
-		if err != nil {
-			return fmt.Errorf("failed to delete stream: %w, unique: %s", err, unique)
+		if len(errorMessages) == 0 {
+			err = v.HandleTXLight(v.conf.TransmissionLight, tx.AllOff)
+			if err != nil {
+				log.Printf("failed to turn transmission light off: %+v, ignoring and continuing", err)
+			}
+
+			err = v.store.DeleteStream(unique)
+			if err != nil {
+				log.Printf("failed to delete stream: %w, unique: %s", err, unique)
+				errorMessages = append(errorMessages, fmt.Sprintf("failed to delete stream: %w, unique: %s", err, unique))
+				response.Error = strings.Join(errorMessages, ",")
+				return c.JSON(http.StatusOK, response)
+			}
+
+			response.Stopped = true
+			return c.JSON(http.StatusOK, response)
 		}
 
-		err = v.HandleTXLight(v.conf.TransmissionLight, tx.AllOff)
-		if err != nil {
-			log.Printf("failed to turn transmission light off: %+v, ignoring and continuing", err)
-		}
-
-		return c.String(http.StatusOK, "STOPPED!")
+		response.Error = strings.Join(errorMessages, ",")
+		return c.JSON(http.StatusOK, response)
 	}
 	return echo.NewHTTPError(http.StatusMethodNotAllowed, "invalid method")
 }

@@ -27,18 +27,29 @@ func (v *Views) StartUniqueFunc(c echo.Context) error {
 			log.Println("StartUnique POST called")
 		}
 
+		var response struct {
+			Unique string `json:"unique"`
+			Error  string `json:"error"`
+		}
+
 		unique := c.FormValue("unique_code")
 		if len(unique) != 10 {
-			return fmt.Errorf("unique key invalid")
+			log.Printf("unique key invalid: %s", unique)
+			response.Error = fmt.Sprintf("unique key invalid: %s", unique)
+			return c.JSON(http.StatusOK, response)
 		}
 
 		stored, err := v.store.FindStored(unique)
 		if err != nil {
-			return fmt.Errorf("unable to find unique code for startUnique: %s, %w", unique, err)
+			log.Printf("unable to find unique code for startUnique: %s, %+v", unique, err)
+			response.Error = fmt.Sprintf("unable to find unique code for startUnique: %s, %+v", unique, err)
+			return c.JSON(http.StatusOK, response)
 		}
 
 		if stored == nil {
-			return fmt.Errorf("failed to get stored as data is empty")
+			log.Printf("failed to get stored as data is empty")
+			response.Error = "failed to get stored as data is empty"
+			return c.JSON(http.StatusOK, response)
 		}
 
 		transporter := commonTransporter.Transporter{
@@ -53,11 +64,6 @@ func (v *Views) StartUniqueFunc(c echo.Context) error {
 		rStart := commonTransporter.RecorderStart{
 			StreamIn: c.FormValue("stream_selector"),
 			PathOut:  c.FormValue("save_path"),
-		}
-
-		var response struct {
-			Unique string `json:"unique"`
-			Error  string `json:"error"`
 		}
 
 		recording := false
