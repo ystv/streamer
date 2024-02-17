@@ -154,6 +154,7 @@
                         target="_blank">https://streamer.dev.ystv.co.uk/resume</a><br><br><br>
                 You can stop the stream by pressing the checkbox and then the button (prevent accidental stops)</p>
             <br><br><br>
+            <p id="stopError" style="color: red"></p><br>
             <label for="stop_checkbox">Enable the stop button </label>
             <input name="stop_checkbox" id="stop_checkbox" type="checkbox"><br>
             <input name="stop_button" id="stop_button" type="button" class="button" value="|> STOP <|"
@@ -313,7 +314,7 @@
                 }
                 startPressed = true;
                 startButton.disabled = true;
-                error.html("")
+                error.html("");
                 if (savePath.val().length > 0 && document.getElementById("record").checked) {
                     if (savePath.val().length === 0) {
                         console.log("SAVE PATH");
@@ -329,6 +330,7 @@
                     }
                 }
                 let websiteStreamEndpoint = $("#website_stream_endpoint");
+
                 if (document.getElementById("website_stream").checked) {
                     if (websiteStreamEndpoint.val().length === 0 || !websiteStreamEndpoint.val().includes("?pwd=")) {
                         console.log("PWD");
@@ -337,19 +339,23 @@
                         return;
                     }
                 }
+
                 let streamServer0 = $("#stream_server_0");
+
                 if (streamServer0.val().length === 0 || $("#stream_key_0").val().length === 0) {
                     console.log("ADDITIONAL");
                     error.html("The stream server and stream key cannot be empty");
                     startPressed = false;
                     return;
                 }
+
                 if (!validURL(streamServer0.val())) {
                     console.log("STREAM SERVER");
                     error.html("The stream server must contain \"rtmp://\" or \"rtmps://\" and needs to be a valid url");
                     startPressed = false;
                     return;
                 }
+
                 let j = 1;
                 while (true) {
                     let streamServerJ = $("#stream_server_" + j);
@@ -387,18 +393,18 @@
                     contentType: "application/x-www-form-urlencoded",
                     data: $("#stream_outs").serialize(),
                     success: function (data) {
-                        const jsonData = JSON.parse(data);
-                        if (jsonData.error !== "") {
-                            error.html(jsonData.error);
+                        const startResponseJson = JSON.parse(data);
+                        if (startResponseJson.error !== "") {
+                            error.html(startResponseJson.error);
                             startPressed = false;
                             return;
                         }
-                        $("#unique").html(jsonData.unique);
+                        $("#unique").html(startResponseJson.unique);
                         document.getElementById("start_window").hidden = true;
                         document.getElementById("start_window").style.visibility = "hidden";
                         document.getElementById("started_window").hidden = false;
                         document.getElementById("started_window").style.visibility = "visible";
-                        unique = jsonData.unique;
+                        unique = startResponseJson.unique;
                         let tableStatus = $("#tableStatus");
                         if (document.getElementById("record").checked) {
                             tableStatus.append("<tr><td><p class='subtitle'>Recording status</p><pre id='recording_status'></pre><br></td></tr>");
@@ -426,17 +432,17 @@
                                 contentType: "application/x-www-form-urlencoded",
                                 data: ({"unique_code": unique}),
                                 success: function (data) {
-                                    const jsonData1 = JSON.parse(data);
-                                    if (jsonData1.error !== "") {
-                                        document.getElementById("statusError").innerHTML = jsonData1.error
-                                    } else {
-                                        for (let j = 0; j < jsonData1.status.length; j++) {
-                                            let status1 = jsonData1.status[j]
-                                            if (status1.error.length > 0) {
-                                                document.getElementById(status1.name + "_status").innerHTML = status1.error;
-                                            } else {
-                                                document.getElementById(status1.name + "_status").innerHTML = status1.response;
-                                            }
+                                    const statusResponseJson = JSON.parse(data);
+                                    if (statusResponseJson.error !== "") {
+                                        document.getElementById("statusError").innerHTML = statusResponseJson.error;
+                                        return;
+                                    }
+                                    for (let j = 0; j < statusResponseJson.status.length; j++) {
+                                        let status1 = statusResponseJson.status[j];
+                                        if (status1.error.length > 0) {
+                                            document.getElementById(status1.name + "_status").innerHTML = status1.error;
+                                        } else {
+                                            document.getElementById(status1.name + "_status").innerHTML = status1.response;
                                         }
                                     }
                                 },
@@ -459,14 +465,22 @@
                     contentType: "application/x-www-form-urlencoded",
                     data: ({"unique_code": unique}),
                     success: function (data) {
-                        if (data === "STOPPED!") {
+                        const stopResponseJson = JSON.parse(data);
+                        if (stopResponseJson.error !== "") {
+                            document.getElementById("stopError").innerHTML = stopResponseJson.error;
+                            return;
+                        }
+                        if (stopResponseJson.stopped) {
                             document.getElementById("started_window").hidden = true;
                             document.getElementById("started_window").style.visibility = "hidden";
                             document.getElementById("stopped_window").hidden = false;
                             document.getElementById("stopped_window").style.visibility = "visible";
                             unique = "";
-                            clearInterval(statusInterval)
+                            clearInterval(statusInterval);
+                            return;
                         }
+                        document.getElementById("stopError").innerHTML = "invalid response from server: " + stopResponseJson.stopped;
+                        console.log("invalid response from server: " + stopResponseJson.stopped);
                     },
                 });
                 $("#stop_button").disabled = false;

@@ -52,6 +52,7 @@
                         target="_blank">https://streamer.dev.ystv.co.uk/resume</a><br><br><br>
                 You can stop the stream by pressing the checkbox and then the button (prevent accidental stops)</p>
             <br><br><br>
+            <p id="stopError" style="color: red"></p><br>
             <label for="stop_checkbox">Enable the stop button </label>
             <input name="stop_checkbox" id="stop_checkbox" type="checkbox"><br>
             <input name="stop_button" id="stop_button" type="button" class="button" value="|> STOP <|"
@@ -167,14 +168,22 @@
                     contentType: "application/x-www-form-urlencoded",
                     data: ({"unique_code": unique}),
                     success: function (data) {
-                        if (data === "STOPPED!") {
-                            document.getElementById("resumed").hidden = true;
-                            document.getElementById("resumed").style.visibility = "hidden";
+                        const stopResponseJson = JSON.parse(data);
+                        if (stopResponseJson.error !== "") {
+                            document.getElementById("stopError").innerHTML = stopResponseJson.error;
+                            return;
+                        }
+                        if (stopResponseJson.stopped) {
+                            document.getElementById("started_window").hidden = true;
+                            document.getElementById("started_window").style.visibility = "hidden";
                             document.getElementById("stopped_window").hidden = false;
                             document.getElementById("stopped_window").style.visibility = "visible";
                             unique = "";
                             clearInterval(statusInterval);
+                            return;
                         }
+                        document.getElementById("stopError").innerHTML = "invalid response from server: " + stopResponseJson.stopped;
+                        console.log("invalid response from server: " + stopResponseJson.stopped);
                     },
                 })
                 stopButton.disabled = false;
