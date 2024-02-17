@@ -12,7 +12,7 @@ COPY . .
 
 RUN go mod download
 
-RUN apk update && apk add git && apk add make && apk add protoc && apk add protoc-gen-go --repository https://dl-cdn.alpinelinux.org/alpine/edge/testing/ --allow-untrusted
+RUN apk update && apk add git make protoc && apk add protoc-gen-go --repository https://dl-cdn.alpinelinux.org/alpine/edge/testing/ --allow-untrusted
 
 # Set build variables
 RUN echo -n "-X 'main.Version=$STREAMER_VERSION_ARG" > ./ldflags && \
