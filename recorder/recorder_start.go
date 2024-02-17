@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/patrickmn/go-cache"
-	ffmpeg "github.com/u2takey/ffmpeg-go"
 
 	commonTransporter "github.com/ystv/streamer/common/transporter"
 )
@@ -117,11 +116,6 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 }
 
 func (v *Views) helperStart(transporter commonTransporter.Transporter, streamIn, path, baseFileName string, i uint64) error {
-	//err := ffmpeg.Input(streamIn).Output(fmt.Sprintf("'%s%s_%d.mkv'", path, baseFileName, i)).Run()
-	//if err != nil {
-	//	return fmt.Errorf("failed to run ffmpeg: %w", err)
-	//}
-	_ = ffmpeg.Stream{}
 	c := exec.Command("ffmpeg", "-i", streamIn, "-f", "matroska", "-c", "copy", fmt.Sprintf("%s%s_%d.mkv", path, baseFileName, i))
 	err := v.cache.Add(transporter.Unique, c, cache.NoExpiration)
 	if err != nil {
