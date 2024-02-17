@@ -19,6 +19,8 @@ func (v *Views) status(transporter commonTransporter.Transporter) (commonTranspo
 	fStatusResponse := commonTransporter.ForwarderStatusResponse{}
 	fStatusResponse.Streams = make(map[string]string)
 
+	baseTrim := "size=       0kB time=00:00:00.00 bitrate=N/A speed="
+
 	for i := start; i <= transporter.Payload.(commonTransporter.ForwarderStatus).Streams; i++ {
 		cmd := exec.Command("tail", "-n", "26", fmt.Sprintf("/logs/%s_%d.txt", transporter.Unique, i))
 
@@ -46,8 +48,8 @@ func (v *Views) status(transporter commonTransporter.Transporter) (commonTranspo
 		} else {
 			response = strings.ReplaceAll(tempRespArr[0], "\n", "<br>")
 			response = strings.TrimSpace(response)
-			response = strings.TrimRight(response, "size=       0kB time=00:00:00.00 bitrate=N/A speed=N/A")
-			response = strings.TrimRight(response, "size=       0kB time=00:00:00.00 bitrate=N/A speed=   0x")
+			response = strings.TrimRight(response, baseTrim+"N/A")
+			response = strings.TrimRight(response, baseTrim+"   0x")
 			response += tempRespArr[len(tempRespArr)-1]
 		}
 		if i == 0 {

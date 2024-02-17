@@ -36,8 +36,9 @@ func (v *Views) status(transporter commonTransporter.Transporter) (string, error
 	} else {
 		response = strings.ReplaceAll(tempRespArr[0], "\n", "<br>")
 		response = strings.TrimSpace(response)
-		response = strings.TrimRight(response, "size=       0kB time=00:00:00.00 bitrate=N/A speed=N/A")
-		response = strings.TrimRight(response, "size=       0kB time=00:00:00.00 bitrate=N/A speed=   0x")
+		baseTrim := "size=       0kB time=00:00:00.00 bitrate=N/A speed="
+		response = strings.TrimRight(response, baseTrim+"N/A")
+		response = strings.TrimRight(response, baseTrim+"   0x")
 		response += tempRespArr[len(tempRespArr)-1]
 	}
 	return response, nil
