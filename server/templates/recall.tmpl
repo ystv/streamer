@@ -125,6 +125,7 @@
                     </table>
                     <p id="error" style="color: red"></p><br>
                     <input class="button" id="start" type="button" value="Start"><br><br><br>
+                    <p id="deleteError" style="color: red"></p><br>
                     <label for="delete_checkbox">Enable the delete button </label>
                     <input name="delete_checkbox" id="delete_checkbox" type="checkbox"><br>
                     <input name="delete_button" id="delete_button" type="button" class="button" value="|> DELETE <|"
@@ -523,14 +524,22 @@
                     contentType: "application/x-www-form-urlencoded",
                     data: ({"unique": unique}),
                     success: function (data) {
-                        if (data === "DELETED!") {
+                        const deleteResponseJson = JSON.parse(data);
+                        if (deleteResponseJson.error !== "") {
+                            document.getElementById("deleteError").innerHTML = deleteResponseJson.error;
+                            return;
+                        }
+                        if (deleteResponseJson.deleted) {
                             document.getElementById("recalled").hidden = true;
                             document.getElementById("recall").style.visibility = "hidden";
                             document.getElementById("deleted_window").hidden = false;
                             document.getElementById("deleted_window").style.visibility = "visible";
                             unique = "";
                             clearInterval(statusInterval);
+                            return;
                         }
+                        document.getElementById("deleteError").innerHTML = "invalid response from server: " + deleteResponseJson.deleted;
+                        console.log("invalid response from server: " + deleteResponseJson.deleted);
                     },
                 })
                 deleteButton.disabled = false;
