@@ -15,6 +15,11 @@ RUN addgroup \
     --gid "${STREAMER_RECORDER_USER_GID}" \
     "${STREAMER_RECORDER_USER_GROUP_NAME}"
 
+RUN addgroup \
+    -S \
+    --gid "${STREAMER_RECORDER_USER_UID}" \
+    "${USER}"
+
 RUN adduser \
     --disabled-password \
     --gecos "" \
@@ -23,6 +28,7 @@ RUN adduser \
     --no-create-home \
     --uid "${STREAMER_RECORDER_USER_UID}" \
     --ingroup "${STREAMER_RECORDER_USER_GROUP_NAME}" \
+    --ingroup "${USER}" \
     "${USER}"
 
 VOLUME /logs
