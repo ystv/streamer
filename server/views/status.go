@@ -89,12 +89,10 @@ func (v *Views) StatusFunc(c echo.Context) error {
 					log.Printf("failed to send or receive message from recorder for status: %+v", err)
 					individualResponse.Error = fmt.Sprintf("failed to send or receive message from recorder for status: %+v", err)
 					statusResponse.Status = append(statusResponse.Status, individualResponse)
-					//m["recording"] = fmt.Sprintf("failed to send or receive message from recorder for status: %+v", err)
 					return
 				}
 				if response.Status == wsMessages.Error {
 					log.Printf("failed to get correct response from recorder for status: %s", response.Payload)
-					//m["recording"] = fmt.Sprintf("failed to get correct response from recorder for status: %s", response.Payload)
 					individualResponse.Error = fmt.Sprintf("failed to get correct response from recorder for status: %s", response.Payload)
 					statusResponse.Status = append(statusResponse.Status, individualResponse)
 					return
@@ -103,10 +101,8 @@ func (v *Views) StatusFunc(c echo.Context) error {
 					log.Printf("invalid response from recorder for status: %s", response)
 					individualResponse.Error = fmt.Sprintf("invalid response from recorder for status: %s", response)
 					statusResponse.Status = append(statusResponse.Status, individualResponse)
-					//m["recording"] = fmt.Sprintf("invalid response from recorder for status: %s", response)
 					return
 				}
-				//m["recording"] = response.Payload.(string)
 
 				individualResponse.Response = response.Payload.(string)
 				statusResponse.Status = append(statusResponse.Status, individualResponse)
@@ -132,21 +128,18 @@ func (v *Views) StatusFunc(c echo.Context) error {
 				log.Printf("failed to send or receive message from forwarder for status: %+v", err)
 				individualErrResponse.Error = fmt.Sprintf("failed to send or receive message from forwarder for status: %+v", err)
 				statusResponse.Status = append(statusResponse.Status, individualErrResponse)
-				//m["0"] = fmt.Sprintf("failed to send or receive message from forwarder for status: %+v", err)
 				return
 			}
 			if response.Status == wsMessages.Error {
 				log.Printf("failed to get correct response from forwarder for status: %s", response.Payload)
 				individualErrResponse.Error = fmt.Sprintf("failed to get correct response from forwarder for status: %s", response.Payload)
 				statusResponse.Status = append(statusResponse.Status, individualErrResponse)
-				//m["0"] = fmt.Sprintf("failed to get correct response from forwarder for status: %s", response.Payload)
 				return
 			}
 			if response.Status != wsMessages.Okay {
 				log.Printf("invalid response from recorder for status: %s", response)
 				individualErrResponse.Error = fmt.Sprintf("invalid response from recorder for status: %s", response)
 				statusResponse.Status = append(statusResponse.Status, individualErrResponse)
-				//m["0"] = fmt.Sprintf("invalid response from recorder for status: %s", response)
 				return
 			}
 
@@ -158,50 +151,23 @@ func (v *Views) StatusFunc(c echo.Context) error {
 				log.Printf("failed to decode message from forwarder for status: %+v", err)
 				individualErrResponse.Error = fmt.Sprintf("failed to decode message from forwarder for status: %+v", err)
 				statusResponse.Status = append(statusResponse.Status, individualErrResponse)
-				//m["0"] = fmt.Sprintf("failed to decode message from forwarder for status: %+v", err)
 				return
 			}
 
 			if len(forwarderStatus.Website) > 0 {
-				//tempRespArr := strings.Split(strings.TrimRight(forwarderStatus.Website, "\r"), "\r")
-				var individualResponse StatusResponseIndividual
-				//if len(tempRespArr) == 0 {
-				//	individualResponse = StatusResponseIndividual{
-				//		Name:  "website",
-				//		Error: "failed to get message response from forwarder for website",
-				//	}
-				//} else {
-				//responseBuild := strings.ReplaceAll(tempRespArr[0], "\n", "<br>")
-				//responseBuild += "<br>"
-				//responseBuild += tempRespArr[len(tempRespArr)-1]
-				individualResponse = StatusResponseIndividual{
+				individualResponse := StatusResponseIndividual{
 					Name:     "website",
 					Response: forwarderStatus.Website,
 				}
-				//}
 				statusResponse.Status = append(statusResponse.Status, individualResponse)
-				//m["website"] = forwarderStatus.Website
 			}
 
 			for index, streamOut := range forwarderStatus.Streams {
-				//tempRespArr := strings.Split(strings.TrimRight(streamOut, "\r"), "\r")
-				var individualResponse StatusResponseIndividual
-				//if len(tempRespArr) == 0 {
-				//	individualResponse = StatusResponseIndividual{
-				//		Name:  index,
-				//		Error: "failed to get message response from forwarder for stream " + index,
-				//	}
-				//} else {
-				//	responseBuild := strings.ReplaceAll(tempRespArr[0], "\n", "<br>")
-				//	responseBuild += "<br>"
-				//	responseBuild += tempRespArr[len(tempRespArr)-1]
-				individualResponse = StatusResponseIndividual{
+				individualResponse := StatusResponseIndividual{
 					Name:     index,
 					Response: streamOut,
 				}
-				//}
 				statusResponse.Status = append(statusResponse.Status, individualResponse)
-				//m[strconv.Itoa(int(index))] = streamOut
 			}
 
 			log.Println("Forwarder status success")

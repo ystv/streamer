@@ -29,17 +29,7 @@ func (v *Views) wsHelper(name server.Server, transporter commonTransporter.Trans
 
 	log.Printf("sending message to %s: %#v", name, transporter)
 
-	//b, err := json.Marshal(sendingTransporter)
-	//if err != nil {
-	//	return commonTransporter.ResponseTransporter{}, fmt.Errorf("failed marshaling transporter: %w", err)
-	//}
-
 	out.(chan TransporterRouter) <- sendingTransporter
-
-	//in, valid := v.cache.Get(name.String() + internalChannelNameAppend)
-	//if !valid {
-	//	return commonTransporter.ResponseTransporter{}, fmt.Errorf("channel %s%s is not valid", name, internalChannelNameAppend)
-	//}
 
 	received := <-returningChannel
 
