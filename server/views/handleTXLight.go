@@ -17,7 +17,6 @@ func (v *Views) HandleTXLight(url string, function tx.FunctionTX) error {
 		if err != nil && !strings.Contains(err.Error(), "unexpected EOF") && (resp.StatusCode < http.StatusOK || resp.StatusCode > http.StatusNoContent) {
 			return fmt.Errorf("failed to get response from tx light transmission on: %w", err)
 		}
-		break
 	case tx.AllOff:
 		if !v.ExistingStreamCheck() {
 			resp, err = http.Get(url + tx.AllOff.String())
@@ -30,7 +29,6 @@ func (v *Views) HandleTXLight(url string, function tx.FunctionTX) error {
 				return fmt.Errorf("failed to get response from tx light rehearsal on: %w", err)
 			}
 		}
-		break
 	case tx.RehearsalOn:
 		if !v.ActiveStreamCheck() {
 			resp, err = http.Get(url + tx.RehearsalOn.String())
@@ -38,7 +36,6 @@ func (v *Views) HandleTXLight(url string, function tx.FunctionTX) error {
 				return fmt.Errorf("failed to get response from tx light rehearsal on: %w", err)
 			}
 		}
-		break
 	default:
 		return fmt.Errorf("unexpected function string: \"%s\"", function)
 	}
