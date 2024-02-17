@@ -28,6 +28,12 @@ func (v *Views) DeleteFunc(c echo.Context) error {
 			return c.String(http.StatusOK, "REJECTED!")
 		}
 
+		err = v.store.DeleteStream(unique)
+		if err != nil {
+			log.Printf("failed to delete stored: %+v, unique: %s", err, unique)
+			return c.String(http.StatusOK, "REJECTED!")
+		}
+
 		log.Printf("deleted stored: %s", unique)
 		return c.String(http.StatusOK, "DELETED!")
 	}
