@@ -132,6 +132,8 @@ func (v *Views) StopFunc(c echo.Context) error {
 				return c.JSON(http.StatusOK, response)
 			}
 
+			log.Printf("stopped stream: %s", unique)
+
 			response.Stopped = true
 			return c.JSON(http.StatusOK, response)
 		}
