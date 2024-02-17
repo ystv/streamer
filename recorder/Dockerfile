@@ -4,10 +4,10 @@ LABEL site="ystv-streamer-recorder"
 
 ARG STREAMER_VERSION_ARG
 ARG STREAMER_RECORDER_USER_UID
+ARG STREAMER_RECORDER_USER_GID
 
 # Create recorder.
 ENV USER=recorder
-ENV UID=$STREAMER_RECORDER_USER_UID
 
 # See https://stackoverflow.com/a/55757473/12429735RUN
 RUN adduser \
@@ -16,7 +16,8 @@ RUN adduser \
     --home "/nonexistent" \
     --shell "/sbin/nologin" \
     --no-create-home \
-    --uid "${UID}" \
+    --uid "${STREAMER_RECORDER_USER_UID}" \
+    --gid "${STREAMER_RECORDER_USER_GID}" \
     "${USER}"
 
 VOLUME /logs
