@@ -210,6 +210,8 @@ func (v *Views) StartFunc(c echo.Context) error {
 				return c.JSON(http.StatusOK, response)
 			}
 
+			log.Printf("started stream: %s", string(b))
+
 			response.Unique = string(b)
 			return c.JSON(http.StatusOK, response)
 		}
