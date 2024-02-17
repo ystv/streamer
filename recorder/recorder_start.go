@@ -138,7 +138,7 @@ func (v *Views) helperStart(transporter commonTransporter.Transporter, streamIn,
 	//	return fmt.Errorf("failed to run ffmpeg: %w", err)
 	//}
 	_ = ffmpeg.Stream{}
-	_, err := os.OpenFile(fmt.Sprintf("%s%s_%d.mkv", path, baseFileName, i), os.O_WRONLY|os.O_CREATE, 0666)
+	_, err := os.OpenFile(fmt.Sprintf("%s%s_%d.mkv", path, baseFileName, i), os.O_RDONLY|os.O_CREATE, 0666)
 	if err != nil {
 		return fmt.Errorf("failed to touch file: %w", err)
 	}
