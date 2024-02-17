@@ -71,7 +71,6 @@ func (v *Views) StatusFunc(c echo.Context) error {
 		}
 
 		var statusResponse StatusResponse
-		//m := make(map[string]string)
 		var wg sync.WaitGroup
 		if stream.Recording {
 			wg.Add(2)
