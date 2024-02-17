@@ -4,12 +4,17 @@ LABEL site="ystv-streamer-recorder"
 
 ARG STREAMER_VERSION_ARG
 ARG STREAMER_RECORDER_USER_UID
+ARG STREAMER_RECORDER_USER_GROUP_NAME
 ARG STREAMER_RECORDER_USER_GID
 
 # Create recorder.
 ENV USER=recorder
 
-# See https://stackoverflow.com/a/55757473/12429735RUN
+RUN addgroup \
+    -S \
+    --gid "${STREAMER_RECORDER_USER_GID}" \
+    "${STREAMER_RECORDER_USER_GROUP_NAME}"
+
 RUN adduser \
     --disabled-password \
     --gecos "" \
@@ -17,7 +22,7 @@ RUN adduser \
     --shell "/sbin/nologin" \
     --no-create-home \
     --uid "${STREAMER_RECORDER_USER_UID}" \
-    --gid "${STREAMER_RECORDER_USER_GID}" \
+    --ingroup "${STREAMER_RECORDER_USER_GROUP_NAME}" \
     "${USER}"
 
 VOLUME /logs

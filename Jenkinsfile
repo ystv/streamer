@@ -45,12 +45,13 @@ pipeline {
           environment {
             STREAMER_RECORDER_USER_UID = credentials('streamer-recorder-user-uid')
             STREAMER_RECORDER_USER_GID = credentials('streamer-recorder-user-gid')
+            STREAMER_RECORDER_USER_GROUP_NAME = credentials('streamer-recorder-user-group-name')
           }
           steps {
             script {
               dir("recorder") {
                 docker.withRegistry('https://' + registryEndpoint, 'docker-registry') {
-                  recorderImage = docker.build(recorderImageName, "--build-arg STREAMER_VERSION_ARG=${env.BRANCH_NAME}-${env.BUILD_ID} --build-arg STREAMER_RECORDER_USER_UID=${STREAMER_RECORDER_USER_UID} --build-arg STREAMER_RECORDER_USER_GID=${STREAMER_RECORDER_USER_GID} --no-cache .")
+                  recorderImage = docker.build(recorderImageName, "--build-arg STREAMER_VERSION_ARG=${env.BRANCH_NAME}-${env.BUILD_ID} --build-arg STREAMER_RECORDER_USER_UID=${STREAMER_RECORDER_USER_UID} --build-arg STREAMER_RECORDER_USER_GID=${STREAMER_RECORDER_USER_GID} --build-arg STREAMER_RECORDER_USER_GROUP_NAME=${STREAMER_RECORDER_USER_GROUP_NAME} --no-cache .")
                 }
               }
             }
