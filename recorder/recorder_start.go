@@ -34,7 +34,7 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 		for i := 0; i < len(array)-1; i++ {
 			path += array[i] + "/"
 		}
-		err := os.MkdirAll(v.Config.RecordingLocation+path, 0777)
+		err := os.MkdirAll(v.Config.RecordingLocation+path, 0666)
 		if err != nil {
 			return fmt.Errorf("error creating %s: %w", v.Config.RecordingLocation+path, err)
 		}
@@ -138,11 +138,11 @@ func (v *Views) helperStart(transporter commonTransporter.Transporter, streamIn,
 	//	return fmt.Errorf("failed to run ffmpeg: %w", err)
 	//}
 	_ = ffmpeg.Stream{}
-	_, err := os.OpenFile(fmt.Sprintf("'%s%s_%d.mkv'", path, baseFileName, i), os.O_WRONLY|os.O_CREATE, 0666)
+	_, err := os.OpenFile(fmt.Sprintf("%s%s_%d.mkv", path, baseFileName, i), os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {
 		return fmt.Errorf("failed to touch file: %w", err)
 	}
-	c := exec.Command("ffmpeg", "-i", streamIn, "-f", "matroska", "-c", "copy", fmt.Sprintf("'%s%s_%d.mkv'", path, baseFileName, i))
+	c := exec.Command("ffmpeg", "-i", streamIn, "-f", "matroska", "-c", "copy", fmt.Sprintf("%s%s_%d.mkv", path, baseFileName, i))
 	log.Println(c.String())
 	err = v.cache.Add(transporter.Unique, c, cache.NoExpiration)
 	if err != nil {
