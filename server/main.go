@@ -66,7 +66,7 @@ func main() {
 
 	root := false
 
-	_, err = os.ReadFile("/store/backend.go")
+	_, err = os.ReadFile("/bin/streamer")
 	if err == nil {
 		root = true
 	}
