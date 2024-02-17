@@ -23,11 +23,22 @@ func (v *Views) RecallFunc(c echo.Context) error {
 			log.Println("Recall POST called")
 		}
 
+		errResponse := struct {
+			Error string `json:"error"`
+		}{}
+
 		unique := c.FormValue("unique")
+		if len(unique) != 10 {
+			log.Printf("unique key invalid: %s", unique)
+			errResponse.Error = fmt.Sprintf("unique key invalid: %s", unique)
+			return c.JSON(http.StatusOK, errResponse)
+		}
 
 		stored, err := v.store.FindStored(unique)
 		if err != nil {
-			return fmt.Errorf("failed to get stored: %w, unique: %s", err, unique)
+			log.Printf("failed to get stored: %+v, unique: %s", err, unique)
+			errResponse.Error = fmt.Sprintf("failed to get stored: %+v, unique: %s", err, unique)
+			return c.JSON(http.StatusOK, errResponse)
 		}
 
 		if stored == nil {
