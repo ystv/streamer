@@ -45,7 +45,9 @@ func (v *Views) status(transporter commonTransporter.Transporter) (commonTranspo
 			response = fmt.Sprintf("failed to get message response from forwarder for stream %d", i)
 		} else {
 			response = strings.ReplaceAll(tempRespArr[0], "\n", "<br>")
-			response = strings.TrimRight(response, "size=       0kB time=00:00:00.00 bitrate=N/A speed=N/A    ")
+			response = strings.TrimSpace(response)
+			response = strings.TrimRight(response, "size=       0kB time=00:00:00.00 bitrate=N/A speed=N/A")
+			response = strings.TrimRight(response, "size=       0kB time=00:00:00.00 bitrate=N/A speed=   0x")
 			response += tempRespArr[len(tempRespArr)-1]
 		}
 		if i == 0 {
