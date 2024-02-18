@@ -285,22 +285,18 @@
                     contentType: "application/x-www-form-urlencoded",
                     data: $("#save_form").serialize(),
                     success: function (data) {
-                        const jsonData = JSON.parse(data);
-                        if (jsonData.error !== "") {
-                            error.html(jsonData.error);
+                        const saveResponseJson = JSON.parse(data);
+                        if (saveResponseJson.error !== "") {
+                            error.html(saveResponseJson.error);
                             savePressed = false;
                             return;
                         }
-                        if (data.includes("An error has occurred...\n")) {
-                            error.html(data)
-                            return;
-                        }
-                        $("#unique_code").html(data);
+                        $("#unique_code").html(saveResponseJson.unique);
                         document.getElementById("save_window").hidden = true;
                         document.getElementById("save_window").style.visibility = "hidden";
                         document.getElementById("saved").hidden = false;
                         document.getElementById("saved").style.visibility = "visible";
-                        unique = data;
+                        unique = saveResponseJson.unique;
                     },
                 });
                 saveButton.disabled = false;

@@ -29,6 +29,11 @@ func (v *Views) SaveFunc(c echo.Context) error {
 			log.Println("Save POST called")
 		}
 
+		var response struct {
+			Unique string `json:"unique"`
+			Error  string `json:"error"`
+		}
+
 		endpoint := strings.Split(c.FormValue("endpointsTable"), "~")[1]
 
 		largest := 0
@@ -55,7 +60,9 @@ func (v *Views) SaveFunc(c echo.Context) error {
 
 			streams1, err := v.store.GetStreams()
 			if err != nil {
-				return fmt.Errorf("failed to get streams: %w", err)
+				log.Printf("failed to get streams: %+v", err)
+				response.Error = fmt.Sprintf("failed to get streams: %+v", err)
+				return c.JSON(http.StatusOK, response)
 			}
 
 			if len(streams1) == 0 {
@@ -76,7 +83,9 @@ func (v *Views) SaveFunc(c echo.Context) error {
 
 			stored, err := v.store.GetStored()
 			if err != nil {
-				return fmt.Errorf("failed to get stored: %w", err)
+				log.Printf("failed to get stored: %+v", err)
+				response.Error = fmt.Sprintf("failed to get stored: %+v", err)
+				return c.JSON(http.StatusOK, response)
 			}
 
 			if len(stored) == 0 {
@@ -120,11 +129,15 @@ func (v *Views) SaveFunc(c echo.Context) error {
 
 		s, err := v.store.AddStored(stored)
 		if err != nil {
-			return fmt.Errorf("failed to add stored: %w, unique: %s", err, string(b))
+			log.Printf("failed to add stored: %+v, unique: %s", err, string(b))
+			response.Error = fmt.Sprintf("failed to add stored: %+v, unique: %s", err, string(b))
+			return c.JSON(http.StatusOK, response)
 		}
 
 		if s == nil {
-			return fmt.Errorf("failed to add stored, stored is nil")
+			log.Printf("failed to add stored, stored is nil")
+			response.Error = "failed to add stored, stored is nil"
+			return c.JSON(http.StatusOK, response)
 		}
 
 		err = v.HandleTXLight(v.conf.TransmissionLight, tx.RehearsalOn)
@@ -132,7 +145,9 @@ func (v *Views) SaveFunc(c echo.Context) error {
 			log.Printf("failed to turn transmission light on: %+v, ignoring and continuing", err)
 		}
 
-		return c.String(http.StatusOK, string(b))
+		log.Printf("saved stream: %s", string(b))
+		response.Unique = string(b)
+		return c.JSON(http.StatusOK, response)
 	}
 	return echo.NewHTTPError(http.StatusMethodNotAllowed, "invalid method")
 }
