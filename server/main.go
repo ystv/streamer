@@ -91,6 +91,10 @@ func main() {
 
 	r.loadRoutes()
 
+	watchdog := r.views.InitWatchdog()
+
+	watchdog.Begin()
+
 	log.Printf("streamer server version: %s\n", Version)
 
 	r.router.Logger.Error(r.router.Start(r.config.ServerAddress))

@@ -77,6 +77,11 @@ type (
 		// TransporterUnique is the payload to send to the client
 		TransporterUnique transporter.TransporterUnique
 	}
+
+	Watchdog struct {
+		conf  Config
+		store *store.Store
+	}
 )
 
 const (
