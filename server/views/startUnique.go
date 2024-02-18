@@ -1,7 +1,9 @@
 package views
 
 import (
+	"encoding/xml"
 	"fmt"
+	"github.com/ystv/streamer/server/helper"
 	"log"
 	"math"
 	"net/http"
@@ -31,7 +33,7 @@ func (v *Views) StartUniqueFunc(c echo.Context) error {
 
 		log.Printf("%#v", c.Request().Form)
 
-		return c.JSON(http.StatusOK, `{"error": "testing"}`)
+		//return c.JSON(http.StatusOK, `{"error": "testing"}`)
 
 		var response struct {
 			Unique string `json:"unique"`
@@ -63,12 +65,54 @@ func (v *Views) StartUniqueFunc(c echo.Context) error {
 			Unique: unique,
 		}
 
+		inputEndpoint := c.FormValue("endpointsTable")
+		inputStream := c.FormValue("stream_input")
+
+		streamPageContent, err := helper.GetBody("http://" + v.conf.StreamServer + "stat")
+		if err != nil {
+			log.Printf("failed to get streams from stream server: %+v", err)
+			response.Error = fmt.Sprintf("failed to get streams from stream server: %+v", err)
+			return c.JSON(http.StatusOK, response)
+		}
+
+		var rtmp RTMP
+
+		err = xml.Unmarshal([]byte(streamPageContent), &rtmp)
+		if err != nil {
+			log.Printf("failed to unmarshal xml: %+v", err)
+			response.Error = fmt.Sprintf("failed to unmarshal xml: %+v", err)
+			return c.JSON(http.StatusOK, response)
+		}
+
+		found := false
+
+		var streamIn string
+		endpoint := strings.Split(inputEndpoint, "~")
+	applicationFor:
+		for i := 0; i < len(rtmp.Server.Applications); i++ {
+			if rtmp.Server.Applications[i].Name == endpoint[1] {
+				for j := 0; j < len(rtmp.Server.Applications[i].Live.Streams); j++ {
+					if rtmp.Server.Applications[i].Live.Streams[j].Name == inputStream {
+						found = true
+						streamIn = endpoint[1] + "/" + rtmp.Server.Applications[i].Live.Streams[j].Name
+						break applicationFor
+					}
+				}
+			}
+		}
+
+		if !found {
+			log.Printf("unable to find current stream input")
+			response.Error = "unable to find current stream input"
+			return c.JSON(http.StatusOK, response)
+		}
+
 		fStart := commonTransporter.ForwarderStart{
-			StreamIn: c.FormValue("stream_selector"),
+			StreamIn: streamIn,
 		}
 
 		rStart := commonTransporter.RecorderStart{
-			StreamIn: c.FormValue("stream_selector"),
+			StreamIn: streamIn,
 			PathOut:  c.FormValue("save_path"),
 		}
 
@@ -172,7 +216,7 @@ func (v *Views) StartUniqueFunc(c echo.Context) error {
 			var s *storage.Stream
 			s, err = v.store.AddStream(&storage.Stream{
 				Stream:    unique,
-				Input:     c.FormValue("stream_selector"),
+				Input:     streamIn,
 				Recording: recording,
 				Website:   websiteStream,
 				Streams:   uint64(len(streams)),
