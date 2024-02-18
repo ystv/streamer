@@ -84,6 +84,7 @@ func (v *Views) StartFunc(c echo.Context) error {
 
 			streams1, err := v.store.GetStreams()
 			if err != nil {
+				log.Printf("failed to get streams: %+v", err)
 				response.Error = fmt.Sprintf("failed to get streams: %+v", err)
 				return c.JSON(http.StatusOK, response)
 			}
@@ -102,6 +103,7 @@ func (v *Views) StartFunc(c echo.Context) error {
 
 			stored, err := v.store.GetStored()
 			if err != nil {
+				log.Printf("failed to get stored: %+v", err)
 				response.Error = fmt.Sprintf("failed to get stored: %+v", err)
 				return c.JSON(http.StatusOK, response)
 			}
