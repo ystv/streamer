@@ -305,13 +305,15 @@
                             document.getElementById("website_stream_endpoint").value = recallResponseJson.websiteStream;
                             // $("#tableStatus").append("<tr><td><p class='subtitle'>Website status</p><p id='website_status'></p><br></td></tr>");
                         }
+                        console.log(recallResponseJson.streams);
                         for (let i = 0; i < recallResponseJson.streams; i++) {
-                            let j = i + 1;
-                            if (j !== 1) {
+                            if (i !== 0) {
                                 addStream();
                             }
-                            let recalledStreamOutput = recallResponseJson.streams[i]
-                            document.getElementById("stream_server_" + j).value = recalledStreamOutput.streamServer;
+                            let recalledStreamOutput = recallResponseJson.streams[i];
+                            console.log(i);
+                            console.log(recalledStreamOutput);
+                            document.getElementById("stream_server_" + i).value = recalledStreamOutput.streamServer;
                             document.getElementById("stream_key_" + i).value = recalledStreamOutput.streamKey;
                         }
                         // let streams = dataPart[4].split("±");
