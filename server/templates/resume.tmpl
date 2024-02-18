@@ -139,10 +139,10 @@
                                     if (statusResponseJson.error !== "") {
                                         document.getElementById("statusError").innerHTML = statusResponseJson.error;
                                         console.log(statusResponseJson.error);
-                                        return
+                                        return;
                                     }
                                     for (let j = 0; j < statusResponseJson.status.length; j++) {
-                                        let positionalStatus = statusResponseJson.status[j]
+                                        let positionalStatus = statusResponseJson.status[j];
                                         if (positionalStatus.error.length > 0) {
                                             document.getElementById(positionalStatus.name + "_status").innerHTML = positionalStatus.error;
                                         } else {
@@ -160,7 +160,7 @@
 
             stopButton.click(function () {
                 stopButton.disabled = true;
-                console.log("Stop pressed")
+                console.log("Stop pressed");
                 $.ajax({
                     url: "stop",
                     type: "post",
