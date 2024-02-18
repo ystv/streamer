@@ -46,7 +46,7 @@
                 <p id="result"></p><br>
                 <p class="subtitle">Selection</p>
                 <form id="endpoint_selector">
-                    <table class="table table-bordered" id="endpointTable"></table>
+                    <table class="table table-bordered" id="endpoint_table"></table>
                     <br>
                     <input type="button" id="stream_check" class="button" value="Refresh streams"/>
                 </form>
@@ -133,7 +133,7 @@
                                 </td>
                             </tr>
                         </table>
-                        <p id="error" style="color: red"></p><br>
+                        <p id="start_error" style="color: red"></p><br>
                         <input id="start" type="button" class="button" value="Start"/>
                     </div>
                 </form>
@@ -145,7 +145,7 @@
             <p class="title">STARTED!</p><br><br>
             <p>The stream has been forwarded, the unique code of this forward is below</p><br>
             <p id="unique" class="subtitle"></p><br>
-            <p id="statusError" style="color: red"></p><br>
+            <p id="status_error" style="color: red"></p><br>
             <table class="table table-bordered" id="tableStatus"></table>
             <br>
             <p>This window can be closed as long as you have the code to stop the stream<br>
@@ -154,7 +154,7 @@
                         target="_blank">https://streamer.dev.ystv.co.uk/resume</a><br><br><br>
                 You can stop the stream by pressing the checkbox and then the button (prevent accidental stops)</p>
             <br><br><br>
-            <p id="stopError" style="color: red"></p><br>
+            <p id="stop_error" style="color: red"></p><br>
             <label for="stop_checkbox">Enable the stop button </label>
             <input name="stop_checkbox" id="stop_checkbox" type="checkbox"><br>
             <input name="stop_button" id="stop_button" type="button" class="button" value="|> STOP <|"
@@ -266,7 +266,7 @@
                     let endpoints = data.split(" ");
                     for (let endpoint of endpoints) {
                         let endpointName = endpoint.split("~");
-                        $("#endpointTable").append("<tr>\n" +
+                        $("#endpoint_table").append("<tr>\n" +
                             "<td>\n" +
                             "<label for='" + endpoint + "'>Endpoint: " + endpointName[1] + "</label>\n" +
                             "</td>\n" +
@@ -304,7 +304,9 @@
             let startPressed = false;
 
             let startButton = $("#start");
-            let error = $("#error");
+            let startError = $("#start_error");
+            let statusError = $("#status_error");
+            let stopError = $("#stop_error");
             let savePath = $("#save_path");
 
             startButton.click(function () {
@@ -314,17 +316,17 @@
                 }
                 startPressed = true;
                 startButton.disabled = true;
-                error.html("");
+                startError.html("");
                 if (savePath.val().length > 0 && document.getElementById("record").checked) {
                     if (savePath.val().length === 0) {
                         console.log("SAVE PATH");
-                        error.html("The save path cannot be empty");
+                        startError.html("The save path cannot be empty");
                         startPressed = false;
                         return;
                     }
                     if (!savePath.val().endsWith(".mkv")) {
                         console.log("SAVE FILE");
-                        error.html("The save path must end in \".mkv\"");
+                        startError.html("The save path must end in \".mkv\"");
                         startPressed = false;
                         return;
                     }
@@ -334,7 +336,7 @@
                 if (document.getElementById("website_stream").checked) {
                     if (websiteStreamEndpoint.val().length === 0 || !websiteStreamEndpoint.val().includes("?pwd=")) {
                         console.log("PWD");
-                        error.html("The website stream must contain \"?pwd=\"");
+                        startError.html("The website stream must contain \"?pwd=\"");
                         startPressed = false;
                         return;
                     }
@@ -344,14 +346,14 @@
 
                 if (streamServer0.val().length === 0 || $("#stream_key_0").val().length === 0) {
                     console.log("ADDITIONAL");
-                    error.html("The stream server and stream key cannot be empty");
+                    startError.html("The stream server and stream key cannot be empty");
                     startPressed = false;
                     return;
                 }
 
                 if (!validURL(streamServer0.val())) {
                     console.log("STREAM SERVER");
-                    error.html("The stream server must contain \"rtmp://\" or \"rtmps://\" and needs to be a valid url");
+                    startError.html("The stream server must contain \"rtmp://\" or \"rtmps://\" and needs to be a valid url");
                     startPressed = false;
                     return;
                 }
@@ -369,13 +371,13 @@
                     }
                     if (streamServerJ.val().length === 0 || $("#stream_key_" + j).val().length === 0) {
                         console.log("ADDITIONAL - " + j);
-                        error.html("The stream server and stream key cannot be empty");
+                        startError.html("The stream server and stream key cannot be empty");
                         startPressed = false;
                         return;
                     }
                     if (!validURL(streamServerJ.val())) {
                         console.log("STREAM SERVER - " + j);
-                        error.html("The stream server must contain \"rtmp://\" or \"rtmps://\" and needs to be a valid url");
+                        startError.html("The stream server must contain \"rtmp://\" or \"rtmps://\" and needs to be a valid url");
                         startPressed = false;
                         return;
                     }
@@ -395,7 +397,7 @@
                     success: function (data) {
                         const startResponseJson = JSON.parse(data);
                         if (startResponseJson.error !== "") {
-                            error.html(startResponseJson.error);
+                            startError.html(startResponseJson.error);
                             startPressed = false;
                             return;
                         }
@@ -432,9 +434,10 @@
                                 contentType: "application/x-www-form-urlencoded",
                                 data: ({"unique_code": unique}),
                                 success: function (data) {
+                                    statusError.html("");
                                     const statusResponseJson = JSON.parse(data);
                                     if (statusResponseJson.error !== "") {
-                                        document.getElementById("statusError").innerHTML = statusResponseJson.error;
+                                        statusError.html(statusResponseJson.error);
                                         return;
                                     }
                                     for (let j = 0; j < statusResponseJson.status.length; j++) {
@@ -467,7 +470,7 @@
                     success: function (data) {
                         const stopResponseJson = JSON.parse(data);
                         if (stopResponseJson.error !== "") {
-                            document.getElementById("stopError").innerHTML = stopResponseJson.error;
+                            stopError.html(stopResponseJson.error);
                             return;
                         }
                         if (stopResponseJson.stopped) {
@@ -479,7 +482,7 @@
                             clearInterval(statusInterval);
                             return;
                         }
-                        document.getElementById("stopError").innerHTML = "invalid response from server: " + stopResponseJson.stopped;
+                        stopError.html("invalid response from server: " + stopResponseJson.stopped);
                         console.log("invalid response from server: " + stopResponseJson.stopped);
                     },
                 });

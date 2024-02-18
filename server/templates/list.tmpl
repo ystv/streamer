@@ -35,14 +35,14 @@
                     If the stream is prefixed by "Saved - " then go to <a href="https://streamer.dev.ystv.co.uk/recall">https://streamer.dev.ystv.co.uk/recall</a> In order to start them
             </p><br>
             <p id="listing"></p>
-            <p id="error" style="color: red"></p><br>
+            <p id="list_error" style="color: red"></p><br>
             <input class="button" id="refresh" type="button" value="Refresh">
         </div>
     </div>
     <script>
         $(document).ready(function () {
             $("#refresh").click(function () {
-                $("#error").html("");
+                $("#list_error").html("");
                 $.ajax({
                     url: "list",
                     type: "post",

@@ -33,19 +33,10 @@ func (v *Views) ActiveStreamsFunc(c echo.Context) error {
 		}
 	}
 
-	//stored, err := v.store.GetStored()
-	//if err != nil {
-	//	return &echo.HTTPError{
-	//		Code:     http.StatusInternalServerError,
-	//		Message:  fmt.Errorf("failed to get stored streams: %w", err),
-	//		Internal: fmt.Errorf("failed to get stored streams: %w", err),
-	//	}
-	//}
-
 	data := struct {
 		Streams int `json:"streams"`
 	}{
-		Streams: len(streams), /* + len(stored)*/
+		Streams: len(streams),
 	}
 
 	return c.JSON(http.StatusOK, data)

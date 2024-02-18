@@ -34,7 +34,7 @@
             <form id="resume">
                 <label for="unique">Enter the code you were given after starting the stream in the box below</label><br>
                 <input class="input" name="unique" id="unique" placeholder="ab12cd34ef"><br>
-                <p id="error" style="color: red"></p><br>
+                <p id="resume_error" style="color: red"></p><br>
                 <input class="button" id="submit_unique" type="button" value="Submit">
             </form>
         </div>
@@ -44,6 +44,7 @@
             <p class="title">STREAMING!</p><br>
             <p>The stream has been forwarded, the unique code of this forward is below</p><br>
             <p id="unique_code" class="subtitle"></p><br>
+            <p id="status_error" style="color: red"></p><br>
             <table class="table table-bordered" id="tableStatus"></table>
             <br>
             <p>This window can be closed as long as you have the code to stop the stream<br>
@@ -52,7 +53,7 @@
                         target="_blank">https://streamer.dev.ystv.co.uk/resume</a><br><br><br>
                 You can stop the stream by pressing the checkbox and then the button (prevent accidental stops)</p>
             <br><br><br>
-            <p id="stopError" style="color: red"></p><br>
+            <p id="stop_error" style="color: red"></p><br>
             <label for="stop_checkbox">Enable the stop button </label>
             <input name="stop_checkbox" id="stop_checkbox" type="checkbox"><br>
             <input name="stop_button" id="stop_button" type="button" class="button" value="|> STOP <|"
@@ -81,13 +82,15 @@
         let unique;
         let statusInterval;
 
-        let error = $("#error");
+        let statusError = $("#status_error");
+        let stopError = $("#stop_error");
+        let resumeError = $("#resume_error");
 
         $(document).ready(function () {
             $("#submit_unique").click(function () {
-                error.html("");
+                resumeError.html("");
                 if ($("#unique").val().length === 0) {
-                    error.html("The code field cannot be empty");
+                    resumeError.html("The code field cannot be empty");
                     return;
                 }
                 $.ajax({
@@ -99,13 +102,13 @@
                     success: function (data) {
                         const resumeResponseJson = JSON.parse(data);
                         if (resumeResponseJson.error !== "") {
-                            error.html("Unique code not accepted");
+                            resumeError.html("Unique code not accepted");
                             console.log(resumeResponseJson.error);
                             return;
                         }
 
                         if (resumeResponseJson.response !== "ACCEPTED!") {
-                            error.html("Unique code not accepted");
+                            resumeError.html("Unique code not accepted");
                             console.log(resumeResponseJson.response);
                             return;
                         }
@@ -137,7 +140,7 @@
                                 success: function (data) {
                                     const statusResponseJson = JSON.parse(data);
                                     if (statusResponseJson.error !== "") {
-                                        document.getElementById("statusError").innerHTML = statusResponseJson.error;
+                                        statusError.html(statusResponseJson.error);
                                         console.log(statusResponseJson.error);
                                         return;
                                     }
@@ -170,7 +173,7 @@
                     success: function (data) {
                         const stopResponseJson = JSON.parse(data);
                         if (stopResponseJson.error !== "") {
-                            document.getElementById("stopError").innerHTML = stopResponseJson.error;
+                            stopError.html(stopResponseJson.error);
                             return;
                         }
                         if (stopResponseJson.stopped) {
@@ -182,7 +185,7 @@
                             clearInterval(statusInterval);
                             return;
                         }
-                        document.getElementById("stopError").innerHTML = "invalid response from server: " + stopResponseJson.stopped;
+                        stopError.html("invalid response from server: " + stopResponseJson.stopped);
                         console.log("invalid response from server: " + stopResponseJson.stopped);
                     },
                 })

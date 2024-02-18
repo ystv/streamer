@@ -59,7 +59,7 @@ func (v *Views) StartUniqueFunc(c echo.Context) error {
 			Unique: unique,
 		}
 
-		inputEndpoint := c.FormValue("endpointsTable")
+		inputEndpoint := c.FormValue("endpoints_table")
 		inputStream := c.FormValue("stream_input")
 
 		streamPageContent, err := helper.GetBody("http://" + v.conf.StreamServer + "stat")

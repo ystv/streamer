@@ -40,7 +40,7 @@
             <div class="card">
                 <div class="card-content">
                     <p class="subtitle">Selection</p>
-                    <table class="table table-bordered" id="endpointTable">
+                    <table class="table table-bordered" id="endpoint_table">
                     </table>
                     <br>
                     <label for="stream_input">Stream input </label><br>
@@ -111,7 +111,7 @@
                             </td>
                         </tr>
                     </table>
-                    <p id="error" style="color: red"></p><br>
+                    <p id="save_error" style="color: red"></p><br>
                     <input class="button" id="save_button" type="button" value="Save">
                 </div>
             </div>
@@ -167,12 +167,12 @@
                     let endpoints = data.split(" ");
                     for (let endpoint of endpoints) {
                         let endpointName = endpoint.split("~");
-                        $("#endpointTable").append("<tr>\n" +
+                        $("#endpoint_table").append("<tr>\n" +
                             "<td>\n" +
-                            "<label for='endpointsTable'>Endpoint: " + endpointName[1] + "</label>\n" +
+                            "<label for='endpoints_table'>Endpoint: " + endpointName[1] + "</label>\n" +
                             "</td>\n" +
                             "<td>\n" +
-                            "<input name='endpointsTable' id='" + endpoint + "' value='" + endpoint + "' type='radio' " + ((endpointName[1] === "internal") ? "checked" : "") + "/>\n" +
+                            "<input name='endpoints_table' id='" + endpoint + "' value='" + endpoint + "' type='radio' " + ((endpointName[1] === "internal") ? "checked" : "") + "/>\n" +
                             "</td>" +
                             "</tr>");
                     }
@@ -195,7 +195,7 @@
             let savePressed = false;
 
             let saveButton = $("#save_button");
-            let error = $("#error");
+            let error = $("#save_error");
             let savePath = $("#save_path");
 
             saveButton.click(function () {

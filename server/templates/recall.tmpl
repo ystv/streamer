@@ -34,7 +34,7 @@
             <form id="recall">
                 <label for="unique">Enter the code you were given after saving the details in the box below</label><br>
                 <input class="input" name="unique" id="unique" placeholder="ab12cd34ef"><br>
-                <p id="recallError" style="color: red"></p><br>
+                <p id="recall_error" style="color: red"></p><br>
                 <input class="button" id="submit_unique" type="button" value="Submit">
             </form>
         </div>
@@ -52,7 +52,7 @@
             <div class="card">
                 <div class="card-content">
                     <p class="subtitle">Selection</p>
-                    <table class="table table-bordered" id="endpointTable">
+                    <table class="table table-bordered" id="endpoint_table">
                     </table>
                     <br>
                     <label for="stream_input">Stream input </label><br>
@@ -123,9 +123,9 @@
                             </td>
                         </tr>
                     </table>
-                    <p id="startError" style="color: red"></p><br>
+                    <p id="start_error" style="color: red"></p><br>
                     <input class="button" id="start" type="button" value="Start"><br><br><br>
-                    <p id="deleteError" style="color: red"></p><br>
+                    <p id="delete_error" style="color: red"></p><br>
                     <label for="delete_checkbox">Enable the delete button </label>
                     <input name="delete_checkbox" id="delete_checkbox" type="checkbox"><br>
                     <input name="delete_button" id="delete_button" type="button" class="button" value="|> DELETE <|"
@@ -139,7 +139,7 @@
             <p class="title">STARTED!</p><br><br>
             <p>The stream has been forwarded, the unique code of this forward is below</p><br>
             <p id="unique1" class="subtitle"></p><br>
-            <p id="statusError" style="color: red"></p><br>
+            <p id="status_error" style="color: red"></p><br>
             <table class="table table-bordered" id="tableStatus"></table>
             <br>
             <p>This window can be closed as long as you have the code to stop the stream<br>
@@ -148,7 +148,7 @@
                         target="_blank">https://streamer.dev.ystv.co.uk/resume</a><br><br><br>
                 You can stop the stream by pressing the checkbox and then the button (prevent accidental stops)</p>
             <br><br><br>
-            <p id="stopError" style="color: red"></p><br>
+            <p id="stop_error" style="color: red"></p><br>
             <label for="stop_checkbox">Enable the stop button </label>
             <input name="stop_checkbox" id="stop_checkbox" type="checkbox"><br>
             <input name="stop_button" id="stop_button" type="button" class="button" value="|> STOP <|"
@@ -242,20 +242,23 @@
                     let endpoints = data.split(" ");
                     for (let endpoint of endpoints) {
                         let endpointName = endpoint.split("~");
-                        $("#endpointTable").append("<tr>\n" +
+                        $("#endpoint_table").append("<tr>\n" +
                             "<td>\n" +
-                            "<label for='endpointsTable'>Endpoint: " + endpointName[1] + "</label>\n" +
+                            "<label for='endpoints_table'>Endpoint: " + endpointName[1] + "</label>\n" +
                             "</td>\n" +
                             "<td>\n" +
-                            "<input name='endpointsTable' id='" + endpoint + "' value='" + endpoint + "' type='radio' " + ((endpointName[1] === "internal") ? "checked" : "") + "/>\n" +
+                            "<input name='endpoints_table' id='" + endpoint + "' value='" + endpoint + "' type='radio' " + ((endpointName[1] === "internal") ? "checked" : "") + "/>\n" +
                             "</td>" +
                             "</tr>");
                     }
                 },
             });
 
-            let recallError = $("#recallError");
-            let startError = $("#startError");
+            let recallError = $("#recall_error");
+            let startError = $("#start_error");
+            let statusError = $("#status_error");
+            let stopError = $("#stop_error");
+            let deleteError = $("#delete_error");
 
             $("#submit_unique").click(function () {
                 recallError.html("")
@@ -270,11 +273,6 @@
                     contentType: "application/x-www-form-urlencoded",
                     data: $("#recall").serialize(),
                     success: function (data) {
-                        // let dataPart = data.split("~");
-                        // if (dataPart[0] !== "ACCEPTED!") {
-                        //     recallError.html("Unique code not accepted");
-                        //     return;
-                        // }
                         const recallResponseJson = JSON.parse(data);
                         if (recallResponseJson.error !== "") {
                             recallError.html(recallResponseJson.error);
@@ -287,23 +285,18 @@
                         unique = recallResponseJson.unique;
                         console.log(unique);
                         document.getElementById("unique_code").value = unique;
-                        // let input = dataPart[1].split("/");
-                        // document.getElementById("stream_input").value = input[1];
                         document.getElementById("stream_input").value = recallResponseJson.inputStream;
                         if (recallResponseJson.recordingPath !== "") {
                             document.getElementById("record").checked = true;
                             document.getElementById("save_path").style.visibility = "visible";
                             document.getElementById("save_path").setAttribute("required", "required");
                             document.getElementById("save_path").value = recallResponseJson.recordingPath;
-                            // document.getElementById("save_path").value = dataPart[2];
-                            // $("#tableStatus").append("<tr><td><p class='subtitle'>Recording status</p><p id='recording_status'></p><br></td></tr>");
                         }
                         if (recallResponseJson.websiteStream !== "") {
                             document.getElementById("website_stream").checked = true;
                             document.getElementById("website_stream_endpoint").style.visibility = "visible";
                             document.getElementById("website_stream_endpoint").setAttribute("required", "required");
                             document.getElementById("website_stream_endpoint").value = recallResponseJson.websiteStream;
-                            // $("#tableStatus").append("<tr><td><p class='subtitle'>Website status</p><p id='website_status'></p><br></td></tr>");
                         }
                         console.log(recallResponseJson.streams);
                         for (let i = 0; i < recallResponseJson.streams.length; i++) {
@@ -316,18 +309,8 @@
                             document.getElementById("stream_server_" + i).value = recalledStreamOutput.streamServer;
                             document.getElementById("stream_key_" + i).value = recalledStreamOutput.streamKey;
                         }
-                        // let streams = dataPart[4].split("±");
-                        // for (let i = 0; i < streams.length; i++) {
-                        //     if (i !== 0) {
-                        //         addStream();
-                        //     }
-                        //     let parts = streams[i].split("|")
-                        //     document.getElementById("stream_server_" + i).value = parts[0];
-                        //     document.getElementById("stream_key_" + i).value = parts[1];
-                        //     // $("#tableStatus").append("<tr><td><p class='subtitle'>Stream " + i + " status</p><p id='" + i + "_status'></p><br></td></tr>");
-                        // }
 
-                        let endpointTable = document.getElementById("endpointTable");
+                        let endpointTable = document.getElementById("endpoint_table");
 
                         for (let i = 0; i < endpointTable.rows.length; i++) {
                             let next = true;
@@ -337,7 +320,6 @@
                                 let temp = col.getElementsByTagName("input");
                                 if (temp.length > 0) {
                                     let element = temp[0];
-                                    // console.log(element.id);
                                     let parts = element.id.split("~")
                                     if (parts[1] === recallResponseJson.inputEndpoint) {
                                         element.checked = true;
@@ -484,17 +466,11 @@
                                 contentType: "application/x-www-form-urlencoded",
                                 data: ({"unique_code": unique}),
                                 success: function (data) {
-                                    // let statusData = data.split("<br><br><br>");
-                                    // for (let j = 0; j < statusData.length; j++) {
-                                    //     let tempStatus = statusData[j].split(":");
-                                    //     let tempStatus1 = tempStatus[0].trim() + "_status";
-                                    //     let first = statusData[j].indexOf(":") + 1;
-                                    //     document.getElementById(tempStatus1).innerHTML = statusData[j].substring(first);
-                                    // }
+                                    statusError.html("");
 
                                     const statusResponseJson = JSON.parse(data);
                                     if (statusResponseJson.error !== "") {
-                                        document.getElementById("statusError").innerHTML = statusResponseJson.error;
+                                        statusError.html(statusResponseJson.error);
                                         return;
                                     }
                                     for (let j = 0; j < statusResponseJson.status.length; j++) {
@@ -527,7 +503,7 @@
                     success: function (data) {
                         const stopResponseJson = JSON.parse(data);
                         if (stopResponseJson.error !== "") {
-                            document.getElementById("stopError").innerHTML = stopResponseJson.error;
+                            stopError.html(stopResponseJson.error);
                             return;
                         }
                         if (stopResponseJson.stopped) {
@@ -539,7 +515,7 @@
                             clearInterval(statusInterval);
                             return;
                         }
-                        document.getElementById("stopError").innerHTML = "invalid response from server: " + stopResponseJson.stopped;
+                        stopError.html("invalid response from server: " + stopResponseJson.stopped);
                         console.log("invalid response from server: " + stopResponseJson.stopped);
                     },
                 })
@@ -560,7 +536,7 @@
                     success: function (data) {
                         const deleteResponseJson = JSON.parse(data);
                         if (deleteResponseJson.error !== "") {
-                            document.getElementById("deleteError").innerHTML = deleteResponseJson.error;
+                            deleteError.html(deleteResponseJson.error);
                             return;
                         }
                         if (deleteResponseJson.deleted) {
@@ -572,7 +548,7 @@
                             clearInterval(statusInterval);
                             return;
                         }
-                        document.getElementById("deleteError").innerHTML = "invalid response from server: " + deleteResponseJson.deleted;
+                        deleteError.html("invalid response from server: " + deleteResponseJson.deleted);
                         console.log("invalid response from server: " + deleteResponseJson.deleted);
                     },
                 })

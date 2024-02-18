@@ -34,7 +34,7 @@ func (v *Views) SaveFunc(c echo.Context) error {
 			Error  string `json:"error"`
 		}
 
-		endpoint := strings.Split(c.FormValue("endpointsTable"), "~")[1]
+		endpoint := strings.Split(c.FormValue("endpoints_table"), "~")[1]
 
 		largest := 0
 		var numbers []int
