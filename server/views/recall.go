@@ -33,8 +33,8 @@ func (v *Views) RecallFunc(c echo.Context) error {
 			Unique        string         `json:"unique"`
 			InputEndpoint string         `json:"inputEndpoint"`
 			InputStream   string         `json:"inputStream"`
-			RecordingPath string         `json:"recordingPath,omitempty"`
-			WebsiteStream string         `json:"websiteStream,omitempty"`
+			RecordingPath string         `json:"recordingPath"`
+			WebsiteStream string         `json:"websiteStream"`
 			Streams       []RecallStream `json:"streams"`
 			Error         string         `json:"error"`
 		}{}
