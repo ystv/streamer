@@ -45,11 +45,11 @@ func (v *Views) StartFunc(c echo.Context) error {
 			Error  string `json:"error"`
 		}
 
-		recording := false
-		websiteStream := false
+		//recording := false
+		//websiteStream := false
 
 		if c.FormValue("website_stream") == "on" {
-			websiteStream = true
+			//websiteStream = true
 			if v.websiteCheck(c.FormValue("website_stream_endpoint")) {
 				fStart.WebsiteOut = c.FormValue("website_stream_endpoint")
 			} else {
@@ -141,7 +141,7 @@ func (v *Views) StartFunc(c echo.Context) error {
 		go func() {
 			defer wg.Done()
 			if c.FormValue("record") == "on" {
-				recording = true
+				//recording = true
 				recorderTransporter := transporter
 				recorderTransporter.Payload = rStart
 				wsResponse, err := v.wsHelper(server.Recorder, recorderTransporter)
@@ -194,9 +194,9 @@ func (v *Views) StartFunc(c echo.Context) error {
 			s, err := v.store.AddStream(&storage.Stream{
 				Stream:    string(b),
 				Input:     c.FormValue("stream_selector"),
-				Recording: recording,
-				Website:   websiteStream,
-				Streams:   uint64(len(streams)),
+				Recording: rStart.PathOut,
+				Website:   fStart.WebsiteOut,
+				Streams:   streams,
 			})
 			if err != nil {
 				log.Printf("invalid response from Forwarder for start: %s", response)

@@ -110,11 +110,11 @@ func (v *Views) StartUniqueFunc(c echo.Context) error {
 			PathOut:  c.FormValue("save_path"),
 		}
 
-		recording := false
-		websiteStream := false
+		//recording := false
+		//websiteStream := false
 
 		if c.FormValue("website_stream") == "on" {
-			websiteStream = true
+			//websiteStream = true
 			if v.websiteCheck(c.FormValue("website_stream_endpoint")) {
 				fStart.WebsiteOut = c.FormValue("website_stream_endpoint")
 			} else {
@@ -155,7 +155,7 @@ func (v *Views) StartUniqueFunc(c echo.Context) error {
 		go func() {
 			defer wg.Done()
 			if c.FormValue("record") == "on" {
-				recording = true
+				//recording = true
 				recorderTransporter := transporter
 				recorderTransporter.Payload = rStart
 				var wsResponse commonTransporter.ResponseTransporter
@@ -211,9 +211,9 @@ func (v *Views) StartUniqueFunc(c echo.Context) error {
 			s, err = v.store.AddStream(&storage.Stream{
 				Stream:    unique,
 				Input:     streamIn,
-				Recording: recording,
-				Website:   websiteStream,
-				Streams:   uint64(len(streams)),
+				Recording: rStart.PathOut,
+				Website:   fStart.WebsiteOut,
+				Streams:   streams,
 			})
 			if err != nil {
 				log.Printf("invalid response from Forwarder for start: %s", response)

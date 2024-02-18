@@ -66,13 +66,13 @@ func (v *Views) StatusFunc(c echo.Context) error {
 
 		//nolint:staticcheck
 		fStatus := commonTransporter.ForwarderStatus{
-			Website: stream.Website,
-			Streams: int(stream.Streams),
+			Website: len(stream.Website) > 0,
+			Streams: len(stream.Streams),
 		}
 
 		var statusResponse StatusResponse
 		var wg sync.WaitGroup
-		if stream.Recording {
+		if len(stream.Recording) > 0 {
 			wg.Add(2)
 			go func() {
 				defer wg.Done()
