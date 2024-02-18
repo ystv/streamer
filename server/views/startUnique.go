@@ -235,6 +235,13 @@ func (v *Views) StartUniqueFunc(c echo.Context) error {
 				return c.JSON(http.StatusOK, response)
 			}
 
+			err = v.store.DeleteStored(unique)
+			if err != nil {
+				log.Printf("failed to delete stored: %+v, unique: %s", err, unique)
+				response.Error = fmt.Sprintf("failed to delete stored: %+v, unique: %s", err, unique)
+				return c.JSON(http.StatusOK, response)
+			}
+
 			log.Printf("started stream: %s", unique)
 
 			response.Unique = unique
