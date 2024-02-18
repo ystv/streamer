@@ -29,12 +29,6 @@ func (v *Views) StartUniqueFunc(c echo.Context) error {
 			log.Println("StartUnique POST called")
 		}
 
-		_ = c.Request().ParseForm()
-
-		log.Printf("%#v", c.Request().Form)
-
-		//return c.JSON(http.StatusOK, `{"error": "testing"}`)
-
 		var response struct {
 			Unique string `json:"unique"`
 			Error  string `json:"error"`
