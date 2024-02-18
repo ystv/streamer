@@ -191,7 +191,9 @@ func (v *Views) StartUniqueFunc(c echo.Context) error {
 			return c.JSON(http.StatusOK, response)
 		}
 
-		response.Error = strings.Join(errorMessages, ",")
+		errMsg := strings.Join(errorMessages, ",")
+		log.Printf("failed to start: %+v", errMsg)
+		response.Error = fmt.Sprintf("failed to start: %+v", errMsg)
 		return c.JSON(http.StatusOK, response)
 	}
 	return echo.NewHTTPError(http.StatusMethodNotAllowed, "invalid method")
