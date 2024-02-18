@@ -101,8 +101,8 @@ func (v *Views) SaveFunc(c echo.Context) error {
 			}
 		}
 
-		recording := "§"
-		website := "§"
+		recording := ""
+		website := ""
 
 		if c.FormValue("record") == "on" {
 			recording = c.FormValue("save_path")
