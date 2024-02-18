@@ -95,7 +95,7 @@ func main() {
 
 	watchdog.Begin()
 
-	log.Printf("streamer server version: %s\n", Version)
+	log.Printf("streamer server version: %s", Version)
 
 	r.router.Logger.Error(r.router.Start(r.config.ServerAddress))
 	log.Fatalf("failed to start router on address %s", r.config.ServerAddress)
