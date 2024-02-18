@@ -306,12 +306,12 @@
                             // $("#tableStatus").append("<tr><td><p class='subtitle'>Website status</p><p id='website_status'></p><br></td></tr>");
                         }
                         console.log(recallResponseJson.streams);
-                        for (let i = 0; i < recallResponseJson.streams; i++) {
+                        for (let i = 0; i < recallResponseJson.streams.length; i++) {
+                            console.log(i);
                             if (i !== 0) {
                                 addStream();
                             }
                             let recalledStreamOutput = recallResponseJson.streams[i];
-                            console.log(i);
                             console.log(recalledStreamOutput);
                             document.getElementById("stream_server_" + i).value = recalledStreamOutput.streamServer;
                             document.getElementById("stream_key_" + i).value = recalledStreamOutput.streamKey;
