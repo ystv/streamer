@@ -134,6 +134,38 @@ func (store *Store) AddStored(stored *storage.Stored) (*storage.Stored, error) {
 	return stored, nil
 }
 
+func (store *Store) DeleteStored(unique string) error {
+	streamer, err := store.backend.Read()
+	if err != nil {
+		return err
+	}
+
+	s := streamer.Stored
+	found := false
+	var index int
+	var v *storage.Stored
+	for index, v = range s {
+		if v.Stream == unique {
+			found = true
+			break
+		}
+	}
+
+	if found {
+		copy(s[index:], s[index+1:])   // Shift a[i+1:] left one index
+		s[len(s)-1] = nil              // Erase last element (write zero value)
+		streamer.Stored = s[:len(s)-1] // Truncate slice
+	} else {
+		return fmt.Errorf("stream not found for DeleteStored")
+	}
+
+	if err = store.backend.Write(streamer); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (store *Store) Get() (*storage.Streamer, error) {
 	return store.backend.Read()
 }

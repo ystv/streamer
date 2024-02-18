@@ -39,7 +39,7 @@ func (v *Views) DeleteFunc(c echo.Context) error {
 			return c.JSON(http.StatusOK, response)
 		}
 
-		err = v.store.DeleteStream(unique)
+		err = v.store.DeleteStored(unique)
 		if err != nil {
 			log.Printf("failed to delete stored: %+v, unique: %s", err, unique)
 			response.Error = fmt.Sprintf("failed to delete stored: %+v, unique: %s", err, unique)
