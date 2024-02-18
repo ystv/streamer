@@ -34,7 +34,7 @@
             <form id="recall">
                 <label for="unique">Enter the code you were given after saving the details in the box below</label><br>
                 <input class="input" name="unique" id="unique" placeholder="ab12cd34ef"><br>
-                <p id="error" style="color: red"></p><br>
+                <p id="recallError" style="color: red"></p><br>
                 <input class="button" id="submit_unique" type="button" value="Submit">
             </form>
         </div>
@@ -123,7 +123,7 @@
                             </td>
                         </tr>
                     </table>
-                    <p id="error" style="color: red"></p><br>
+                    <p id="startError" style="color: red"></p><br>
                     <input class="button" id="start" type="button" value="Start"><br><br><br>
                     <p id="deleteError" style="color: red"></p><br>
                     <label for="delete_checkbox">Enable the delete button </label>
@@ -139,6 +139,7 @@
             <p class="title">STARTED!</p><br><br>
             <p>The stream has been forwarded, the unique code of this forward is below</p><br>
             <p id="unique1" class="subtitle"></p><br>
+            <p id="statusError" style="color: red"></p><br>
             <table class="table table-bordered" id="tableStatus"></table>
             <br>
             <p>This window can be closed as long as you have the code to stop the stream<br>
@@ -253,12 +254,13 @@
                 },
             });
 
-            let error = $("#error");
+            let recallError = $("#recallError");
+            let startError = $("#startError");
 
             $("#submit_unique").click(function () {
-                error.html("")
+                recallError.html("")
                 if ($("#unique").val().length === 0) {
-                    $("#error").html("The code field cannot be empty");
+                    recallError.html("The code field cannot be empty");
                     return;
                 }
                 $.ajax({
@@ -268,45 +270,60 @@
                     contentType: "application/x-www-form-urlencoded",
                     data: $("#recall").serialize(),
                     success: function (data) {
-                        let dataPart = data.split("~");
-                        if (dataPart[0] !== "ACCEPTED!") {
-                            $("#error").html("Unique code not accepted");
+                        // let dataPart = data.split("~");
+                        // if (dataPart[0] !== "ACCEPTED!") {
+                        //     recallError.html("Unique code not accepted");
+                        //     return;
+                        // }
+                        const recallResponseJson = JSON.parse(data);
+                        if (recallResponseJson.error !== "") {
+                            recallError.html(recallResponseJson.error);
                             return;
                         }
                         document.getElementById("enter").hidden = true;
                         document.getElementById("enter").style.visibility = "hidden";
                         document.getElementById("recalled").hidden = false;
                         document.getElementById("recalled").style.visibility = "visible";
-                        unique = $("#unique").val();
+                        unique = recallResponseJson.unique;
                         console.log(unique);
                         document.getElementById("unique_code").value = unique;
-                        let input = dataPart[1].split("/");
-                        document.getElementById("stream_input").value = input[1];
-                        if (dataPart[2] !== "§") {
+                        // let input = dataPart[1].split("/");
+                        // document.getElementById("stream_input").value = input[1];
+                        document.getElementById("stream_input").value = recallResponseJson.inputStream;
+                        if (recallResponseJson.recordingPath !== "") {
                             document.getElementById("record").checked = true;
                             document.getElementById("save_path").style.visibility = "visible";
                             document.getElementById("save_path").setAttribute("required", "required");
-                            document.getElementById("save_path").value = dataPart[2];
+                            document.getElementById("save_path").value = recallResponseJson.recordingPath;
+                            // document.getElementById("save_path").value = dataPart[2];
                             // $("#tableStatus").append("<tr><td><p class='subtitle'>Recording status</p><p id='recording_status'></p><br></td></tr>");
                         }
-                        if (dataPart[3] !== "§") {
+                        if (recallResponseJson.websiteStream !== "") {
                             document.getElementById("website_stream").checked = true;
                             document.getElementById("website_stream_endpoint").style.visibility = "visible";
                             document.getElementById("website_stream_endpoint").setAttribute("required", "required");
-                            document.getElementById("website_stream_endpoint").value = dataPart[3];
+                            document.getElementById("website_stream_endpoint").value = recallResponseJson.websiteStream;
                             // $("#tableStatus").append("<tr><td><p class='subtitle'>Website status</p><p id='website_status'></p><br></td></tr>");
                         }
-                        let streams = dataPart[4].split("±");
-                        let noStreams = streams.length;
-                        for (let i = 0; i < noStreams; i++) {
-                            if (i !== 0) {
+                        for (let i = 0; i < recallResponseJson.streams; i++) {
+                            let j = i + 1;
+                            if (j !== 1) {
                                 addStream();
                             }
-                            let parts = streams[i].split("|")
-                            document.getElementById("stream_server_" + i).value = parts[0];
-                            document.getElementById("stream_key_" + i).value = parts[1];
-                            // $("#tableStatus").append("<tr><td><p class='subtitle'>Stream " + i + " status</p><p id='" + i + "_status'></p><br></td></tr>");
+                            let recalledStreamOutput = recallResponseJson.streams[i]
+                            document.getElementById("stream_server_" + j).value = recalledStreamOutput.streamServer;
+                            document.getElementById("stream_key_" + i).value = recalledStreamOutput.streamKey;
                         }
+                        // let streams = dataPart[4].split("±");
+                        // for (let i = 0; i < streams.length; i++) {
+                        //     if (i !== 0) {
+                        //         addStream();
+                        //     }
+                        //     let parts = streams[i].split("|")
+                        //     document.getElementById("stream_server_" + i).value = parts[0];
+                        //     document.getElementById("stream_key_" + i).value = parts[1];
+                        //     // $("#tableStatus").append("<tr><td><p class='subtitle'>Stream " + i + " status</p><p id='" + i + "_status'></p><br></td></tr>");
+                        // }
 
                         let endpointTable = document.getElementById("endpointTable");
 
@@ -320,7 +337,7 @@
                                     let element = temp[0];
                                     // console.log(element.id);
                                     let parts = element.id.split("~")
-                                    if (parts[1] === input[0]) {
+                                    if (parts[1] === recallResponseJson.inputEndpoint) {
                                         element.checked = true;
                                         next = false;
                                         break;
@@ -347,20 +364,20 @@
                 startPressed = true;
                 startButton.disabled = true;
 
-                error.html("")
+                startError.html("")
 
                 let savePath = $("#save_path");
 
                 if (savePath.val().length > 0 && document.getElementById("record").checked) {
                     if (savePath.val().length === 0) {
                         console.log("SAVE PATH");
-                        error.html("The save path cannot be empty");
+                        startError.html("The save path cannot be empty");
                         startPressed = false;
                         return;
                     }
                     if (!savePath.val().endsWith(".mkv")) {
                         console.log("SAVE FILE");
-                        error.html("The save path must end in \".mkv\"");
+                        startError.html("The save path must end in \".mkv\"");
                         startPressed = false;
                         return;
                     }
@@ -370,7 +387,7 @@
                 if (document.getElementById("website_stream").checked) {
                     if (websiteStreamEndpoint.val().length === 0 || !websiteStreamEndpoint.val().includes("?pwd=")) {
                         console.log("PWD");
-                        error.html("The website stream must contain \"?pwd=\"");
+                        startError.html("The website stream must contain \"?pwd=\"");
                         startPressed = false;
                         return;
                     }
@@ -378,13 +395,13 @@
                 let streamServer0 = $("#stream_server_0");
                 if (streamServer0.val().length === 0 || $("#stream_key_0").val().length === 0) {
                     console.log("ADDITIONAL");
-                    $("#error").html("The stream server and stream key cannot be empty");
+                    startError.html("The stream server and stream key cannot be empty");
                     startPressed = false;
                     return;
                 }
                 if (!validURL(streamServer0.val())) {
                     console.log("STREAM SERVER");
-                    error.html("The stream server must contain \"rtmp://\" or \"rtmps://\" and needs to be a valid url");
+                    startError.html("The stream server must contain \"rtmp://\" or \"rtmps://\" and needs to be a valid url");
                     startPressed = false;
                     return;
                 }
@@ -401,13 +418,13 @@
                     }
                     if (streamServerJ.val().length === 0 || $("#stream_key_" + j).val().length === 0) {
                         console.log("ADDITIONAL - " + j);
-                        error.html("The stream server and stream key cannot be empty");
+                        startError.html("The stream server and stream key cannot be empty");
                         startPressed = false;
                         return;
                     }
                     if (!validURL(streamServerJ.val())) {
                         console.log("STREAM SERVER - " + j);
-                        error.html("The stream server must contain \"rtmp://\" or \"rtmps://\" and needs to be a valid url");
+                        startError.html("The stream server must contain \"rtmp://\" or \"rtmps://\" and needs to be a valid url");
                         startPressed = false;
                         return;
                     }
@@ -425,31 +442,32 @@
                     contentType: "application/x-www-form-urlencoded",
                     data: $("#recall_form").serialize(),
                     success: function (data) {
-                        if (data.includes("An error has occurred...\n")) {
-                            error.html(data);
+                        const startResponseJson = JSON.parse(data);
+                        if (startResponseJson.error !== "") {
+                            startError.html(startResponseJson.error);
                             startPressed = false;
                             return;
                         }
-                        console.log(data);
-                        $("#unique1").html(data);
+                        console.log(startResponseJson);
+                        $("#unique1").html(startResponseJson.unique);
                         document.getElementById("recalled").hidden = true;
                         document.getElementById("recalled").style.visibility = "hidden";
                         document.getElementById("started_window").hidden = false;
                         document.getElementById("started_window").style.visibility = "visible";
-                        unique = data;
+                        unique = startResponseJson.unique;
                         let tableStatus = $("#tableStatus");
                         if (document.getElementById("record").checked) {
-                            tableStatus.append("<tr><td><p class='subtitle'>Recording status</p></td><td><p id='recording_status'></p><br></td></tr>");
+                            tableStatus.append("<tr><td><p class='subtitle'>Recording status</p><pre id='recording_status'></pre><br></td></tr>");
                         }
                         if (document.getElementById("website_stream").checked) {
-                            tableStatus.append("<tr><td><p class='subtitle'>Website status</p></td><td><p id='website_status'></p><br></td></tr>");
+                            tableStatus.append("<tr><td><p class='subtitle'>Website status</p><pre id='website_status'></pre><br></td></tr>");
                         }
-                        tableStatus.append("<tr><td><p class='subtitle'>Stream 1 status</p></td><td><p id='1_status'></p><br></td></tr>");
+                        tableStatus.append("<tr><td><p class='subtitle'>Stream 1 status</p><pre id='1_status'></pre><br></td></tr>");
                         let k = 2;
                         for (let j = 1; j < i; j++) {
                             try {
                                 document.getElementById("row_" + j)
-                                tableStatus.append("<tr><td><p class='subtitle'>Stream " + k + " status</p></td><td><p id='" + k + "_status'></p><br></td></tr>");
+                                tableStatus.append("<tr><td><p class='subtitle'>Stream " + k + " status</p><pre id='" + k + "_status'></pre><br></td></tr>");
                                 k++;
                             } catch (e) {
 
@@ -464,12 +482,26 @@
                                 contentType: "application/x-www-form-urlencoded",
                                 data: ({"unique_code": unique}),
                                 success: function (data) {
-                                    let statusData = data.split("<br><br><br>");
-                                    for (let j = 0; j < statusData.length; j++) {
-                                        let tempStatus = statusData[j].split(":");
-                                        let tempStatus1 = tempStatus[0].trim() + "_status";
-                                        let first = statusData[j].indexOf(":") + 1;
-                                        document.getElementById(tempStatus1).innerHTML = statusData[j].substring(first);
+                                    // let statusData = data.split("<br><br><br>");
+                                    // for (let j = 0; j < statusData.length; j++) {
+                                    //     let tempStatus = statusData[j].split(":");
+                                    //     let tempStatus1 = tempStatus[0].trim() + "_status";
+                                    //     let first = statusData[j].indexOf(":") + 1;
+                                    //     document.getElementById(tempStatus1).innerHTML = statusData[j].substring(first);
+                                    // }
+
+                                    const statusResponseJson = JSON.parse(data);
+                                    if (statusResponseJson.error !== "") {
+                                        document.getElementById("statusError").innerHTML = statusResponseJson.error;
+                                        return;
+                                    }
+                                    for (let j = 0; j < statusResponseJson.status.length; j++) {
+                                        let status1 = statusResponseJson.status[j];
+                                        if (status1.error.length > 0) {
+                                            document.getElementById(status1.name + "_status").innerHTML = status1.error;
+                                        } else {
+                                            document.getElementById(status1.name + "_status").innerHTML = status1.response;
+                                        }
                                     }
                                 },
                             })
