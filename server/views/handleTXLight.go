@@ -2,6 +2,7 @@ package views
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 
@@ -32,6 +33,7 @@ func (v *Views) HandleTXLight(url string, function tx.FunctionTX) error {
 	case tx.RehearsalOn:
 		if !v.ActiveStreamCheck() {
 			resp, err = http.Get(url + tx.RehearsalOn.String())
+			log.Printf("response: %#v, error: %#v", resp, err)
 			if err != nil && !strings.Contains(err.Error(), "unexpected EOF") && (resp.StatusCode < http.StatusOK || resp.StatusCode > http.StatusNoContent) {
 				return fmt.Errorf("failed to get response from tx light rehearsal on: %w", err)
 			}
