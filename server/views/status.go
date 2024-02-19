@@ -72,10 +72,10 @@ func (v *Views) StatusFunc(c echo.Context) error {
 
 		var statusResponse StatusResponse
 		var wg sync.WaitGroup
-		if len(stream.Recording) > 0 {
-			wg.Add(2)
-			go func() {
-				defer wg.Done()
+		wg.Add(2)
+		go func() {
+			defer wg.Done()
+			if len(stream.Recording) > 0 {
 				recorderTransporter := transporter
 
 				individualResponse := StatusResponseIndividual{
@@ -107,10 +107,8 @@ func (v *Views) StatusFunc(c echo.Context) error {
 				statusResponse.Status = append(statusResponse.Status, individualResponse)
 
 				log.Println("recorder status success")
-			}()
-		} else {
-			wg.Add(1)
-		}
+			}
+		}()
 		go func() {
 			defer wg.Done()
 			forwarderTransporter := transporter
