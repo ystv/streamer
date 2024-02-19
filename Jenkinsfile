@@ -6,6 +6,7 @@ String proceed = "yes"
 String serverImageName = "ystv/streamer/server:${branch}-${env.BUILD_ID}"
 String forwarderImageName = "ystv/streamer/forwarder:${branch}-${env.BUILD_ID}"
 String recorderImageName = "ystv/streamer/recorder:${branch}-${env.BUILD_ID}"
+def productionBuild = env.TAG_NAME ==~ /v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)/
 
 pipeline {
   agent {
@@ -104,7 +105,11 @@ pipeline {
     stage('Checking existing streams') {
       steps {
         script {
-          final String url = "https://streamer.dev.ystv.co.uk/activeStreams"
+          String url = "https://streamer."
+          if (!productionBuild) {
+            url += "dev."
+          }
+          url += "ystv.co.uk/activeStreams"
           final def (String response, String tempCode) =
               sh(script: "curl -s -w '~~~%{response_code}' $url", returnStdout: true)
                   .trim()
@@ -154,7 +159,7 @@ pipeline {
         stage('Production') {
           when {
             // Checking if it is semantic version release.
-            expression { return env.TAG_NAME ==~ /v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)/ }
+            expression { return productionBuild }
           }
           steps {
             build(job: 'Deploy Nomad Job', parameters: [
