@@ -124,16 +124,16 @@ pipeline {
               tempStreams = sh(script: "echo '$response' | jq -M '.streams'", returnStdout: true).trim()
               int streams = Integer.parseInt(tempStreams)
               if (streams > 0) {
-                echo "Pre-existing active streams: $streams, not deploying"
+                echo "Pre-existing active streams: $streams, not proceeding to deploy stage"
                 proceed = "no"
               } else {
-                echo "No pre-existing active streams, deploying"
+                echo "No pre-existing active streams, proceeding to deploy stage"
               }
             } else {
-              echo "Streamer not currently running, deploying"
+              echo "Streamer not currently running, proceeding to deploy stage"
             }
           } else {
-            echo "Invalid HTTP response code: $code, deploying"
+            echo "Invalid HTTP response code: $code, proceeding to deploy stage"
           }
         }
       }
