@@ -79,8 +79,7 @@ type (
 	}
 
 	Watchdog struct {
-		conf  Config
-		store *store.Store
+		views *Views
 	}
 )
 

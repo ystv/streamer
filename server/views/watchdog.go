@@ -5,14 +5,8 @@ import (
 	"time"
 )
 
-func (v *Views) InitWatchdog() *Watchdog {
-	return &Watchdog{
-		conf:  v.conf,
-		store: v.store,
-	}
-}
-
-func (w *Watchdog) Begin() {
+func (v *Views) BeginWatchdog() {
+	log.Printf("watchdog initiailised")
 	go func() {
 		for {
 			if w.conf.Verbose {
