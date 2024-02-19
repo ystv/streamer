@@ -77,10 +77,6 @@ type (
 		// TransporterUnique is the payload to send to the client
 		TransporterUnique transporter.TransporterUnique
 	}
-
-	Watchdog struct {
-		views *Views
-	}
 )
 
 const (
