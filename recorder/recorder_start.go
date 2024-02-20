@@ -131,6 +131,9 @@ func (v *Views) helperStart(transporter commonTransporter.Transporter, streamIn,
 		_ = f.Close()
 	}(f)
 
+	// Adding a new line in the event of this being a restart
+	_, _ = f.Write([]byte("\n"))
+
 	c.Stdout = f
 	c.Stderr = f
 
