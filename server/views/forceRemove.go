@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/labstack/echo/v4"
 
@@ -32,7 +33,7 @@ func (v *Views) ForceRemoveFunc(c echo.Context) error {
 
 		_, err := v.store.FindStored(unique)
 		if err != nil {
-			log.Printf("force did not find stored with unique: %s, attempting streams", unique)
+			log.Printf("force remove did not find stored with unique: %s, attempting streams", unique)
 		} else {
 			stored = true
 			err = v.store.DeleteStored(unique)
@@ -41,24 +42,37 @@ func (v *Views) ForceRemoveFunc(c echo.Context) error {
 				response.Error = fmt.Sprintf("failed to delete stored: %+v, unique: %s", err, unique)
 				return c.JSON(http.StatusInternalServerError, response)
 			}
+			log.Printf("force removed stored: %s", unique)
 		}
 
 		stream, err := v.store.FindStream(unique)
 		if err != nil {
-			log.Printf("force did not find stream with unique: %s", unique)
+			log.Printf("force remove did not find stream with unique: %s", unique)
 			if !stored {
 				log.Printf("failing forced")
 				response.Error = fmt.Sprintf("force did not find stream or stored with unique: %s, failing", unique)
 				return c.JSON(http.StatusInternalServerError, response)
 			}
 		} else {
+			errorString := ""
+
+			err = v.store.DeleteStream(unique)
+			if err != nil {
+				log.Printf("failed to delete stream: %+v, unique: %s", err, unique)
+				errorString += fmt.Sprintf("failed to delete stream: %+v, unique: %s", err, unique)
+			}
+
+			// Adding delay to ensure the watchdog has stopped checking if it did
+			time.Sleep(500 * time.Millisecond)
+
 			_, rec := v.cache.Get(server.Recorder.String())
 			_, fow := v.cache.Get(server.Forwarder.String())
-			errorString := ""
+
 			transporter := commonTransporter.Transporter{
 				Action: action.Stop,
 				Unique: unique,
 			}
+
 			if len(stream.Recording) > 0 && rec {
 				recorderTransporter := transporter
 				var wsResponse commonTransporter.ResponseTransporter
@@ -95,16 +109,12 @@ func (v *Views) ForceRemoveFunc(c echo.Context) error {
 				}
 			}
 
-			err = v.store.DeleteStream(unique)
-			if err != nil {
-				log.Printf("failed to delete stream: %+v, unique: %s", err, unique)
-				errorString += fmt.Sprintf("failed to delete stream: %+v, unique: %s", err, unique)
-			}
-
 			if len(errorString) > 0 {
 				response.Error = errorString
 				return c.JSON(http.StatusInternalServerError, response)
 			}
+
+			log.Printf("force removed stream: %s", unique)
 		}
 		return nil
 	}
