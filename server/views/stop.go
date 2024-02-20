@@ -58,9 +58,9 @@ func (v *Views) StopFunc(c echo.Context) error {
 		_, rec := v.cache.Get(server.Recorder.String())
 		_, fow := v.cache.Get(server.Forwarder.String())
 
-		if (!rec && stream.Recording) && !fow {
+		if (!rec && len(stream.Recording) > 0) && !fow {
 			err = fmt.Errorf("no recorder or forwarder available")
-		} else if !rec && stream.Recording {
+		} else if !rec && len(stream.Recording) > 0 {
 			err = fmt.Errorf("no recorder available")
 		} else if !fow {
 			err = fmt.Errorf("no forwarder available")
@@ -69,7 +69,7 @@ func (v *Views) StopFunc(c echo.Context) error {
 		wg.Add(2)
 		go func() {
 			defer wg.Done()
-			if stream.Recording {
+			if len(stream.Recording) > 0 {
 				recorderTransporter := transporter
 				var wsResponse commonTransporter.ResponseTransporter
 				wsResponse, err = v.wsHelper(server.Recorder, recorderTransporter)

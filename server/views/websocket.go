@@ -145,7 +145,7 @@ func (v *Views) Websocket(c echo.Context) error {
 			switch transportUniqueReturning.Payload.(type) {
 			case string:
 				receive = []byte(transportUniqueReturning.Payload.(string))
-			case map[string]interface{}:
+			case map[string]interface{}, commonTransporter.ResponseTransporter:
 				receive, err = json.Marshal(transportUniqueReturning.Payload)
 				if err != nil {
 					log.Printf("failed to unmarshal response: %+v, server %s", err, responseTransporter.Server)
@@ -155,18 +155,7 @@ func (v *Views) Websocket(c echo.Context) error {
 					v.cache.Delete(responseTransporter.Server.String() + internalChannelNameAppend)
 					return nil
 				}
-				log.Printf("Message received from %s: %s", responseTransporter.Server, msg)
-			case commonTransporter.ResponseTransporter:
-				receive, err = json.Marshal(transportUniqueReturning.Payload)
-				if err != nil {
-					log.Printf("failed to unmarshal response: %+v, server %s", err, responseTransporter.Server)
-					close(internalChannel)
-					close(clientChannel)
-					v.cache.Delete(responseTransporter.Server.String())
-					v.cache.Delete(responseTransporter.Server.String() + internalChannelNameAppend)
-					return nil
-				}
-				log.Printf("Message received from %s: %s", responseTransporter.Server, msg)
+				log.Printf("message received from %s", responseTransporter.Server)
 			default:
 				log.Printf("invalid returning message: %#v, server %s", transportUniqueReturning.Payload, responseTransporter.Server)
 				close(internalChannel)

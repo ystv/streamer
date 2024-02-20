@@ -6,6 +6,7 @@ String proceed = "yes"
 String serverImageName = "ystv/streamer/server:${branch}-${env.BUILD_ID}"
 String forwarderImageName = "ystv/streamer/forwarder:${branch}-${env.BUILD_ID}"
 String recorderImageName = "ystv/streamer/recorder:${branch}-${env.BUILD_ID}"
+def productionBuild = env.TAG_NAME ==~ /v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)/
 
 pipeline {
   agent {
@@ -104,7 +105,11 @@ pipeline {
     stage('Checking existing streams') {
       steps {
         script {
-          final String url = "https://streamer.dev.ystv.co.uk/activeStreams"
+          String url = "https://streamer."
+          if (!productionBuild) {
+            url += "dev."
+          }
+          url += "ystv.co.uk/activeStreams"
           final def (String response, String tempCode) =
               sh(script: "curl -s -w '~~~%{response_code}' $url", returnStdout: true)
                   .trim()
@@ -119,16 +124,16 @@ pipeline {
               tempStreams = sh(script: "echo '$response' | jq -M '.streams'", returnStdout: true).trim()
               int streams = Integer.parseInt(tempStreams)
               if (streams > 0) {
-                echo "Pre-existing active streams: $streams, not deploying"
+                echo "Pre-existing active streams: $streams, not proceeding to deploy stage"
                 proceed = "no"
               } else {
-                echo "No pre-existing active streams, deploying"
+                echo "No pre-existing active streams, proceeding to deploy stage"
               }
             } else {
-              echo "Streamer not currently running, deploying"
+              echo "Streamer not currently running, proceeding to deploy stage"
             }
           } else {
-            echo "Invalid HTTP response code: $code, deploying"
+            echo "Invalid HTTP response code: $code, proceeding to deploy stage"
           }
         }
       }
@@ -154,7 +159,7 @@ pipeline {
         stage('Production') {
           when {
             // Checking if it is semantic version release.
-            expression { return env.TAG_NAME ==~ /v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)/ }
+            expression { return productionBuild }
           }
           steps {
             build(job: 'Deploy Nomad Job', parameters: [

@@ -66,16 +66,16 @@ func (v *Views) StatusFunc(c echo.Context) error {
 
 		//nolint:staticcheck
 		fStatus := commonTransporter.ForwarderStatus{
-			Website: stream.Website,
-			Streams: int(stream.Streams),
+			Website: len(stream.Website) > 0,
+			Streams: len(stream.Streams),
 		}
 
 		var statusResponse StatusResponse
 		var wg sync.WaitGroup
-		if stream.Recording {
-			wg.Add(2)
-			go func() {
-				defer wg.Done()
+		wg.Add(2)
+		go func() {
+			defer wg.Done()
+			if len(stream.Recording) > 0 {
 				recorderTransporter := transporter
 
 				individualResponse := StatusResponseIndividual{
@@ -107,10 +107,8 @@ func (v *Views) StatusFunc(c echo.Context) error {
 				statusResponse.Status = append(statusResponse.Status, individualResponse)
 
 				log.Println("recorder status success")
-			}()
-		} else {
-			wg.Add(1)
-		}
+			}
+		}()
 		go func() {
 			defer wg.Done()
 			forwarderTransporter := transporter

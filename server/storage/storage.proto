@@ -18,7 +18,7 @@ message Stored {
 message Stream {
     string stream = 1;
     string input = 2;
-    bool recording = 3;
-    bool website = 4;
-    uint64 streams = 5;
+    string recording = 3;
+    string website = 4;
+    repeated string streams = 5;
 }

@@ -30,6 +30,7 @@ type (
 		ServerAddress         string `envconfig:"SERVER_ADDRESS"`
 		RecordingLocation     string `envconfig:"RECORDING_LOCATION"`
 		StreamerWebsocketPath string `envconfig:"STREAMER_WEBSOCKET_PATH"`
+		StreamerAdminPath     string `envconfig:"STREAMER_ADMIN_PATH"`
 	}
 
 	// Views encapsulates our view dependencies

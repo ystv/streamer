@@ -68,16 +68,18 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 		var i uint64
 		for {
 			v.cache.Delete(transporter.Unique)
+		selectBreak:
 			select {
 			case <-finish:
 				return
 			default:
+				file := fmt.Sprintf("%s%s_%d.mkv", path, baseFileName, i)
 				// Checking if file exists
-				_, err = os.Stat(fmt.Sprintf("'%s%s_%d.mkv'", path, baseFileName, i))
+				_, err = os.Stat(file)
 				if err == nil {
-					break
+					break selectBreak
 				}
-				err = v.helperStart(transporter, streamIn, path, baseFileName, i)
+				err = v.helperStart(transporter, streamIn, file)
 				if err != nil {
 					log.Printf("failed to record: %+v", err)
 					return
@@ -115,20 +117,23 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 	return nil
 }
 
-func (v *Views) helperStart(transporter commonTransporter.Transporter, streamIn, path, baseFileName string, i uint64) error {
-	c := exec.Command("ffmpeg", "-i", streamIn, "-f", "matroska", "-c", "copy", fmt.Sprintf("%s%s_%d.mkv", path, baseFileName, i))
+func (v *Views) helperStart(transporter commonTransporter.Transporter, streamIn, file string) error {
+	c := exec.Command("ffmpeg", "-i", streamIn, "-f", "matroska", "-c", "copy", file)
 	err := v.cache.Add(transporter.Unique, c, cache.NoExpiration)
 	if err != nil {
 		return fmt.Errorf("failed to add command to cache: %w", err)
 	}
 	var f *os.File
-	f, err = os.OpenFile(fmt.Sprintf("/logs/%s.txt", transporter.Unique), os.O_APPEND|os.O_WRONLY|os.O_CREATE, os.FileMode(0600))
+	f, err = os.OpenFile(fmt.Sprintf("/logs/%s.txt", transporter.Unique), os.O_APPEND|os.O_WRONLY|os.O_CREATE, os.FileMode(0644))
 	if err != nil {
 		panic(fmt.Errorf("failed to open file: %w", err))
 	}
 	defer func(f *os.File) {
 		_ = f.Close()
 	}(f)
+
+	// Adding a new line in the event of this being a restart
+	_, _ = f.Write([]byte("\n"))
 
 	c.Stdout = f
 	c.Stderr = f
