@@ -68,6 +68,7 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 		var i uint64
 		for {
 			v.cache.Delete(transporter.Unique)
+		selectBreak:
 			select {
 			case <-finish:
 				return
@@ -75,7 +76,7 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 				// Checking if file exists
 				_, err = os.Stat(fmt.Sprintf("'%s%s_%d.mkv'", path, baseFileName, i))
 				if err == nil {
-					break
+					break selectBreak
 				}
 				err = v.helperStart(transporter, streamIn, path, baseFileName, i)
 				if err != nil {
