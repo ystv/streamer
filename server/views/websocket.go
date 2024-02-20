@@ -155,7 +155,7 @@ func (v *Views) Websocket(c echo.Context) error {
 					v.cache.Delete(responseTransporter.Server.String() + internalChannelNameAppend)
 					return nil
 				}
-				log.Printf("Message received from %s: %s", responseTransporter.Server, msg)
+				log.Printf("message received from %s", responseTransporter.Server)
 			default:
 				log.Printf("invalid returning message: %#v, server %s", transportUniqueReturning.Payload, responseTransporter.Server)
 				close(internalChannel)
