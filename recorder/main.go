@@ -218,10 +218,8 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 		switchBreak:
 			switch receivedMessage.Payload.(type) {
 			case map[string]interface{}:
-				log.Println(100)
 				break switchBreak
 			case commonTransporter.Transporter:
-				log.Println(101)
 				break switchBreak
 			case string:
 				if msgType == websocket.TextMessage && receivedMessage.Payload.(string) == specialWSMessage.Ping.String() {
