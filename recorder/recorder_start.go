@@ -124,7 +124,7 @@ func (v *Views) helperStart(transporter commonTransporter.Transporter, streamIn,
 		return fmt.Errorf("failed to add command to cache: %w", err)
 	}
 	var f *os.File
-	f, err = os.OpenFile(fmt.Sprintf("/logs/%s.txt", transporter.Unique), os.O_APPEND|os.O_WRONLY|os.O_CREATE, os.FileMode(0600))
+	f, err = os.OpenFile(fmt.Sprintf("/logs/%s.txt", transporter.Unique), os.O_APPEND|os.O_WRONLY|os.O_CREATE, os.FileMode(0644))
 	if err != nil {
 		panic(fmt.Errorf("failed to open file: %w", err))
 	}
