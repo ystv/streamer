@@ -54,17 +54,17 @@ func (v *Views) BeginWatchdog() {
 							var response commonTransporter.ResponseTransporter
 							response, err = v.wsHelper(server.Recorder, recorderTransporter)
 							if err != nil {
-								log.Printf("failed to send or receive message from recorder for status: %+v", err)
+								log.Printf("failed to send or receive message from recorder for watchdog status: %+v", err)
 								recorderError = true
 								return
 							}
 							if response.Status == wsMessages.Error {
-								log.Printf("failed to get correct response from recorder for status: %s", response.Payload)
+								log.Printf("failed to get correct response from recorder for watchdog status: %s", response.Payload)
 								recorderError = true
 								return
 							}
 							if response.Status != wsMessages.Okay {
-								log.Printf("invalid response from recorder for status: %s", response)
+								log.Printf("invalid response from recorder for watchdog status: %s", response)
 								recorderError = true
 								return
 							}
@@ -80,17 +80,17 @@ func (v *Views) BeginWatchdog() {
 							var response commonTransporter.ResponseTransporter
 							response, err = v.wsHelper(server.Forwarder, forwarderTransporter)
 							if err != nil {
-								log.Printf("failed to send or receive message from forwarder for status: %+v", err)
+								log.Printf("failed to send or receive message from forwarder for watchdog status: %+v", err)
 								forwarderError = true
 								return
 							}
 							if response.Status == wsMessages.Error {
-								log.Printf("failed to get correct response from forwarder for status: %s", response.Payload)
+								log.Printf("failed to get correct response from forwarder for watchdog status: %s", response.Payload)
 								forwarderError = true
 								return
 							}
 							if response.Status != wsMessages.Okay {
-								log.Printf("invalid response from recorder for status: %s", response)
+								log.Printf("invalid response from recorder for watchdog status: %s", response)
 								forwarderError = true
 								return
 							}
@@ -106,13 +106,13 @@ func (v *Views) BeginWatchdog() {
 						var wsResponse commonTransporter.ResponseTransporter
 						wsResponse, err = v.wsHelper(server.Recorder, stopTransporter)
 						if err != nil {
-							log.Printf("failed sending to Recorder for stop: %+v", err)
+							log.Printf("failed sending to Recorder for watchdog stop: %+v", err)
 						}
 						if wsResponse.Status == wsMessages.Error {
-							log.Printf("failed sending to Recorder for stop: %#v", wsResponse)
+							log.Printf("failed sending to Recorder for watchdog stop: %#v", wsResponse)
 						}
 						if wsResponse.Status != wsMessages.Okay {
-							log.Printf("invalid response from Recorder for stop: %#v", wsResponse)
+							log.Printf("invalid response from Recorder for watchdog stop: %#v", wsResponse)
 						}
 
 						startTransporter := commonTransporter.Transporter{
@@ -125,14 +125,16 @@ func (v *Views) BeginWatchdog() {
 						}
 						wsResponse, err = v.wsHelper(server.Recorder, startTransporter)
 						if err != nil {
-							log.Printf("failed sending to Recorder for start: %+v", err)
+							log.Printf("failed sending to Recorder for watchdog start: %+v", err)
 						}
 						if wsResponse.Status == wsMessages.Error {
-							log.Printf("failed sending to Recorder for start: %#v", wsResponse)
+							log.Printf("failed sending to Recorder for watchdog start: %#v", wsResponse)
 						}
 						if wsResponse.Status != wsMessages.Okay {
-							log.Printf("invalid response from Recorder for start: %#v", wsResponse)
+							log.Printf("invalid response from Recorder for watchdog start: %#v", wsResponse)
 						}
+
+						log.Printf("watchdog successfully restarted Recorder: %s", stream1.Streams)
 					}
 
 					if forwarderError && fow {
@@ -143,13 +145,13 @@ func (v *Views) BeginWatchdog() {
 						var wsResponse commonTransporter.ResponseTransporter
 						wsResponse, err = v.wsHelper(server.Forwarder, stopTransporter)
 						if err != nil {
-							log.Printf("failed sending to Forwarder for stop: %+v", err)
+							log.Printf("failed sending to Forwarder for watchdog stop: %+v", err)
 						}
 						if wsResponse.Status == wsMessages.Error {
-							log.Printf("failed sending to Forwarder for stop: %#v", wsResponse)
+							log.Printf("failed sending to Forwarder for watchdog stop: %#v", wsResponse)
 						}
 						if wsResponse.Status != wsMessages.Okay {
-							log.Printf("invalid response from Forwarder for stop: %#v", wsResponse)
+							log.Printf("invalid response from Forwarder for watchdog stop: %#v", wsResponse)
 						}
 
 						startTransporter := commonTransporter.Transporter{
@@ -163,14 +165,16 @@ func (v *Views) BeginWatchdog() {
 						}
 						wsResponse, err = v.wsHelper(server.Forwarder, startTransporter)
 						if err != nil {
-							log.Printf("failed sending to Forwarder for start: %+v", err)
+							log.Printf("failed sending to Forwarder for watchdog start: %+v", err)
 						}
 						if wsResponse.Status == wsMessages.Error {
-							log.Printf("failed sending to Forwarder for start: %#v", wsResponse)
+							log.Printf("failed sending to Forwarder for watchdog start: %#v", wsResponse)
 						}
 						if wsResponse.Status != wsMessages.Okay {
-							log.Printf("invalid response from Forwarder for start: %#v", wsResponse)
+							log.Printf("invalid response from Forwarder for watchdog start: %#v", wsResponse)
 						}
+
+						log.Printf("watchdog successfully restarted Forwarder: %s", stream1.Streams)
 					}
 				}()
 			}
