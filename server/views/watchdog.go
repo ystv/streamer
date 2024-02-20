@@ -170,7 +170,6 @@ func (v *Views) BeginWatchdog() {
 						log.Printf("invalid response from Forwarder for start: %#v", wsResponse)
 					}
 				}
-				time.Sleep(250 * time.Millisecond)
 			}
 		}
 	}()
