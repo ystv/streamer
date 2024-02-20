@@ -340,7 +340,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 					continue
 				}
 			case "stop":
-				_, ok := v.cache.Get(fmt.Sprintf("%s_1", t.Unique))
+				_, ok := v.cache.Get(fmt.Sprintf("%s_1_%s", t.Unique, finishChannelNameAppend))
 				if !ok {
 					kill := v.errorResponse(fmt.Errorf("failed to stop forward, invalid unique: %s", t.Unique), c, m.ID)
 					if kill {
