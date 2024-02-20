@@ -25,6 +25,8 @@ func (v *Views) BeginWatchdog() {
 				continue
 			}
 
+			log.Printf("current streams: %d", len(streams))
+
 			_, rec := v.cache.Get(server.Recorder.String())
 			_, fow := v.cache.Get(server.Forwarder.String())
 
