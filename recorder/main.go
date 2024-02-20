@@ -306,6 +306,15 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 					continue
 				}
 			case "status":
+				_, ok := v.cache.Get(fmt.Sprintf("%s_%s", t.Unique, finishChannelNameAppend))
+				if !ok {
+					kill := v.errorResponse(fmt.Errorf("failed to get status recorder, invalid unique: %s", t.Unique), c, m.ID)
+					if kill {
+						return
+					}
+					continue
+				}
+
 				out, err = v.status(t)
 				if err != nil {
 					kill := v.errorResponse(fmt.Errorf("failed to get status recorder: %w", err), c, m.ID)
@@ -315,6 +324,15 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 					continue
 				}
 			case "stop":
+				_, ok := v.cache.Get(fmt.Sprintf("%s_%s", t.Unique, finishChannelNameAppend))
+				if !ok {
+					kill := v.errorResponse(fmt.Errorf("failed to stop recorder, invalid unique: %s", t.Unique), c, m.ID)
+					if kill {
+						return
+					}
+					continue
+				}
+
 				err = v.stop(t)
 				if err != nil {
 					kill := v.errorResponse(fmt.Errorf("failed to stop recorder: %w", err), c, m.ID)
