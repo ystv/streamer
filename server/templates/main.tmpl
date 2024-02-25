@@ -32,12 +32,12 @@
         <div class="card">
             <div class="card-content">
                 <p>This tool allows you to select the endpoint that your streaming software is streaming to and then
-                <p style="color: red">{{.Error}}</p><br>
                     forward it onto your platforms of choice.<br>
                     Streamer is designed to be straightforward to use,
                     you select the endpoint that you are streaming to by
                     selecting the possible endpoints using the checkboxes below
                     and then pressing "Refresh streams".</p><br>
+                <p id="start_window_server_error" style="color: red">{{.Error}}</p>
                 <p class="title">Stream endpoint selector</p>
                 <p class="subtitle">Endpoints</p>
                 <p id="streams_result"></p><br>
@@ -142,7 +142,8 @@
             <p class="title">STARTED!</p><br><br>
             <p>The stream has been forwarded, the unique code of this forward is below</p><br>
             <p id="unique" class="subtitle"></p><br>
-            <p id="status_error" style="color: red"></p><br>
+            <p id="status_error" style="color: red"></p>
+            <p id="status_window_server_error" style="color: red"></p>
             <table class="table table-bordered" id="tableStatus"></table>
             <br>
             <p>This window can be closed as long as you have the code to stop the stream<br>
