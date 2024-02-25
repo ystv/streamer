@@ -110,11 +110,7 @@ func (v *Views) StartUniqueFunc(c echo.Context) error {
 			PathOut:  c.FormValue("save_path"),
 		}
 
-		//recording := false
-		//websiteStream := false
-
 		if c.FormValue("website_stream") == "on" {
-			//websiteStream = true
 			if v.websiteCheck(c.FormValue("website_stream_endpoint")) {
 				fStart.WebsiteOut = c.FormValue("website_stream_endpoint")
 			} else {
@@ -155,7 +151,6 @@ func (v *Views) StartUniqueFunc(c echo.Context) error {
 		go func() {
 			defer wg.Done()
 			if c.FormValue("record") == "on" {
-				//recording = true
 				recorderTransporter := transporter
 				recorderTransporter.Payload = rStart
 				var wsResponse commonTransporter.ResponseTransporter
