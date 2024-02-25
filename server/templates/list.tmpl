@@ -31,25 +31,52 @@
     <div class="card" id="enter">
         <div class="card-content">
             <p class="title">Listing all streams, active and saved</p>
-                <p>If the stream is prefixed by "Active - " then go to <a href="https://streamer.dev.ystv.co.uk/resume">https://streamer.dev.ystv.co.uk/resume</a> In order to stop them or view the current status<br>
-                    If the stream is prefixed by "Saved - " then go to <a href="https://streamer.dev.ystv.co.uk/recall">https://streamer.dev.ystv.co.uk/recall</a> In order to start them
+                <p>If the stream is prefixed by "Active - " then go to
+                    <a href="https://streamer.dev.ystv.co.uk/resume">https://streamer.dev.ystv.co.uk/resume</a>
+                    in order to stop them or view the current status<br>
+                    If the stream is prefixed by "Saved - " then go to
+                    <a href="https://streamer.dev.ystv.co.uk/recall">https://streamer.dev.ystv.co.uk/recall</a>
+                    in order to start them
             </p><br>
             <p id="listing"></p>
-            <p id="list_error" style="color: red"></p><br>
+            <p id="listing_error" style="color: red"></p><br>
             <input class="button" id="refresh" type="button" value="Refresh">
         </div>
     </div>
     <script>
         $(document).ready(function () {
+            let listing = $("#listing");
+            let listingError = $("#listing_error");
             $("#refresh").click(function () {
-                $("#list_error").html("");
+                listingError.html("");
                 $.ajax({
                     url: "list",
                     type: "post",
                     dataType: "text",
                     contentType: "application/x-www-form-urlencoded",
                     success: function (data) {
-                        $("#listing").html(data);
+                        let listResponseJson = JSON.parse(data);
+                        if (listResponseJson.error !== "") {
+                            listingError.html(listResponseJson.error);
+                            return;
+                        }
+
+                        if (listResponseJson.activeList.length === 0 && listResponseJson.savedList.length === 0) {
+                            listing.html("No current streams");
+                            return;
+                        }
+
+                        let listingOut = "";
+
+                        for (const activeList of listResponseJson.activeList) {
+                            listingOut += "Active - " + activeList.code + " - " + activeList.input + "<br>";
+                        }
+
+                        for (const savedList of listResponseJson.savedList) {
+                            listingOut += "Saved - " + savedList.code + " - " + savedList.input + "<br>";
+                        }
+
+                        listing.html(listingOut);
                     },
                 })
             }).trigger("click");

@@ -4,11 +4,17 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strings"
 
 	"github.com/labstack/echo/v4"
 
 	"github.com/ystv/streamer/server/templates"
+)
+
+type (
+	listedStream struct {
+		Code  string `json:"code"`
+		Input string `json:"input"`
+	}
 )
 
 // ListFunc lists all current streams that are registered in the database
@@ -35,38 +41,44 @@ func (v *Views) ListFunc(c echo.Context) error {
 			log.Println("Stop POST called")
 		}
 
-		streams, err := v.store.GetStreams()
-		if err != nil {
-			return fmt.Errorf("failed to get streams: %w", err)
+		var response struct {
+			ActiveList []listedStream `json:"activeList"`
+			SavedList  []listedStream `json:"savedList"`
+			Error      string         `json:"error"`
 		}
 
-		var streamsSlice []string
+		response.ActiveList = []listedStream{}
+		response.SavedList = []listedStream{}
 
-		data := false
+		streams, err := v.store.GetStreams()
+		if err != nil {
+			log.Printf("failed to get streams: %+v", err)
+			response.Error = fmt.Sprintf("failed to get streams: %+v", err)
+			return c.JSON(http.StatusOK, response)
+		}
 
 		for _, s := range streams {
-			data = true
-			streamsSlice = append(streamsSlice, "Active", "-", s.Stream, "-", s.Input)
-			streamsSlice = append(streamsSlice, "<br>")
+			response.ActiveList = append(response.ActiveList, listedStream{
+				Code:  s.Stream,
+				Input: s.Input,
+			})
 		}
 
 		stored, err := v.store.GetStored()
 		if err != nil {
-			return fmt.Errorf("failed to get stored: %w", err)
+			log.Printf("failed to get stored: %+v", err)
+			response.Error = fmt.Sprintf("failed to get stored: %+v", err)
+			return c.JSON(http.StatusOK, response)
 		}
 
 		for _, s := range stored {
-			data = true
-			streamsSlice = append(streamsSlice, "Saved", "-", s.Stream, "-", s.Input)
-			streamsSlice = append(streamsSlice, "<br>")
+			response.SavedList = append(response.SavedList, listedStream{
+				Code:  s.Stream,
+				Input: s.Input,
+			})
 		}
 
-		if !data {
-			return c.String(http.StatusOK, "No current streams")
-		} else {
-			stringByte := strings.Join(streamsSlice, "\x20")
-			return c.String(http.StatusOK, stringByte)
-		}
+		return c.JSON(http.StatusOK, response)
 	}
 	return echo.NewHTTPError(http.StatusMethodNotAllowed, "invalid method")
 }
