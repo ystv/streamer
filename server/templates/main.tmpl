@@ -209,12 +209,19 @@
                 contentType: "application/x-www-form-urlencoded",
                 data: $("#endpoint_selector").serialize(),
                 success: function (data) {
-                    let result = $("#result");
+                    let streamsResult = $("#streams_result");
+                    let streamSelectorBefore = $("#stream_selector").val();
+
+                    const streamsResponseJson = JSON.parse(data);
+                    if (streamsResponseJson.error !== "") {
+                        streamsResult.html(streamsResponseJson.error);
+                        return;
+                    }
 
                     let streamFurther = $("#stream_further_1");
 
-                    if (data === "No active streams with the current selection") {
-                        result.html(data);
+                    if (streamsResponseJson.streams.length === 0) {
+                        streamsResult.html("No active streams with the current selection");
                         let selectObject = document.getElementById("stream_selector");
                         for (let i = selectObject.length; i > 0; i--) {
                             selectObject.remove(i);
@@ -223,10 +230,8 @@
                         streamFurther.hide();
                         return;
                     }
-                    const myArray = data.split(" ");
-                    result.html(data);
 
-                    let index = 0;
+                    let streamsResultOut = "";
 
                     let selectObject = document.getElementById("stream_selector");
                     for (let i = selectObject.length; i > 0; i--) {
@@ -234,8 +239,24 @@
                     }
 
                     let select = document.getElementById("stream_selector");
-                    for (index in myArray) {
-                        select.options[select.options.length] = new Option(myArray[index], myArray[index]);
+                    for (let stream of streamsResponseJson.streams) {
+                        select.options[select.options.length] = new Option(stream, stream);
+                        streamsResultOut += stream + "&emsp;";
+                    }
+
+                    streamsResult.html(streamsResultOut);
+
+                    if (streamSelectorBefore === "please_select") {
+                        selectObject.options.selectedIndex = 0;
+                        streamFurther.hide();
+                        return;
+                    }
+
+                    for (let i = 0; i < select.options.length; i++) {
+                        if (select.options[i].value === streamSelectorBefore) {
+                            selectObject.options.selectedIndex = i;
+                            return;
+                        }
                     }
 
                     selectObject.options.selectedIndex = 0;
