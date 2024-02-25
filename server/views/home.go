@@ -30,18 +30,18 @@ func (v *Views) HomeFunc(c echo.Context) error {
 	_, rec := v.cache.Get(server.Recorder.String())
 	_, fow := v.cache.Get(server.Forwarder.String())
 
-	var err error
+	var err string
 
 	if !rec && !fow {
-		err = fmt.Errorf("no recorder or forwarder available")
+		err = fmt.Sprintf("No recorder or forwarder available")
 	} else if !rec {
-		err = fmt.Errorf("no recorder available")
+		err = fmt.Sprintf("No recorder available")
 	} else if !fow {
-		err = fmt.Errorf("no forwarder available")
+		err = fmt.Sprintf("No forwarder available")
 	}
 
 	data := struct {
-		Error error
+		Error string
 	}{
 		Error: err,
 	}
