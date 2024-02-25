@@ -3,7 +3,6 @@ package views
 import (
 	"encoding/xml"
 	"fmt"
-	"github.com/ystv/streamer/server/helper"
 	"log"
 	"math"
 	"net/http"
@@ -18,6 +17,7 @@ import (
 	"github.com/ystv/streamer/common/transporter/action"
 	"github.com/ystv/streamer/common/transporter/server"
 	"github.com/ystv/streamer/common/wsMessages"
+	"github.com/ystv/streamer/server/helper"
 	"github.com/ystv/streamer/server/helper/tx"
 	"github.com/ystv/streamer/server/storage"
 )
