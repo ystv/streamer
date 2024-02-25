@@ -32,8 +32,8 @@
         <div class="card-content">
             <p class="title">Resume a stream</p><br>
             <form id="resume">
-                <label for="unique">Enter the code you were given after starting the stream in the box below</label><br>
-                <input class="input" name="unique" id="unique" placeholder="ab12cd34ef"><br>
+                <label for="resume_unique_input">Enter the code you were given after starting the stream in the box below</label><br>
+                <input class="input" name="unique" id="resume_unique_input" placeholder="ab12cd34ef"><br>
                 <p id="resume_error" style="color: red"></p><br>
                 <input class="button" id="submit_unique" type="button" value="Submit">
             </form>
@@ -45,7 +45,7 @@
             <p>The stream has been forwarded, the unique code of this forward is below</p><br>
             <p id="unique_code" class="subtitle"></p><br>
             <p id="status_error" style="color: red"></p><br>
-            <table class="table table-bordered" id="tableStatus"></table>
+            <table class="table table-bordered" id="table_status"></table>
             <br>
             <p>This window can be closed as long as you have the code to stop the stream<br>
                 If you want to return later, then you will need to go to <a
@@ -89,7 +89,7 @@
         $(document).ready(function () {
             $("#submit_unique").click(function () {
                 resumeError.html("");
-                if ($("#unique").val().length === 0) {
+                if ($("#resume_unique_input").val().length === 0) {
                     resumeError.html("The code field cannot be empty");
                     return;
                 }
@@ -116,10 +116,10 @@
                         document.getElementById("enter").style.visibility = "hidden";
                         document.getElementById("resumed").hidden = false;
                         document.getElementById("resumed").style.visibility = "visible";
-                        let uniqueField = $("#unique");
+                        let uniqueField = $("#resume_unique_input");
                         unique = uniqueField.val();
                         $("#unique_code").html(uniqueField.val());
-                        let tableStatus = $("#tableStatus");
+                        let tableStatus = $("#table_status");
                         if (resumeResponseJson.recording) {
                             tableStatus.append("<tr><td><p class='subtitle'>Recording status</p><pre id='recording_status'></pre><br></td></tr>");
                         }
