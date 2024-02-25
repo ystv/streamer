@@ -52,6 +52,7 @@
             <div class="card">
                 <div class="card-content">
                     <p class="subtitle">Selection</p>
+                    <p id="endpoint_table_error" style="color: red"></p>
                     <table class="table table-bordered" id="endpoint_table">
                     </table>
                     <br>
@@ -232,27 +233,52 @@
         });
 
         $(document).ready(function () {
-            $.ajax({
-                url: "endpoints",
-                type: "post",
-                dataType: "text",
-                contentType: "application/x-www-form-urlencoded",
-                data: ({"unique": unique}),
-                success: function (data) {
-                    let endpoints = data.split(" ");
-                    for (let endpoint of endpoints) {
-                        let endpointName = endpoint.split("~");
-                        $("#endpoint_table").append("<tr>\n" +
-                            "<td>\n" +
-                            "<label for='endpoints_table'>Endpoint: " + endpointName[1] + "</label>\n" +
-                            "</td>\n" +
-                            "<td>\n" +
-                            "<input name='endpoints_table' id='" + endpoint + "' value='" + endpoint + "' type='radio' " + ((endpointName[1] === "internal") ? "checked" : "") + "/>\n" +
-                            "</td>" +
-                            "</tr>");
-                    }
-                },
-            });
+            let unique;
+
+            let statusInterval;
+            let recalledWindowServerErrorInterval;
+            let statusWindowServerErrorInterval;
+
+            let recalledWindowServerError = $("#recalled_window_server_error");
+            let statusWindowServerError = $("#status_window_server_error");
+
+            let endpointsCheckErrorInterval;
+
+            let endpointTableError = $("#endpoint_table_error");
+
+            let endpointsCheck = function () {
+                $.ajax({
+                    url: "endpoints",
+                    type: "post",
+                    dataType: "text",
+                    contentType: "application/x-www-form-urlencoded",
+                    data: ({"unique": unique}),
+                    success: function (data) {
+                        const endpointsResponseJson = JSON.parse(data);
+                        endpointTableError.html("");
+                        if (endpointsResponseJson.error !== "") {
+                            endpointTableError.html(endpointsResponseJson.error + "<br>");
+                            if (endpointsCheckErrorInterval === undefined) {
+                                endpointsCheckErrorInterval = setInterval(endpointsCheck, 5000);
+                            }
+                            return;
+                        }
+                        clearInterval(endpointsCheckErrorInterval);
+                        for (let endpoint of endpointsResponseJson.endpoints) {
+                            $("#endpoint_table").append("<tr>" +
+                                "<td>" +
+                                "<label for='endpoint~" + endpoint + "'>Endpoint: " + endpoint + "</label>" +
+                                "</td>" +
+                                "<td>" +
+                                "<input name='endpoint~" + endpoint + "' id='endpoint~" + endpoint + "' type='checkbox' " + ((endpoint === "internal") ? "checked" : "") + "/>" +
+                                "</td>" +
+                                "</tr>");
+                        }
+                    },
+                });
+            }
+
+            endpointsCheck();
 
             let recallError = $("#recall_error");
             let startError = $("#start_error");
