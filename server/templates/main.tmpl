@@ -526,7 +526,9 @@
                                         statusWindowServerError.html(serverErrorResponseJson.error);
                                         return;
                                     }
-                                    statusWindowServerError.html(serverErrorResponseJson.serverError + "You may have stream instabilities during this time<br>");
+                                    if (serverErrorResponseJson.serverError.length > 0) {
+                                        statusWindowServerError.html(serverErrorResponseJson.serverError + "You may have stream instabilities during this time<br>");
+                                    }
                                 },
                             });
                         }, 5000);
