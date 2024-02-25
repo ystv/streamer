@@ -5,10 +5,14 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 )
 
 func GetBody(url string) (body string, err error) {
-	response, err := http.Get(url)
+	client := http.Client{
+		Timeout: 5 * time.Second,
+	}
+	response, err := client.Get(url)
 	if err != nil {
 		log.Printf("failed to get http: %+v", err)
 		return
