@@ -135,6 +135,7 @@ func (r *Router) loadRoutes() {
 	r.router.Match(validMethods, "/"+r.config.StreamerWebsocketPath, r.views.Websocket) // Websocket for the recorder and forwarder to communicate on
 	r.router.Match(validMethods, "/activeStreams", r.views.ActiveStreamsFunc)
 	r.router.Match(validMethods, "/"+r.config.StreamerAdminPath+"/forceRemove/:unique", r.views.ForceRemoveFunc)
+	r.router.Match(validMethods, "/serverError", r.views.ServerErrorFunc)
 	r.router.GET("/api/health", func(c echo.Context) error {
 		marshal, err := json.Marshal(struct {
 			Status int `json:"status"`
