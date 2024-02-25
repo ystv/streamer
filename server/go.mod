@@ -13,7 +13,7 @@ require (
 	github.com/labstack/gommon v0.4.2
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
-	github.com/ystv/streamer/common v0.0.0-20240214233956-8447f6611cb8
+	github.com/ystv/streamer/common v0.0.0-20240224110523-a1eadbeea663
 	google.golang.org/protobuf v1.32.0
 )
 
