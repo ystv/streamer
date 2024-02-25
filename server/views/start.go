@@ -137,7 +137,7 @@ func (v *Views) StartFunc(c echo.Context) error {
 		var errorMessages []string
 		go func() {
 			defer wg.Done()
-			if c.FormValue("record") == "on" {
+			if c.FormValue("record_checkbox") == "on" {
 				recorderTransporter := transporter
 				recorderTransporter.Payload = rStart
 				wsResponse, err := v.wsHelper(server.Recorder, recorderTransporter)

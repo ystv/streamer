@@ -104,7 +104,7 @@ func (v *Views) SaveFunc(c echo.Context) error {
 		recording := ""
 		website := ""
 
-		if c.FormValue("record") == "on" {
+		if c.FormValue("record_checkbox") == "on" {
 			recording = c.FormValue("save_path")
 		}
 

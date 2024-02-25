@@ -150,7 +150,7 @@ func (v *Views) StartUniqueFunc(c echo.Context) error {
 		var errorMessages []string
 		go func() {
 			defer wg.Done()
-			if c.FormValue("record") == "on" {
+			if c.FormValue("record_checkbox") == "on" {
 				recorderTransporter := transporter
 				recorderTransporter.Payload = rStart
 				var wsResponse commonTransporter.ResponseTransporter
