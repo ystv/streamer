@@ -32,15 +32,12 @@
         <div class="card">
             <div class="card-content">
                 <p>This tool allows you to select the endpoint that your streaming software is streaming to and then
-                    forward
-                    it
-                    onto
-                    your platforms of choice.<br>
-                    Streamer is designed to be simple to use, you select the endpoint that you are streaming to by
-                    selecting
-                    the
-                    possible endpoints using the checkboxes below and then pressing "Refresh streams".</p><br>
                 <p style="color: red">{{.Error}}</p><br>
+                    forward it onto your platforms of choice.<br>
+                    Streamer is designed to be straightforward to use,
+                    you select the endpoint that you are streaming to by
+                    selecting the possible endpoints using the checkboxes below
+                    and then pressing "Refresh streams".</p><br>
                 <p class="title">Stream endpoint selector</p>
                 <p class="subtitle">Endpoints</p>
                 <p id="streams_result"></p><br>
@@ -94,7 +91,7 @@
                                required/><br><br>
 
 
-                        <p>If this is selected then it will default to stream1?pwd=gamer<br>
+                        <p>If this is selected, then it will default to <code>stream1?pwd=gamer</code><br>
                             By default, the website works with streaming to the live endpoint so that is done by default<br>
                             Use the live endpoint followed by one of the keys in <a
                                     href="https://cobra.dev.ystv.co.uk/streamkeys">cobra</a>
@@ -111,10 +108,8 @@
 
                         <p>This section is for adding all the stream servers and keys<br>
                             All stream servers should start with "rtmp://" or "rtmps://"<br>
-                            If you are unsure how to get the stream servers and keys from YouTube and Facebook then
-                            click on
-                            the
-                            links below<br>
+                            If you are unsure how to get the stream servers and keys from YouTube and Facebook, then
+                            click on the links below<br>
                             <a target="_blank" href="/youtubehelp">YouTube</a><br>
                             <a target="_blank" href="/facebookhelp">Facebook</a></p><br>
                         <label for="input"></label><input type="text" id="input" hidden disabled/>
@@ -251,7 +246,7 @@
                     streamFurther.hide();
                 },
             });
-        }
+        };
 
         document.getElementById("stream_check").addEventListener("click", () => {
             streamsCheck();
@@ -292,7 +287,7 @@
                         streamsCheck();
                     },
                 });
-            }
+            };
 
             endpointsCheck();
 
@@ -301,7 +296,7 @@
                     $("#stream_further_1").hide();
                 } else {
                     $("#stream_further_1").show();
-                    $("#input").val($(this).val())
+                    $("#input").val($(this).val());
                 }
             });
 
@@ -341,7 +336,7 @@
                         startPressed = false;
                         return;
                     }
-                    if (!savePath.val().endsWith(".mkv")) {
+                    if ( !savePath.val().endsWith(".mkv")) {
                         console.log("SAVE FILE");
                         startError.html("The save path must end in \".mkv\"");
                         startPressed = false;
@@ -368,7 +363,7 @@
                     return;
                 }
 
-                if (!validURL(streamServer0.val())) {
+                if ( !validURL(streamServer0.val())) {
                     console.log("STREAM SERVER");
                     startError.html("The stream server must contain \"rtmp://\" or \"rtmps://\" and needs to be a valid url");
                     startPressed = false;
@@ -380,7 +375,7 @@
                     let streamServerJ = $("#stream_server_" + j);
                     if (streamServerJ.length === 0) {
                         if (j < i) {
-                            j++
+                            j++;
                         } else {
                             break;
                         }
@@ -392,14 +387,14 @@
                         startPressed = false;
                         return;
                     }
-                    if (!validURL(streamServerJ.val())) {
+                    if ( !validURL(streamServerJ.val())) {
                         console.log("STREAM SERVER - " + j);
                         startError.html("The stream server must contain \"rtmp://\" or \"rtmps://\" and needs to be a valid url");
                         startPressed = false;
                         return;
                     }
                     if (j < i) {
-                        j++
+                        j++;
                     } else {
                         break;
                     }
@@ -435,7 +430,7 @@
                         let k = 2;
                         for (let j = 1; j < i; j++) {
                             try {
-                                document.getElementById("row_" + j)
+                                document.getElementById("row_" + j);
                                 tableStatus.append("<tr><td><p class='subtitle'>Stream " + k + " status</p><pre id='" + k + "_status'></pre><br></td></tr>");
                                 k++;
                             } catch (e) {
@@ -443,7 +438,7 @@
                             }
                         }
                         statusInterval = setInterval(function () {
-                            console.log("Status")
+                            console.log("Status");
                             $.ajax({
                                 url: "status",
                                 type: "post",
@@ -454,7 +449,7 @@
                                     statusError.html("");
                                     const statusResponseJson = JSON.parse(data);
                                     if (statusResponseJson.error !== "") {
-                                        statusError.html(statusResponseJson.error);
+                                        statusError.html(statusResponseJson.error + "<br>");
                                         return;
                                     }
                                     for (let j = 0; j < statusResponseJson.status.length; j++) {
@@ -466,7 +461,7 @@
                                         }
                                     }
                                 },
-                            })
+                            });
                         }, 5000);
                     },
                 });
@@ -477,7 +472,7 @@
 
             stopButton.click(function () {
                 stopButton.disabled = true;
-                console.log("Stop pressed")
+                console.log("Stop pressed");
                 $.ajax({
                     url: "stop",
                     type: "post",

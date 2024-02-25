@@ -277,7 +277,7 @@
                         }
                     },
                 });
-            }
+            };
 
             endpointsCheck();
 
@@ -288,7 +288,7 @@
             let deleteError = $("#delete_error");
 
             $("#submit_unique").click(function () {
-                recallError.html("")
+                recallError.html("");
                 if ($("#unique").val().length === 0) {
                     recallError.html("The code field cannot be empty");
                     return;
@@ -367,7 +367,7 @@
                                 let temp = col.getElementsByTagName("input");
                                 if (temp.length > 0) {
                                     let element = temp[0];
-                                    let parts = element.id.split("~")
+                                    let parts = element.id.split("~");
                                     if (parts[1] === recallResponseJson.inputEndpoint) {
                                         element.checked = true;
                                         next = false;
@@ -375,12 +375,12 @@
                                     }
                                 }
                             }
-                            if (!next) {
+                            if ( !next) {
                                 break;
                             }
                         }
                     },
-                })
+                });
             });
 
             let startPressed = false;
@@ -395,7 +395,7 @@
                 startPressed = true;
                 startButton.disabled = true;
 
-                startError.html("")
+                startError.html("");
 
                 let savePath = $("#save_path");
 
@@ -406,7 +406,7 @@
                         startPressed = false;
                         return;
                     }
-                    if (!savePath.val().endsWith(".mkv")) {
+                    if ( !savePath.val().endsWith(".mkv")) {
                         console.log("SAVE FILE");
                         startError.html("The save path must end in \".mkv\"");
                         startPressed = false;
@@ -430,7 +430,7 @@
                     startPressed = false;
                     return;
                 }
-                if (!validURL(streamServer0.val())) {
+                if ( !validURL(streamServer0.val())) {
                     console.log("STREAM SERVER");
                     startError.html("The stream server must contain \"rtmp://\" or \"rtmps://\" and needs to be a valid url");
                     startPressed = false;
@@ -441,7 +441,7 @@
                     let streamServerJ = $("#stream_server_" + j);
                     if (streamServerJ.length === 0) {
                         if (j < i) {
-                            j++
+                            j++;
                         } else {
                             break;
                         }
@@ -453,14 +453,14 @@
                         startPressed = false;
                         return;
                     }
-                    if (!validURL(streamServerJ.val())) {
+                    if ( !validURL(streamServerJ.val())) {
                         console.log("STREAM SERVER - " + j);
                         startError.html("The stream server must contain \"rtmp://\" or \"rtmps://\" and needs to be a valid url");
                         startPressed = false;
                         return;
                     }
                     if (j < i) {
-                        j++
+                        j++;
                     } else {
                         break;
                     }
@@ -518,7 +518,7 @@
                         let k = 2;
                         for (let j = 1; j < i; j++) {
                             try {
-                                document.getElementById("row_" + j)
+                                document.getElementById("row_" + j);
                                 tableStatus.append("<tr><td><p class='subtitle'>Stream " + k + " status</p><pre id='" + k + "_status'></pre><br></td></tr>");
                                 k++;
                             } catch (e) {
@@ -526,7 +526,7 @@
                             }
                         }
                         statusInterval = setInterval(function () {
-                            console.log("Status")
+                            console.log("Status");
                             $.ajax({
                                 url: "status",
                                 type: "post",
@@ -550,7 +550,7 @@
                                         }
                                     }
                                 },
-                            })
+                            });
                         }, 5000);
                     },
                 });
@@ -561,7 +561,7 @@
 
             stopButton.click(function () {
                 stopButton.disabled = true;
-                console.log("Stop pressed")
+                console.log("Stop pressed");
                 $.ajax({
                     url: "stop",
                     type: "post",
@@ -586,7 +586,7 @@
                         stopError.html("invalid response from server: " + stopResponseJson.stopped);
                         console.log("invalid response from server: " + stopResponseJson.stopped);
                     },
-                })
+                });
                 stopButton.disabled = false;
             });
 
@@ -594,7 +594,7 @@
 
             deleteButton.click(function () {
                 deleteButton.disabled = true;
-                console.log("Delete pressed")
+                console.log("Delete pressed");
                 $.ajax({
                     url: "delete",
                     type: "post",
@@ -619,9 +619,9 @@
                         deleteError.html("invalid response from server: " + deleteResponseJson.deleted);
                         console.log("invalid response from server: " + deleteResponseJson.deleted);
                     },
-                })
+                });
                 deleteButton.disabled = false;
-            })
+            });
         });
 
         function validURL(str) {
