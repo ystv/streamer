@@ -200,11 +200,6 @@
             }
         };
 
-        let unique;
-        let statusInterval;
-
-        let endpointSelector = $("#endpoint_selector");
-
         let streamsCheck = function () {
             $.ajax({
                 url: "streams",
@@ -253,7 +248,37 @@
         });
 
         $(document).ready(function () {
+            let unique;
+
+            let statusInterval;
+            let startWindowServerErrorInterval;
+            let statusWindowServerErrorInterval;
+
+            let startWindowServerError = $("#start_window_server_error");
+            let statusWindowServerError = $("#status_window_server_error");
             let endpointTableError = $("#endpoint_table_error");
+
+            let stopButton = $("#stop_button");
+
+            startWindowServerErrorInterval = setInterval(function () {
+                $.ajax({
+                    url: "serverError",
+                    type: "post",
+                    dataType: "text",
+                    contentType: "application/x-www-form-urlencoded",
+                    data: ({"unique_code": unique}),
+                    success: function (data) {
+                        startWindowServerError.html("");
+                        const serverErrorResponseJson = JSON.parse(data);
+                        if (serverErrorResponseJson.error !== "") {
+                            startWindowServerError.html(serverErrorResponseJson.error + "<br>");
+                            return;
+                        }
+                        startWindowServerError.html(serverErrorResponseJson.serverError);
+                    },
+                });
+            }, 5000);
+
             let endpointsCheckErrorInterval;
 
             let endpointsCheck = function () {
@@ -413,6 +438,7 @@
                             startPressed = false;
                             return;
                         }
+                        clearInterval(startWindowServerErrorInterval);
                         $("#unique").html(startResponseJson.unique);
                         document.getElementById("start_window").hidden = true;
                         document.getElementById("start_window").style.visibility = "hidden";
@@ -463,12 +489,29 @@
                                 },
                             });
                         }, 5000);
+
+                        statusWindowServerErrorInterval = setInterval(function () {
+                            $.ajax({
+                                url: "serverError",
+                                type: "post",
+                                dataType: "text",
+                                contentType: "application/x-www-form-urlencoded",
+                                data: ({"unique_code": unique}),
+                                success: function (data) {
+                                    statusWindowServerError.html();
+                                    const serverErrorResponseJson = JSON.parse(data);
+                                    if (serverErrorResponseJson.error !== "") {
+                                        statusWindowServerError.html(serverErrorResponseJson.error);
+                                        return;
+                                    }
+                                    statusWindowServerError.html(serverErrorResponseJson.serverError + "You may have stream instabilities during this time<br>");
+                                },
+                            });
+                        }, 5000);
                     },
                 });
                 startButton.disabled = false;
             });
-
-            let stopButton = $("#stop_button");
 
             stopButton.click(function () {
                 stopButton.disabled = true;
@@ -492,6 +535,7 @@
                             document.getElementById("stopped_window").style.visibility = "visible";
                             unique = "";
                             clearInterval(statusInterval);
+                            clearInterval(statusWindowServerErrorInterval);
                             return;
                         }
                         stopError.html("invalid response from server: " + stopResponseJson.stopped);

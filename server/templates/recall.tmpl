@@ -51,6 +51,7 @@
             <label for="unique_code"></label><input id="unique_code" name="unique_code" style="visibility: hidden"/><br>
             <div class="card">
                 <div class="card-content">
+                    <p id="recalled_window_server_error" style="color: red"></p>
                     <p class="subtitle">Selection</p>
                     <p id="endpoint_table_error" style="color: red"></p>
                     <table class="table table-bordered" id="endpoint_table">
@@ -142,7 +143,8 @@
             <p>The stream has been forwarded, the unique code of this forward is below</p><br>
             <p id="started_unique" class="subtitle"></p><br>
             <p id="status_error" style="color: red"></p><br>
-            <table class="table table-bordered" id="tableStatus"></table>
+            <p id="status_window_server_error" style="color: red"></p>
+            <table class="table table-bordered" id="table_status"></table>
             <br>
             <p>This window can be closed as long as you have the code to stop the stream<br>
                 If you want to return later, then you will need to go to <a
@@ -216,8 +218,6 @@
             }
         };
 
-        let unique;
-        let statusInterval;
         let i = 1;
 
         function addStream() {
@@ -552,6 +552,25 @@
                                 },
                             });
                         }, 5000);
+
+                        statusWindowServerErrorInterval = setInterval(function () {
+                            $.ajax({
+                                url: "serverError",
+                                type: "post",
+                                dataType: "text",
+                                contentType: "application/x-www-form-urlencoded",
+                                data: ({"unique_code": unique}),
+                                success: function (data) {
+                                    statusWindowServerError.html();
+                                    const serverErrorResponseJson = JSON.parse(data);
+                                    if (serverErrorResponseJson.error !== "") {
+                                        statusWindowServerError.html(serverErrorResponseJson.error);
+                                        return;
+                                    }
+                                    statusWindowServerError.html(serverErrorResponseJson.serverError + "You may have stream instabilities during this time<br>");
+                                },
+                            });
+                        }, 5000);
                     },
                 });
                 startButton.disabled = false;
@@ -581,6 +600,7 @@
                             document.getElementById("stopped_window").style.visibility = "visible";
                             unique = "";
                             clearInterval(statusInterval);
+                            clearInterval(statusWindowServerErrorInterval);
                             return;
                         }
                         stopError.html("invalid response from server: " + stopResponseJson.stopped);
@@ -614,6 +634,7 @@
                             document.getElementById("deleted_window").style.visibility = "visible";
                             unique = "";
                             clearInterval(statusInterval);
+                            clearInterval(recalledWindowServerErrorInterval);
                             return;
                         }
                         deleteError.html("invalid response from server: " + deleteResponseJson.deleted);

@@ -45,6 +45,7 @@
             <p>The stream has been forwarded, the unique code of this forward is below</p><br>
             <p id="unique_code" class="subtitle"></p><br>
             <p id="status_error" style="color: red"></p><br>
+            <p id="status_window_server_error" style="color: red"></p>
             <table class="table table-bordered" id="table_status"></table>
             <br>
             <p>This window can be closed as long as you have the code to stop the stream<br>
@@ -85,6 +86,10 @@
         let statusError = $("#status_error");
         let stopError = $("#stop_error");
         let resumeError = $("#resume_error");
+
+        let statusWindowServerErrorInterval;
+
+        let statusWindowServerError = $("#status_window_server_error");
 
         $(document).ready(function () {
             $("#submit_unique").click(function () {
@@ -155,6 +160,25 @@
                                 },
                             })
                         }, 5000);
+
+                        statusWindowServerErrorInterval = setInterval(function () {
+                            $.ajax({
+                                url: "serverError",
+                                type: "post",
+                                dataType: "text",
+                                contentType: "application/x-www-form-urlencoded",
+                                data: ({"unique_code": unique}),
+                                success: function (data) {
+                                    statusWindowServerError.html();
+                                    const serverErrorResponseJson = JSON.parse(data);
+                                    if (serverErrorResponseJson.error !== "") {
+                                        statusWindowServerError.html(serverErrorResponseJson.error);
+                                        return;
+                                    }
+                                    statusWindowServerError.html(serverErrorResponseJson.serverError+"You may have stream instabilities during this time<br>");
+                                },
+                            })
+                        }, 5000);
                     },
                 })
             });
@@ -183,6 +207,7 @@
                             document.getElementById("stopped_window").style.visibility = "visible";
                             unique = "";
                             clearInterval(statusInterval);
+                            clearInterval(statusWindowServerErrorInterval);
                             return;
                         }
                         stopError.html("invalid response from server: " + stopResponseJson.stopped);
