@@ -483,25 +483,6 @@
 
                         clearInterval(recalledWindowServerErrorInterval);
 
-                        statusWindowServerErrorInterval = setInterval(function () {
-                            $.ajax({
-                                url: "serverError",
-                                type: "post",
-                                dataType: "text",
-                                contentType: "application/x-www-form-urlencoded",
-                                data: ({"unique_code": unique}),
-                                success: function (data) {
-                                    statusWindowServerError.html("");
-                                    const serverErrorResponseJson = JSON.parse(data);
-                                    if (serverErrorResponseJson.error !== "") {
-                                        statusWindowServerError.html(serverErrorResponseJson.error + "<br>");
-                                        return;
-                                    }
-                                    statusWindowServerError.html(serverErrorResponseJson.serverError);
-                                },
-                            });
-                        }, 5000);
-
                         $("#started_unique").html(startResponseJson.unique);
                         document.getElementById("recalled_stream_window").hidden = true;
                         document.getElementById("recalled_stream_window").style.visibility = "hidden";
