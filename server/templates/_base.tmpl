@@ -16,8 +16,8 @@
     <h1 class="title">Streamer</h1><br>
     <div class="subtitle"><p>Welcome to Streamer<br></p></div>
     <div class="theme-switch-wrapper">
-      <label class="theme-switch" for="checkbox">
-        <input type="checkbox" id="checkbox"/>
+      <label class="theme-switch" for="theme_checkbox">
+        <input type="checkbox" id="theme_checkbox"/>
         <div class="slider round"></div>
       </label>
       <p style="margin-bottom: 10px;">Dark Mode</p>
@@ -28,7 +28,7 @@
     {{ $year := thisYear }}
     <footer id="footer">Streamer (version: {{ getVersion }}) - created by Liam Burnand 2022{{if ne $year 2022}}-{{ $year }}{{end}}</footer>
     <script>
-        const toggleSwitch = document.querySelector(".theme-switch input[type='checkbox']");
+        const toggleSwitch = document.getElementById("theme_checkbox");
 
         if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
             document.documentElement.setAttribute("data-theme", "dark");
