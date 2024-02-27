@@ -31,12 +31,14 @@ func (v *Views) StartFunc(c echo.Context) error {
 			Action: action.Start,
 		}
 
+		streamSelector := c.FormValue("stream_selector")
+
 		fStart := commonTransporter.ForwarderStart{
-			StreamIn: c.FormValue("stream_selector"),
+			StreamIn: streamSelector,
 		}
 
 		rStart := commonTransporter.RecorderStart{
-			StreamIn: c.FormValue("stream_selector"),
+			StreamIn: streamSelector,
 			PathOut:  c.FormValue("save_path"),
 		}
 
@@ -46,9 +48,9 @@ func (v *Views) StartFunc(c echo.Context) error {
 		}
 
 		if c.FormValue("website_stream") == "on" {
-			//websiteStream = true
-			if v.websiteCheck(c.FormValue("website_stream_endpoint")) {
-				fStart.WebsiteOut = c.FormValue("website_stream_endpoint")
+			websiteStreamEndpoint := c.FormValue("website_stream_endpoint")
+			if v.websiteCheck(websiteStreamEndpoint) {
+				fStart.WebsiteOut = websiteStreamEndpoint
 			} else {
 				response.Error = "website key check has failed"
 				return c.JSON(http.StatusOK, response)
@@ -69,56 +71,14 @@ func (v *Views) StartFunc(c echo.Context) error {
 		}
 		sort.Ints(numbers)
 
-		var b []byte
-
-		loop := true
-
-		for loop {
-			b = make([]byte, 10)
-			for i := range b {
-				b[i] = charset[seededRand.Intn(len(charset))]
-			}
-
-			streams1, err := v.store.GetStreams()
-			if err != nil {
-				log.Printf("failed to get streams: %+v", err)
-				response.Error = fmt.Sprintf("failed to get streams: %+v", err)
-				return c.JSON(http.StatusOK, response)
-			}
-
-			if len(streams1) == 0 {
-				break
-			}
-
-			for _, s := range streams1 {
-				if s.Stream == string(b) {
-					loop = true
-					break
-				}
-				loop = false
-			}
-
-			stored, err := v.store.GetStored()
-			if err != nil {
-				log.Printf("failed to get stored: %+v", err)
-				response.Error = fmt.Sprintf("failed to get stored: %+v", err)
-				return c.JSON(http.StatusOK, response)
-			}
-
-			if len(stored) == 0 {
-				break
-			}
-
-			for _, s := range stored {
-				if s.Stream == string(b) {
-					loop = true
-					break
-				}
-				loop = false
-			}
+		unique, err := v.generateUnique()
+		if err != nil {
+			log.Printf("failed to get unique: %+v", err)
+			response.Error = fmt.Sprintf("failed to get unique: %+v", err)
+			return c.JSON(http.StatusOK, response)
 		}
 
-		transporter.Unique = string(b)
+		transporter.Unique = unique
 
 		var streams []string
 		for _, index := range numbers {
@@ -140,7 +100,8 @@ func (v *Views) StartFunc(c echo.Context) error {
 			if c.FormValue("record_checkbox") == "on" {
 				recorderTransporter := transporter
 				recorderTransporter.Payload = rStart
-				wsResponse, err := v.wsHelper(server.Recorder, recorderTransporter)
+				var wsResponse commonTransporter.ResponseTransporter
+				wsResponse, err = v.wsHelper(server.Recorder, recorderTransporter)
 				if err != nil {
 					log.Printf("failed sending to Recorder for start: %+v", err)
 					errorMessages = append(errorMessages, fmt.Sprintf("failed sending to Recorder for start: %+v", err))
@@ -162,7 +123,8 @@ func (v *Views) StartFunc(c echo.Context) error {
 			defer wg.Done()
 			forwarderTransporter := transporter
 			forwarderTransporter.Payload = fStart
-			wsResponse, err := v.wsHelper(server.Forwarder, forwarderTransporter)
+			var wsResponse commonTransporter.ResponseTransporter
+			wsResponse, err = v.wsHelper(server.Forwarder, forwarderTransporter)
 			if err != nil {
 				log.Printf("failed sending to Forwarder for start: %+v", err)
 				errorMessages = append(errorMessages, fmt.Sprintf("failed sending to Forwarder for start: %+v", err))
@@ -182,14 +144,15 @@ func (v *Views) StartFunc(c echo.Context) error {
 		wg.Wait()
 
 		if len(errorMessages) == 0 {
-			err := v.HandleTXLight(v.conf.TransmissionLight, tx.TransmissionOn)
+			err = v.HandleTXLight(v.conf.TransmissionLight, tx.TransmissionOn)
 			if err != nil {
 				log.Printf("failed to turn transmission light on: %+v, ignoring and continuing", err)
 			}
 
-			s, err := v.store.AddStream(&storage.Stream{
-				Stream:    string(b),
-				Input:     c.FormValue("stream_selector"),
+			var s *storage.Stream
+			s, err = v.store.AddStream(&storage.Stream{
+				Stream:    unique,
+				Input:     streamSelector,
 				Recording: rStart.PathOut,
 				Website:   fStart.WebsiteOut,
 				Streams:   streams,
@@ -208,9 +171,9 @@ func (v *Views) StartFunc(c echo.Context) error {
 				return c.JSON(http.StatusOK, response)
 			}
 
-			log.Printf("started stream: %s", string(b))
+			log.Printf("started stream: %s", unique)
 
-			response.Unique = string(b)
+			response.Unique = unique
 			return c.JSON(http.StatusOK, response)
 		}
 

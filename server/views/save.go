@@ -48,57 +48,11 @@ func (v *Views) SaveFunc(c echo.Context) error {
 		}
 		sort.Ints(numbers)
 
-		var b []byte
-
-		loop := true
-
-		for loop {
-			b = make([]byte, 10)
-			for i := range b {
-				b[i] = charset[seededRand.Intn(len(charset))]
-			}
-
-			streams1, err := v.store.GetStreams()
-			if err != nil {
-				log.Printf("failed to get streams: %+v", err)
-				response.Error = fmt.Sprintf("failed to get streams: %+v", err)
-				return c.JSON(http.StatusOK, response)
-			}
-
-			if len(streams1) == 0 {
-				break
-			}
-
-			for _, s := range streams1 {
-				if s.Stream == string(b) {
-					loop = true
-					break
-				}
-				loop = false
-			}
-
-			if loop {
-				continue
-			}
-
-			stored, err := v.store.GetStored()
-			if err != nil {
-				log.Printf("failed to get stored: %+v", err)
-				response.Error = fmt.Sprintf("failed to get stored: %+v", err)
-				return c.JSON(http.StatusOK, response)
-			}
-
-			if len(stored) == 0 {
-				break
-			}
-
-			for _, s := range stored {
-				if s.Stream == string(b) {
-					loop = true
-					break
-				}
-				loop = false
-			}
+		unique, err := v.generateUnique()
+		if err != nil {
+			log.Printf("failed to get unique: %+v", err)
+			response.Error = fmt.Sprintf("failed to get unique: %+v", err)
+			return c.JSON(http.StatusOK, response)
 		}
 
 		recording := ""
@@ -120,7 +74,7 @@ func (v *Views) SaveFunc(c echo.Context) error {
 		}
 
 		stored := &storage.Stored{
-			Stream:    string(b),
+			Stream:    unique,
 			Input:     endpoint + "/" + c.FormValue("stream_input"),
 			Recording: recording,
 			Website:   website,
@@ -129,8 +83,8 @@ func (v *Views) SaveFunc(c echo.Context) error {
 
 		s, err := v.store.AddStored(stored)
 		if err != nil {
-			log.Printf("failed to add stored: %+v, unique: %s", err, string(b))
-			response.Error = fmt.Sprintf("failed to add stored: %+v, unique: %s", err, string(b))
+			log.Printf("failed to add stored: %+v, unique: %s", err, unique)
+			response.Error = fmt.Sprintf("failed to add stored: %+v, unique: %s", err, unique)
 			return c.JSON(http.StatusOK, response)
 		}
 
@@ -145,8 +99,8 @@ func (v *Views) SaveFunc(c echo.Context) error {
 			log.Printf("failed to turn transmission light on: %+v, ignoring and continuing", err)
 		}
 
-		log.Printf("saved stream: %s", string(b))
-		response.Unique = string(b)
+		log.Printf("saved stream: %s", unique)
+		response.Unique = unique
 		return c.JSON(http.StatusOK, response)
 	}
 	return echo.NewHTTPError(http.StatusMethodNotAllowed, "invalid method")
