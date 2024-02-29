@@ -54,7 +54,6 @@ func (v *Views) StopFunc(c echo.Context) error {
 			Unique: unique,
 		}
 
-		var wg sync.WaitGroup
 		_, rec := v.cache.Get(server.Recorder.String())
 		_, fow := v.cache.Get(server.Forwarder.String())
 
@@ -65,6 +64,8 @@ func (v *Views) StopFunc(c echo.Context) error {
 		} else if !fow {
 			err = fmt.Errorf("no forwarder available")
 		}
+
+		var wg sync.WaitGroup
 		var errorMessages []string
 		wg.Add(2)
 		go func() {
