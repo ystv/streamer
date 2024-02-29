@@ -2,14 +2,9 @@ package views
 
 import (
 	"fmt"
-	"log"
-	"math"
-	"net/http"
-	"sort"
-	"strconv"
-	"strings"
-
 	"github.com/labstack/echo/v4"
+	"log"
+	"net/http"
 
 	"github.com/ystv/streamer/server/helper/tx"
 	"github.com/ystv/streamer/server/storage"
@@ -34,19 +29,12 @@ func (v *Views) SaveFunc(c echo.Context) error {
 			Error  string `json:"error"`
 		}
 
-		endpoint := strings.Split(c.FormValue("endpoints_table"), "~")[1]
-
-		largest := 0
-		var numbers []int
-		for s := range c.Request().PostForm {
-			if strings.Contains(s, "stream_server_") {
-				split := strings.Split(s, "_")
-				conv, _ := strconv.ParseInt(split[2], 10, 64)
-				largest = int(math.Max(float64(largest), float64(conv)))
-				numbers = append(numbers, int(conv))
-			}
+		formValues := v.startSaveValidationHelper(c, Save)
+		if formValues.Error != nil {
+			log.Printf("invalid form input: %+v", formValues.Error)
+			response.Error = fmt.Sprintf("invalid form input: %+v", formValues.Error)
+			return c.JSON(http.StatusOK, response)
 		}
-		sort.Ints(numbers)
 
 		unique, err := v.generateUnique()
 		if err != nil {
@@ -55,30 +43,12 @@ func (v *Views) SaveFunc(c echo.Context) error {
 			return c.JSON(http.StatusOK, response)
 		}
 
-		recording := ""
-		website := ""
-
-		if c.FormValue("record_checkbox") == "on" {
-			recording = c.FormValue("save_path")
-		}
-
-		if c.FormValue("website_stream") == "on" {
-			website = c.FormValue("website_stream_endpoint")
-		}
-
-		var streams []string
-		for _, index := range numbers {
-			server := c.FormValue("stream_server_" + strconv.Itoa(index))
-			server += "|"
-			streams = append(streams, server+c.FormValue("stream_key_"+strconv.Itoa(index)))
-		}
-
 		stored := &storage.Stored{
 			Stream:    unique,
-			Input:     endpoint + "/" + c.FormValue("stream_input"),
-			Recording: recording,
-			Website:   website,
-			Streams:   streams,
+			Input:     formValues.Input,
+			Recording: formValues.SavePath,
+			Website:   formValues.WebsiteOut,
+			Streams:   formValues.Streams,
 		}
 
 		s, err := v.store.AddStored(stored)

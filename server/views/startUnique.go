@@ -1,13 +1,9 @@
 package views
 
 import (
-	"encoding/xml"
 	"fmt"
 	"log"
-	"math"
 	"net/http"
-	"sort"
-	"strconv"
 	"strings"
 	"sync"
 
@@ -17,7 +13,6 @@ import (
 	"github.com/ystv/streamer/common/transporter/action"
 	"github.com/ystv/streamer/common/transporter/server"
 	"github.com/ystv/streamer/common/wsMessages"
-	"github.com/ystv/streamer/server/helper"
 	"github.com/ystv/streamer/server/helper/tx"
 	"github.com/ystv/streamer/server/storage"
 )
@@ -54,103 +49,36 @@ func (v *Views) StartUniqueFunc(c echo.Context) error {
 			return c.JSON(http.StatusOK, response)
 		}
 
+		formValues := v.startSaveValidationHelper(c, StartUnique)
+		if formValues.Error != nil {
+			log.Printf("invalid form input: %+v", formValues.Error)
+			response.Error = fmt.Sprintf("invalid form input: %+v", formValues.Error)
+			return c.JSON(http.StatusOK, response)
+		}
+
 		transporter := commonTransporter.Transporter{
 			Action: action.Start,
 			Unique: unique,
 		}
 
-		inputEndpoint := c.FormValue("endpoints_table")
-		inputStream := c.FormValue("stream_input")
-
-		streamPageContent, err := helper.GetBody("http://" + v.conf.StreamServer + "stat")
-		if err != nil {
-			log.Printf("failed to get streams from stream server: %+v", err)
-			response.Error = fmt.Sprintf("failed to get streams from stream server: %+v", err)
-			return c.JSON(http.StatusOK, response)
-		}
-
-		var rtmp RTMP
-
-		err = xml.Unmarshal([]byte(streamPageContent), &rtmp)
-		if err != nil {
-			log.Printf("failed to unmarshal xml: %+v", err)
-			response.Error = fmt.Sprintf("failed to unmarshal xml: %+v", err)
-			return c.JSON(http.StatusOK, response)
-		}
-
-		found := false
-
-		var streamIn string
-		endpoint := strings.Split(inputEndpoint, "~")
-	applicationFor:
-		for i := 0; i < len(rtmp.Server.Applications); i++ {
-			if rtmp.Server.Applications[i].Name == endpoint[1] {
-				for j := 0; j < len(rtmp.Server.Applications[i].Live.Streams); j++ {
-					if rtmp.Server.Applications[i].Live.Streams[j].Name == inputStream {
-						found = true
-						streamIn = endpoint[1] + "/" + rtmp.Server.Applications[i].Live.Streams[j].Name
-						break applicationFor
-					}
-				}
-			}
-		}
-
-		if !found {
-			log.Printf("unable to find current stream input")
-			response.Error = "unable to find current stream input"
-			return c.JSON(http.StatusOK, response)
-		}
-
 		fStart := commonTransporter.ForwarderStart{
-			StreamIn: streamIn,
+			StreamIn:   formValues.Input,
+			WebsiteOut: formValues.WebsiteOut,
 		}
 
 		rStart := commonTransporter.RecorderStart{
-			StreamIn: streamIn,
-			PathOut:  c.FormValue("save_path"),
+			StreamIn: formValues.Input,
+			PathOut:  formValues.SavePath,
 		}
 
-		if c.FormValue("website_stream") == "on" {
-			if v.websiteCheck(c.FormValue("website_stream_endpoint")) {
-				fStart.WebsiteOut = c.FormValue("website_stream_endpoint")
-			} else {
-				response.Error = "website key check has failed"
-				return c.JSON(http.StatusOK, response)
-			}
-		}
-
-		// This section finds the number of the stream from the form
-		// You can miss values out, and some rearranging will have to be done
-		largest := 0
-		var numbers []int
-		for s := range c.Request().PostForm {
-			if strings.Contains(s, "stream_server_") {
-				split := strings.Split(s, "_")
-				conv, _ := strconv.ParseInt(split[2], 10, 64)
-				largest = int(math.Max(float64(largest), float64(conv)))
-				numbers = append(numbers, int(conv))
-			}
-		}
-		sort.Ints(numbers)
-
-		var streams []string
-		for _, index := range numbers {
-			streamServer := c.FormValue("stream_server_" + strconv.Itoa(index))
-			if streamServer[len(streamServer)-1] != '/' {
-				streamServer += "/"
-			}
-			streamServer += c.FormValue("stream_key_" + strconv.Itoa(index))
-			streams = append(streams, streamServer)
-		}
-
-		fStart.Streams = streams
+		fStart.Streams = formValues.Streams
 
 		var wg sync.WaitGroup
 		wg.Add(2)
 		var errorMessages []string
 		go func() {
 			defer wg.Done()
-			if c.FormValue("record_checkbox") == "on" {
+			if formValues.RecordCheckbox {
 				recorderTransporter := transporter
 				recorderTransporter.Payload = rStart
 				var wsResponse commonTransporter.ResponseTransporter
@@ -205,10 +133,10 @@ func (v *Views) StartUniqueFunc(c echo.Context) error {
 			var s *storage.Stream
 			s, err = v.store.AddStream(&storage.Stream{
 				Stream:    unique,
-				Input:     streamIn,
+				Input:     formValues.Input,
 				Recording: rStart.PathOut,
 				Website:   fStart.WebsiteOut,
-				Streams:   streams,
+				Streams:   formValues.Streams,
 			})
 			if err != nil {
 				log.Printf("invalid response from Forwarder for start: %s", response)

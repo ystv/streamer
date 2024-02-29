@@ -3,11 +3,7 @@ package views
 import (
 	"fmt"
 	"log"
-	"math"
 	"net/http"
-	"regexp"
-	"sort"
-	"strconv"
 	"strings"
 	"sync"
 
@@ -33,113 +29,11 @@ func (v *Views) StartFunc(c echo.Context) error {
 			Error  string `json:"error"`
 		}
 
-		var websiteOut string
-
-		streamSelector := c.FormValue("stream_selector")
-		if len(streamSelector) < 3 {
-			log.Printf("invalid stream selector value")
-			response.Error = fmt.Sprintf("invalid stream selector value")
+		formValues := v.startSaveValidationHelper(c, Start)
+		if formValues.Error != nil {
+			log.Printf("invalid form input: %+v", formValues.Error)
+			response.Error = fmt.Sprintf("invalid form input: %+v", formValues.Error)
 			return c.JSON(http.StatusOK, response)
-		}
-
-		recordCheckboxRaw := c.FormValue("record_checkbox")
-		if recordCheckboxRaw != "" && recordCheckboxRaw != "on" {
-			log.Printf("invalid record checkbox value: %s", recordCheckboxRaw)
-			response.Error = fmt.Sprintf("invalid record checkbox value: %s", recordCheckboxRaw)
-			return c.JSON(http.StatusOK, response)
-		}
-
-		recordCheckbox := recordCheckboxRaw == "on"
-
-		savePath := c.FormValue("save_path")
-		if len(savePath) == 0 && recordCheckbox {
-			log.Printf("invalid save path value")
-			response.Error = fmt.Sprintf("invalid save path value")
-			return c.JSON(http.StatusOK, response)
-		}
-
-		if recordCheckbox && !strings.HasSuffix(savePath, ".mkv") {
-			log.Printf("the save path must end in \".mkv\"")
-			response.Error = fmt.Sprintf("the save path must end in \".mkv\"")
-			return c.JSON(http.StatusOK, response)
-		}
-
-		websiteCheckboxRaw := c.FormValue("website_stream")
-		if websiteCheckboxRaw != "" && websiteCheckboxRaw != "on" {
-			log.Printf("invalid website stream checkbox value: %s", recordCheckboxRaw)
-			response.Error = fmt.Sprintf("invalid website stream checkbox value: %s", recordCheckboxRaw)
-			return c.JSON(http.StatusOK, response)
-		}
-
-		websiteCheckbox := websiteCheckboxRaw == "on"
-
-		websiteStreamEndpoint := c.FormValue("website_stream_endpoint")
-		if websiteCheckbox && !strings.Contains(websiteStreamEndpoint, "?pwd=") {
-			log.Printf("the website stream endpoint must contain \"?pwd=\"")
-			response.Error = fmt.Sprintf("the website stream endpoint must contain \"?pwd=\"")
-			return c.JSON(http.StatusOK, response)
-		}
-
-		if websiteCheckbox {
-			if v.websiteCheck(websiteStreamEndpoint) {
-				websiteOut = websiteStreamEndpoint
-			} else {
-				log.Printf("website key check has failed")
-				response.Error = "website key check has failed"
-				return c.JSON(http.StatusOK, response)
-			}
-		}
-
-		// This section finds the number of the stream from the form
-		// You can miss values out, and some rearranging will have to be done
-		largest := 0
-		var numbers []int
-		for s := range c.Request().PostForm {
-			if strings.Contains(s, "stream_server_") {
-				split := strings.Split(s, "_")
-				conv, _ := strconv.ParseInt(split[2], 10, 64)
-				largest = int(math.Max(float64(largest), float64(conv)))
-				numbers = append(numbers, int(conv))
-			}
-		}
-		sort.Ints(numbers)
-
-		streamServerRegex, err := regexp.Compile("^(rtmps?:\\/\\/)?" + // protocol
-			"((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|" + // domain name
-			"((\\d{1,3}\\.){3}\\d{1,3}))" + // OR ip (v4) address
-			"(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*" + // port and path
-			"(\\?[;&a-z\\d%_.~+=-]*)?" + // query string
-			"(\\#[-a-z\\d_]*)?$") // fragment locator
-		if err != nil {
-			log.Printf("failed to compile regex: %+v", err)
-			response.Error = fmt.Sprintf("failed to compile regex: %+v", err)
-			return c.JSON(http.StatusOK, response)
-		}
-
-		var streams []string
-		for _, index := range numbers {
-			streamServer := c.FormValue("stream_server_" + strconv.Itoa(index))
-			if len(streamServer) == 0 {
-				log.Printf("invalid length of stream_server_%d", index)
-				response.Error = fmt.Sprintf("invalid length of stream_server_%d", index)
-				return c.JSON(http.StatusOK, response)
-			}
-			if !streamServerRegex.Match([]byte(streamServer)) {
-				log.Printf("invalid value of stream_server_%d: %+v", index, err)
-				response.Error = fmt.Sprintf("invalid value of stream_server_%d: %+v", index, err)
-				return c.JSON(http.StatusOK, response)
-			}
-			if streamServer[len(streamServer)-1] != '/' {
-				streamServer += "/"
-			}
-			streamKey := c.FormValue("stream_key_" + strconv.Itoa(index))
-			if len(streamKey) == 0 {
-				log.Printf("invalid length of stream_key_%d", index)
-				response.Error = fmt.Sprintf("invalid length of stream_key_%d", index)
-				return c.JSON(http.StatusOK, response)
-			}
-			streamServer += streamKey
-			streams = append(streams, streamServer)
 		}
 
 		unique, err := v.generateUnique()
@@ -151,28 +45,27 @@ func (v *Views) StartFunc(c echo.Context) error {
 
 		transporter := commonTransporter.Transporter{
 			Action: action.Start,
-		}
-
-		transporter.Unique = unique
-
-		rStart := commonTransporter.RecorderStart{
-			StreamIn: streamSelector,
-			PathOut:  savePath,
+			Unique: unique,
 		}
 
 		fStart := commonTransporter.ForwarderStart{
-			StreamIn:   streamSelector,
-			WebsiteOut: websiteOut,
+			StreamIn:   formValues.Input,
+			WebsiteOut: formValues.WebsiteOut,
 		}
 
-		fStart.Streams = streams
+		rStart := commonTransporter.RecorderStart{
+			StreamIn: formValues.Input,
+			PathOut:  formValues.SavePath,
+		}
+
+		fStart.Streams = formValues.Streams
 
 		var wg sync.WaitGroup
 		wg.Add(2)
 		var errorMessages []string
 		go func() {
 			defer wg.Done()
-			if recordCheckbox {
+			if formValues.RecordCheckbox {
 				recorderTransporter := transporter
 				recorderTransporter.Payload = rStart
 				var wsResponse commonTransporter.ResponseTransporter
@@ -227,10 +120,10 @@ func (v *Views) StartFunc(c echo.Context) error {
 			var s *storage.Stream
 			s, err = v.store.AddStream(&storage.Stream{
 				Stream:    unique,
-				Input:     streamSelector,
+				Input:     formValues.Input,
 				Recording: rStart.PathOut,
 				Website:   fStart.WebsiteOut,
-				Streams:   streams,
+				Streams:   formValues.Streams,
 			})
 			if err != nil {
 				log.Printf("invalid response from Forwarder for start: %s", response)
