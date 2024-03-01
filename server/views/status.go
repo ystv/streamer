@@ -51,7 +51,6 @@ func (v *Views) StatusFunc(c echo.Context) error {
 			Unique: unique,
 		}
 
-		//nolint:staticcheck
 		fStatus := commonTransporter.ForwarderStatus{
 			Website: len(stream.Website) > 0,
 			Streams: len(stream.Streams),

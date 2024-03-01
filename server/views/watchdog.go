@@ -36,7 +36,6 @@ func (v *Views) BeginWatchdog() {
 						Unique: stream1.Stream,
 					}
 
-					//nolint:staticcheck
 					fStatus := commonTransporter.ForwarderStatus{
 						Website: len(stream1.Website) > 0,
 						Streams: len(stream1.Streams),
