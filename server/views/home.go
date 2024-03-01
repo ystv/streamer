@@ -1,7 +1,6 @@
 package views
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/labstack/echo/v4"
@@ -33,11 +32,11 @@ func (v *Views) HomeFunc(c echo.Context) error {
 	var err string
 
 	if !rec && !fow {
-		err = fmt.Sprintf("No recorder or forwarder available")
+		err = "No recorder or forwarder available"
 	} else if !rec {
-		err = fmt.Sprintf("No recorder available")
+		err = "No recorder available"
 	} else if !fow {
-		err = fmt.Sprintf("No forwarder available")
+		err = "No forwarder available"
 	}
 
 	data := struct {
