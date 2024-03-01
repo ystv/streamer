@@ -78,6 +78,62 @@ type (
 		// TransporterUnique is the payload to send to the client
 		TransporterUnique transporter.TransporterUnique
 	}
+
+	RecallStream struct {
+		StreamServer string `json:"streamServer"`
+		StreamKey    string `json:"streamKey"`
+	}
+
+	ResumeResponse struct {
+		Response  string `json:"response"`
+		Error     string `json:"error"`
+		Website   bool   `json:"website"`
+		Recording bool   `json:"recording"`
+		Streams   uint64 `json:"streams"`
+	}
+
+	StartSaveValidationResponse struct {
+		Input           string
+		RecordCheckbox  bool
+		SavePath        string
+		WebsiteCheckbox bool
+		WebsiteOut      string
+		Streams         []string
+		Error           error
+	}
+
+	StatusResponse struct {
+		Status []StatusResponseIndividual `json:"status"`
+		Error  string                     `json:"error"`
+	}
+
+	StatusResponseIndividual struct {
+		Name     string `json:"name"`
+		Response string `json:"response"`
+		Error    string `json:"error"`
+	}
+
+	ListedStream struct {
+		Code  string `json:"code"`
+		Input string `json:"input"`
+	}
+
+	// StartingType identifies which starting type this should act as
+	StartingType int
+
+	// ValidationType is used to determine how a form input should be validated
+	ValidationType int
+)
+
+const (
+	nonStoredStart StartingType = iota
+	storedStart
+)
+
+const (
+	startValidation ValidationType = iota
+	startUniqueValidation
+	saveValidation
 )
 
 const (

@@ -10,13 +10,6 @@ import (
 	"github.com/ystv/streamer/server/templates"
 )
 
-type (
-	listedStream struct {
-		Code  string `json:"code"`
-		Input string `json:"input"`
-	}
-)
-
 // ListFunc lists all current streams that are registered in the database
 func (v *Views) ListFunc(c echo.Context) error {
 	/*if !authenticate(w, r) {
@@ -42,13 +35,13 @@ func (v *Views) ListFunc(c echo.Context) error {
 		}
 
 		var response struct {
-			ActiveList []listedStream `json:"activeList"`
-			SavedList  []listedStream `json:"savedList"`
+			ActiveList []ListedStream `json:"activeList"`
+			SavedList  []ListedStream `json:"savedList"`
 			Error      string         `json:"error"`
 		}
 
-		response.ActiveList = []listedStream{}
-		response.SavedList = []listedStream{}
+		response.ActiveList = []ListedStream{}
+		response.SavedList = []ListedStream{}
 
 		streams, err := v.store.GetStreams()
 		if err != nil {
@@ -58,7 +51,7 @@ func (v *Views) ListFunc(c echo.Context) error {
 		}
 
 		for _, s := range streams {
-			response.ActiveList = append(response.ActiveList, listedStream{
+			response.ActiveList = append(response.ActiveList, ListedStream{
 				Code:  s.Stream,
 				Input: s.Input,
 			})
@@ -72,7 +65,7 @@ func (v *Views) ListFunc(c echo.Context) error {
 		}
 
 		for _, s := range stored {
-			response.SavedList = append(response.SavedList, listedStream{
+			response.SavedList = append(response.SavedList, ListedStream{
 				Code:  s.Stream,
 				Input: s.Input,
 			})
