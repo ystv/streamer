@@ -257,9 +257,9 @@
                     data: ({"unique": unique}),
                     success: function (data) {
                         const endpointsResponseJson = JSON.parse(data);
-                        endpointTableError.html("");
+                        endpointsTableError.html("");
                         if (endpointsResponseJson.error !== "") {
-                            endpointTableError.html(endpointsResponseJson.error + "<br>");
+                            endpointsTableError.html(endpointsResponseJson.error + "<br>");
                             if (endpointsCheckErrorInterval === undefined) {
                                 endpointsCheckErrorInterval = setInterval(endpointsCheck, 5000);
                             }
