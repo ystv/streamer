@@ -184,10 +184,10 @@
                         for (let endpoint of endpointsResponseJson.endpoints) {
                             $("#endpoints_table").append("<tr>" +
                                 "<td>" +
-                                "<label for='endpoint~" + endpoint + "'>Endpoint: " + endpoint + "</label>" +
+                                "<label for='" + endpoint + "'>Endpoint: " + endpoint + "</label>" +
                                 "</td>" +
                                 "<td>" +
-                                "<input name='endpoint~" + endpoint + "' id='endpoint~" + endpoint + "' type='checkbox' " + ((endpoint === "internal") ? "checked" : "") + "/>" +
+                                "<input name='endpoints_table' id='" + endpoint + "' value='" + endpoint + "' type='radio' " + ((endpoint === "internal") ? "checked" : "") + "/>" +
                                 "</td>" +
                                 "</tr>");
                         }

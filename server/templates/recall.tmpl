@@ -47,7 +47,7 @@
                 <p>Below are the saved details, you can edit whichever you need to before you start the stream.</p>
             </div>
         </div>
-        <form id="recall_form">
+        <form id="recalled_form">
             <label for="unique_code"></label><input id="unique_code" name="unique_code" style="visibility: hidden"/><br>
             <div class="card">
                 <div class="card-content">
@@ -269,10 +269,10 @@
                         for (let endpoint of endpointsResponseJson.endpoints) {
                             $("#endpoints_table").append("<tr>" +
                                 "<td>" +
-                                "<label for='endpoint~" + endpoint + "'>Endpoint: " + endpoint + "</label>" +
+                                "<label for='" + endpoint + "'>Endpoint: " + endpoint + "</label>" +
                                 "</td>" +
                                 "<td>" +
-                                "<input name='endpoint~" + endpoint + "' id='endpoint~" + endpoint + "' type='checkbox' " + ((endpoint === "internal") ? "checked" : "") + "/>" +
+                                "<input name='endpoints_table' id='" + endpoint + "' value='" + endpoint + "' type='radio' " + ((endpoint === "internal") ? "checked" : "") + "/>" +
                                 "</td>" +
                                 "</tr>");
                         }
@@ -368,8 +368,7 @@
                                 let temp = col.getElementsByTagName("input");
                                 if (temp.length > 0) {
                                     let element = temp[0];
-                                    let parts = element.id.split("~");
-                                    if (parts[1] === recallResponseJson.inputEndpoint) {
+                                    if (element.id === recallResponseJson.inputEndpoint) {
                                         element.checked = true;
                                         next = false;
                                         break;
@@ -472,7 +471,7 @@
                     type: "post",
                     dataType: "text",
                     contentType: "application/x-www-form-urlencoded",
-                    data: $("#recall_form").serialize(),
+                    data: $("#recalled_form").serialize(),
                     success: function (data) {
                         const startResponseJson = JSON.parse(data);
                         if (startResponseJson.error !== "") {
