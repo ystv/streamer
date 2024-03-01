@@ -43,8 +43,8 @@
                 <p id="streams_result"></p><br>
                 <p class="subtitle">Selection</p>
                 <form id="endpoint_selector">
-                    <p id="endpoint_table_error" style="color: red"></p>
-                    <table class="table table-bordered" id="endpoint_table"></table>
+                    <p id="endpoints_table_error" style="color: red"></p>
+                    <table class="table table-bordered" id="endpoints_table"></table>
                     <br>
                     <input type="button" id="stream_check" class="button" value="Refresh streams"/>
                 </form>
@@ -278,7 +278,7 @@
 
             let startWindowServerError = $("#start_window_server_error");
             let statusWindowServerError = $("#status_window_server_error");
-            let endpointTableError = $("#endpoint_table_error");
+            let endpointsTableError = $("#endpoints_table_error");
 
             let stopButton = $("#stop_button");
 
@@ -312,9 +312,9 @@
                     data: ({"unique": unique}),
                     success: function (data) {
                         const endpointsResponseJson = JSON.parse(data);
-                        endpointTableError.html("");
+                        endpointsTableError.html("");
                         if (endpointsResponseJson.error !== "") {
-                            endpointTableError.html(endpointsResponseJson.error + "<br>");
+                            endpointsTableError.html(endpointsResponseJson.error + "<br>");
                             if (endpointsCheckErrorInterval === undefined) {
                                 endpointsCheckErrorInterval = setInterval(endpointsCheck, 5000);
                             }
@@ -322,7 +322,7 @@
                         }
                         clearInterval(endpointsCheckErrorInterval);
                         for (let endpoint of endpointsResponseJson.endpoints) {
-                            $("#endpoint_table").append("<tr>" +
+                            $("#endpoints_table").append("<tr>" +
                                 "<td>" +
                                 "<label for='endpoint~" + endpoint + "'>Endpoint: " + endpoint + "</label>" +
                                 "</td>" +

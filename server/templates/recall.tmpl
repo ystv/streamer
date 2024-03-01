@@ -53,8 +53,8 @@
                 <div class="card-content">
                     <p id="recalled_window_server_error" style="color: red"></p>
                     <p class="subtitle">Selection</p>
-                    <p id="endpoint_table_error" style="color: red"></p>
-                    <table class="table table-bordered" id="endpoint_table">
+                    <p id="endpoints_table_error" style="color: red"></p>
+                    <table class="table table-bordered" id="endpoints_table">
                     </table>
                     <br>
                     <label for="stream_input">Stream input </label><br>
@@ -246,7 +246,7 @@
 
             let endpointsCheckErrorInterval;
 
-            let endpointTableError = $("#endpoint_table_error");
+            let endpointsTableError = $("#endpoints_table_error");
 
             let endpointsCheck = function () {
                 $.ajax({
@@ -267,7 +267,7 @@
                         }
                         clearInterval(endpointsCheckErrorInterval);
                         for (let endpoint of endpointsResponseJson.endpoints) {
-                            $("#endpoint_table").append("<tr>" +
+                            $("#endpoints_table").append("<tr>" +
                                 "<td>" +
                                 "<label for='endpoint~" + endpoint + "'>Endpoint: " + endpoint + "</label>" +
                                 "</td>" +
@@ -358,7 +358,7 @@
                             document.getElementById("stream_key_" + i).value = recalledStreamOutput.streamKey;
                         }
 
-                        let endpointTable = document.getElementById("endpoint_table");
+                        let endpointTable = document.getElementById("endpoints_table");
 
                         for (let i = 0; i < endpointTable.rows.length; i++) {
                             let next = true;
