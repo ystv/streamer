@@ -3,15 +3,15 @@ package views
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/google/uuid"
-	commonTransporter "github.com/ystv/streamer/common/transporter"
 	"log"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
 	"github.com/patrickmn/go-cache"
 
+	commonTransporter "github.com/ystv/streamer/common/transporter"
 	"github.com/ystv/streamer/common/transporter/server"
 	specialTransporter "github.com/ystv/streamer/common/transporter/special"
 	specialWSMessage "github.com/ystv/streamer/common/wsMessages/special"
