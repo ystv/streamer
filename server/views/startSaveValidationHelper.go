@@ -183,6 +183,9 @@ func (v *Views) startSaveValidationHelper(c echo.Context, valType validationType
 		if streamServer[len(streamServer)-1] != '/' {
 			streamServer += "/"
 		}
+		if valType == Save {
+			streamServer += "|"
+		}
 		streamKey := c.FormValue("stream_key_" + strconv.Itoa(index))
 		if len(streamKey) == 0 {
 			response.Error = fmt.Errorf("invalid length of stream_key_%d", index)
