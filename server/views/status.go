@@ -15,19 +15,6 @@ import (
 	"github.com/ystv/streamer/common/wsMessages"
 )
 
-type (
-	StatusResponse struct {
-		Status []StatusResponseIndividual `json:"status"`
-		Error  string                     `json:"error"`
-	}
-
-	StatusResponseIndividual struct {
-		Name     string `json:"name"`
-		Response string `json:"response"`
-		Error    string `json:"error"`
-	}
-)
-
 // StatusFunc is used to check the status of the streams and does this by tail command of the output logs
 func (v *Views) StatusFunc(c echo.Context) error {
 	if c.Request().Method == "POST" {

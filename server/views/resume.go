@@ -10,14 +10,6 @@ import (
 	"github.com/ystv/streamer/server/templates"
 )
 
-type ResumeResponse struct {
-	Response  string `json:"response"`
-	Error     string `json:"error"`
-	Website   bool   `json:"website"`
-	Recording bool   `json:"recording"`
-	Streams   uint64 `json:"streams"`
-}
-
 // ResumeFunc is used if the user decides to return at a later date then they can, by inputting the unique code that they were given then they can go to the resume page and enter the code
 func (v *Views) ResumeFunc(c echo.Context) error {
 	if c.Request().Method == "GET" {

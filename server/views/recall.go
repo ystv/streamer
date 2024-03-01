@@ -11,11 +11,6 @@ import (
 	"github.com/ystv/streamer/server/templates"
 )
 
-type RecallStream struct {
-	StreamServer string `json:"streamServer"`
-	StreamKey    string `json:"streamKey"`
-}
-
 // RecallFunc can pull back up stream details from the save function and allows you to start a stored stream
 func (v *Views) RecallFunc(c echo.Context) error {
 	if c.Request().Method == "GET" {

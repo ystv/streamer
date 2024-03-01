@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/gorilla/websocket"
 	"github.com/patrickmn/go-cache"
 
 	"github.com/ystv/streamer/common/transporter"
@@ -141,7 +142,11 @@ const (
 	internalChannelNameAppend = "Internal"
 )
 
-var seededRand = rand.New(rand.NewSource(time.Now().UnixNano()))
+var (
+	seededRand = rand.New(rand.NewSource(time.Now().UnixNano()))
+
+	wsUpgrade = websocket.Upgrader{}
+)
 
 // New initialises connections, templates, and cookies
 func New(conf Config, store *store.Store) *Views {

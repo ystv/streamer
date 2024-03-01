@@ -17,8 +17,6 @@ import (
 	specialWSMessage "github.com/ystv/streamer/common/wsMessages/special"
 )
 
-var wsUpgrade = websocket.Upgrader{}
-
 func (v *Views) Websocket(c echo.Context) error {
 	ws, err := wsUpgrade.Upgrade(c.Response(), c.Request(), nil)
 	if err != nil {

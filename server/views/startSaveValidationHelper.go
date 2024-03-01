@@ -14,38 +14,19 @@ import (
 	"github.com/ystv/streamer/server/helper"
 )
 
-type (
-	startSaveValidationResponse struct {
-		Input           string
-		RecordCheckbox  bool
-		SavePath        string
-		WebsiteCheckbox bool
-		WebsiteOut      string
-		Streams         []string
-		Error           error
-	}
-	validationType int
-)
-
-const (
-	Start validationType = iota
-	StartUnique
-	Save
-)
-
-func (v *Views) startSaveValidationHelper(c echo.Context, valType validationType) startSaveValidationResponse {
-	var response startSaveValidationResponse
+func (v *Views) startSaveValidationHelper(c echo.Context, valType ValidationType) StartSaveValidationResponse {
+	var response StartSaveValidationResponse
 
 	var input string
 
 	switch valType {
-	case Start:
+	case startValidation:
 		input = c.FormValue("stream_selector")
 		if len(input) < 3 {
 			response.Error = fmt.Errorf("invalid stream selector value: %s", input)
 			return response
 		}
-	case StartUnique:
+	case startUniqueValidation:
 		inputEndpoint := c.FormValue("endpoints_table")
 		inputStream := c.FormValue("stream_input")
 
@@ -81,7 +62,7 @@ func (v *Views) startSaveValidationHelper(c echo.Context, valType validationType
 			response.Error = fmt.Errorf("unable to find current stream input")
 			return response
 		}
-	case Save:
+	case saveValidation:
 		endpoint := c.FormValue("endpoints_table")
 		if len(endpoint) < 2 {
 			response.Error = fmt.Errorf("invalid endpoint selected: %s", endpoint)
@@ -181,7 +162,7 @@ func (v *Views) startSaveValidationHelper(c echo.Context, valType validationType
 		if streamServer[len(streamServer)-1] != '/' {
 			streamServer += "/"
 		}
-		if valType == Save {
+		if valType == saveValidation {
 			streamServer += "|"
 		}
 		streamKey := c.FormValue("stream_key_" + strconv.Itoa(index))

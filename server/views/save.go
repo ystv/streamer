@@ -29,7 +29,7 @@ func (v *Views) SaveFunc(c echo.Context) error {
 			Error  string `json:"error"`
 		}
 
-		formValues := v.startSaveValidationHelper(c, Save)
+		formValues := v.startSaveValidationHelper(c, saveValidation)
 		if formValues.Error != nil {
 			log.Printf("invalid form input: %+v", formValues.Error)
 			response.Error = fmt.Sprintf("invalid form input: %+v", formValues.Error)
