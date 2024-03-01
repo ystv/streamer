@@ -64,15 +64,13 @@ func (v *Views) startSaveValidationHelper(c echo.Context, valType validationType
 		}
 
 		found := false
-
-		endpoint := strings.Split(inputEndpoint, "~")
 	applicationFor:
 		for _, application := range rtmp.Server.Applications {
-			if application.Name == endpoint[1] {
+			if application.Name == inputEndpoint {
 				for _, stream := range application.Live.Streams {
 					if stream.Name == inputStream {
 						found = true
-						input = endpoint[1] + "/" + stream.Name
+						input = inputEndpoint + "/" + stream.Name
 						break applicationFor
 					}
 				}
@@ -84,7 +82,7 @@ func (v *Views) startSaveValidationHelper(c echo.Context, valType validationType
 			return response
 		}
 	case Save:
-		endpoint := strings.Split(c.FormValue("endpoints_table"), "~")[1]
+		endpoint := c.FormValue("endpoints_table")
 		if len(endpoint) < 2 {
 			response.Error = fmt.Errorf("invalid endpoint selected: %s", endpoint)
 			return response
