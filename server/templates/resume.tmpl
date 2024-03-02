@@ -28,7 +28,7 @@
             </li>
         </ul>
     </div>
-    <div class="card" id="enter">
+    <div class="card" id="enter_window">
         <div class="card-content">
             <p class="title">Resume a stream</p><br>
             <form id="resume">
@@ -39,57 +39,13 @@
             </form>
         </div>
     </div>
-    <div class="card" id="resumed" hidden>
-        <div class="card-content">
-            <p class="title">STREAMING!</p><br>
-            <p>The stream has been forwarded, the unique code of this forward is below</p><br>
-            <p id="unique_code" class="subtitle"></p><br>
-            <p id="status_error" style="color: red"></p><br>
-            <p id="status_window_server_error" style="color: red"></p>
-            <table class="table table-bordered" id="table_status"></table>
-            <br>
-            <p>This window can be closed as long as you have the code to stop the stream<br>
-                If you want to return later, then you will need to go to <a
-                        href="https://streamer.dev.ystv.co.uk/resume"
-                        target="_blank">https://streamer.dev.ystv.co.uk/resume</a><br><br><br>
-                You can stop the stream by pressing the checkbox and then the button (prevent accidental stops)</p>
-            <br><br><br>
-            <p id="stop_error" style="color: red"></p><br>
-            <label for="stop_checkbox">Enable the stop button </label>
-            <input name="stop_checkbox" id="stop_checkbox" type="checkbox"><br>
-            <input name="stop_button" id="stop_button" type="button" class="button" value="|> STOP <|"
-                   style="visibility: hidden"
-                   disabled hidden>
-        </div>
-    </div>
-    <div class="card" id="stopped_window" hidden>
-        <div class="card-content">
-            <p class="title">STOPPED!</p>
-            <p>The forwarding has been stopped successfully<br>
-                You can close this window now</p>
-        </div>
-    </div>
+    {{block "statusWindowHTML" .}}{{end}}
+    {{block "stopWindowHTML" .}}{{end}}
     <script>
-        document.getElementById("stop_checkbox").onchange = function () {
-            document.getElementById("stop_button").disabled = !this.checked;
-            document.getElementById("stop_button").hidden = !this.checked;
-            if (this.checked) {
-                document.getElementById("stop_button").style.visibility = "visible";
-            } else {
-                document.getElementById("stop_button").style.visibility = "hidden";
-            }
-        };
-
         let unique;
-        let statusInterval;
-
-        let statusError = $("#status_error");
-        let stopError = $("#stop_error");
         let resumeError = $("#resume_error");
-
+        let statusInterval;
         let statusWindowServerErrorInterval;
-
-        let statusWindowServerError = $("#status_window_server_error");
 
         $(document).ready(function () {
             $("#submit_unique").click(function () {
@@ -117,10 +73,10 @@
                             console.log(resumeResponseJson.response);
                             return;
                         }
-                        document.getElementById("enter").hidden = true;
-                        document.getElementById("enter").style.visibility = "hidden";
-                        document.getElementById("resumed").hidden = false;
-                        document.getElementById("resumed").style.visibility = "visible";
+                        document.getElementById("enter_window").hidden = true;
+                        document.getElementById("enter_window").style.visibility = "hidden";
+                        document.getElementById("status_window").hidden = false;
+                        document.getElementById("status_window").style.visibility = "visible";
                         let uniqueField = $("#resume_unique_input");
                         unique = uniqueField.val();
                         $("#unique_code").html(uniqueField.val());
@@ -135,89 +91,13 @@
                         for (let i = 1; i <= streams; i++) {
                             tableStatus.append("<tr><td><p class='subtitle'>Stream " + i + " status</p><pre id='" + i + "_status'></pre><br></td></tr>");
                         }
-                        statusInterval = setInterval(function () {
-                            $.ajax({
-                                url: "status",
-                                type: "post",
-                                dataType: "text",
-                                contentType: "application/x-www-form-urlencoded",
-                                data: ({"unique_code": unique}),
-                                success: function (data) {
-                                    const statusResponseJson = JSON.parse(data);
-                                    if (statusResponseJson.error !== "") {
-                                        statusError.html(statusResponseJson.error);
-                                        console.log(statusResponseJson.error);
-                                        return;
-                                    }
-                                    for (let j = 0; j < statusResponseJson.status.length; j++) {
-                                        let positionalStatus = statusResponseJson.status[j];
-                                        if (positionalStatus.error.length > 0) {
-                                            document.getElementById(positionalStatus.name + "_status").innerHTML = positionalStatus.error;
-                                        } else {
-                                            document.getElementById(positionalStatus.name + "_status").innerHTML = positionalStatus.response;
-                                        }
-                                    }
-                                },
-                            })
-                        }, 5000);
 
-                        statusWindowServerErrorInterval = setInterval(function () {
-                            $.ajax({
-                                url: "serverError",
-                                type: "post",
-                                dataType: "text",
-                                contentType: "application/x-www-form-urlencoded",
-                                data: ({"unique_code": unique}),
-                                success: function (data) {
-                                    statusWindowServerError.html();
-                                    const serverErrorResponseJson = JSON.parse(data);
-                                    if (serverErrorResponseJson.error !== "") {
-                                        statusWindowServerError.html(serverErrorResponseJson.error);
-                                        return;
-                                    }
-                                    if (serverErrorResponseJson.serverError.length > 0) {
-                                        statusWindowServerError.html(serverErrorResponseJson.serverError + "You may have stream instabilities during this time<br>");
-                                    }
-                                },
-                            })
-                        }, 5000);
+                        {{block "statusJSON" .}}{{end}}
                     },
                 })
             });
 
-            let stopButton = $("#stop_button");
-
-            stopButton.click(function () {
-                stopButton.disabled = true;
-                console.log("Stop pressed");
-                $.ajax({
-                    url: "stop",
-                    type: "post",
-                    dataType: "text",
-                    contentType: "application/x-www-form-urlencoded",
-                    data: ({"unique_code": unique}),
-                    success: function (data) {
-                        const stopResponseJson = JSON.parse(data);
-                        if (stopResponseJson.error !== "") {
-                            stopError.html(stopResponseJson.error);
-                            return;
-                        }
-                        if (stopResponseJson.stopped) {
-                            document.getElementById("resumed").hidden = true;
-                            document.getElementById("resumed").style.visibility = "hidden";
-                            document.getElementById("stopped_window").hidden = false;
-                            document.getElementById("stopped_window").style.visibility = "visible";
-                            unique = "";
-                            clearInterval(statusInterval);
-                            clearInterval(statusWindowServerErrorInterval);
-                            return;
-                        }
-                        stopError.html("invalid response from server: " + stopResponseJson.stopped);
-                        console.log("invalid response from server: " + stopResponseJson.stopped);
-                    },
-                })
-                stopButton.disabled = false;
-            })
+            {{block "stopJSON" .}}{{end}}
         });
     </script>
 {{end}}

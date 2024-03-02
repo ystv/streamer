@@ -19,15 +19,18 @@ type Templater struct {
 type Template string
 
 const (
-	FacebookHelpTemplate Template = "facebookHelp.tmpl"
-	ListTemplate         Template = "list.tmpl"
-	MainTemplate         Template = "main.tmpl"
-	RecallTemplate       Template = "recall.tmpl"
-	ResumeTemplate       Template = "resume.tmpl"
-	SaveTemplate         Template = "save.tmpl"
-	YouTubeHelpTemplate  Template = "youtubeHelp.tmpl"
-	ErrorTemplate        Template = "error.tmpl"
-	NotFound404Template  Template = "404NotFound.tmpl"
+	FacebookHelpTemplate     Template = "facebookHelp.tmpl"
+	ListTemplate             Template = "list.tmpl"
+	MainTemplate             Template = "main.tmpl"
+	RecallTemplate           Template = "recall.tmpl"
+	ResumeTemplate           Template = "resume.tmpl"
+	SaveTemplate             Template = "save.tmpl"
+	YouTubeHelpTemplate      Template = "youtubeHelp.tmpl"
+	ErrorTemplate            Template = "error.tmpl"
+	NotFound404Template      Template = "404NotFound.tmpl"
+	baseTemplate             Template = "_base.tmpl"
+	statusComponentsTemplate Template = "_statusComponents.tmpl"
+	stopComponentsTemplate   Template = "_stopComponents.tmpl"
 )
 
 func (t Template) String() string {
@@ -47,7 +50,7 @@ func (t *Templater) RenderTemplate(w io.Writer, data interface{}, mainTmpl Templ
 
 	t1.Funcs(t.getFuncMaps())
 
-	t1, err = t1.ParseFS(tmpls, "_base.tmpl", mainTmpl.String())
+	t1, err = t1.ParseFS(tmpls, baseTemplate.String(), statusComponentsTemplate.String(), stopComponentsTemplate.String(), mainTmpl.String())
 
 	if err != nil {
 		log.Printf("failed to get templates for template(RenderTemplate): %+v", err)

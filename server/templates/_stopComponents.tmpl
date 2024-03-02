@@ -1,0 +1,66 @@
+{{define "stopButtonHTML"}}
+    <p id="stop_error" style="color: red"></p><br>
+    <label for="stop_checkbox">Enable the stop button </label>
+    <input name="stop_checkbox" id="stop_checkbox" type="checkbox"><br>
+    <input name="stop_button" id="stop_button" type="button" class="button" value="|> STOP <|"
+           style="visibility: hidden"
+           disabled hidden>
+{{end}}
+
+{{define "stopWindowHTML"}}
+    <div class="card" id="stopped_window" hidden>
+        <div class="card-content">
+            <p class="title">STOPPED!</p>
+            <p>The forwarding has been stopped successfully<br>
+                You can close this window now</p>
+        </div>
+    </div>
+{{end}}
+
+{{define "stopJSON"}}
+    document.getElementById("stop_checkbox").onchange = function () {
+    document.getElementById("stop_button").disabled = !this.checked;
+    document.getElementById("stop_button").hidden = !this.checked;
+    if (this.checked) {
+    document.getElementById("stop_button").style.visibility = "visible";
+    } else {
+    document.getElementById("stop_button").style.visibility = "hidden";
+    }
+    };
+
+    let stopButton = $("#stop_button");
+
+    let stopError = $("#stop_error");
+
+    stopButton.click(function () {
+    stopButton.attr("disabled", true);
+    console.log("Stop pressed");
+    $.ajax({
+    url: "stop",
+    type: "post",
+    dataType: "text",
+    contentType: "application/x-www-form-urlencoded",
+    data: ({"unique_code": unique}),
+    success: function (data) {
+    const stopResponseJson = JSON.parse(data);
+    if (stopResponseJson.error !== "") {
+    stopError.html(stopResponseJson.error);
+    return;
+    }
+    if (stopResponseJson.stopped) {
+    document.getElementById("status_window").hidden = true;
+    document.getElementById("status_window").style.visibility = "hidden";
+    document.getElementById("stopped_window").hidden = false;
+    document.getElementById("stopped_window").style.visibility = "visible";
+    unique = "";
+    clearInterval(statusInterval);
+    clearInterval(statusWindowServerErrorInterval);
+    return;
+    }
+    stopError.html("invalid response from server: " + stopResponseJson.stopped);
+    console.log("invalid response from server: " + stopResponseJson.stopped);
+    },
+    });
+    stopButton.attr("disabled", false);
+    });
+{{end}}
