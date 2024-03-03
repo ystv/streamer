@@ -74,15 +74,15 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 // This section is for go template linter
 var (
 	AllTemplates = [][]string{
-		{"facebookHelp.tmpl", "_base.tmpl"},
-		{"list.tmpl", "_base.tmpl"},
-		{"main.tmpl", "_base.tmpl"},
-		{"recall.tmpl", "_base.tmpl"},
-		{"resume.tmpl", "_base.tmpl"},
-		{"save.tmpl", "_base.tmpl"},
-		{"youtubeHelp.tmpl", "_base.tmpl"},
-		{"error.tmpl", "_base.tmpl"},
-		{"404NotFound.tmpl", "_base.tmpl"},
+		{FacebookHelpTemplate.String(), baseTemplate.String(), statusComponentsTemplate.String(), stopComponentsTemplate.String()},
+		{ListTemplate.String(), baseTemplate.String(), statusComponentsTemplate.String(), stopComponentsTemplate.String()},
+		{MainTemplate.String(), baseTemplate.String(), statusComponentsTemplate.String(), stopComponentsTemplate.String()},
+		{RecallTemplate.String(), baseTemplate.String(), statusComponentsTemplate.String(), stopComponentsTemplate.String()},
+		{ResumeTemplate.String(), baseTemplate.String(), statusComponentsTemplate.String(), stopComponentsTemplate.String()},
+		{SaveTemplate.String(), baseTemplate.String(), statusComponentsTemplate.String(), stopComponentsTemplate.String()},
+		{YouTubeHelpTemplate.String(), baseTemplate.String(), statusComponentsTemplate.String(), stopComponentsTemplate.String()},
+		{ErrorTemplate.String(), baseTemplate.String(), statusComponentsTemplate.String(), stopComponentsTemplate.String()},
+		{NotFound404Template.String(), baseTemplate.String(), statusComponentsTemplate.String(), stopComponentsTemplate.String()},
 	}
 
 	_ = AllTemplates
