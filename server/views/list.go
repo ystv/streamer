@@ -25,13 +25,13 @@ func (v *Views) ListFunc(c echo.Context) error {
 	}*/
 	if c.Request().Method == "GET" {
 		if v.conf.Verbose {
-			log.Println("Stop GET called")
+			log.Println("List GET called")
 		}
 
 		return v.template.RenderTemplate(c.Response().Writer, nil, templates.ListTemplate)
 	} else if c.Request().Method == "POST" {
 		if v.conf.Verbose {
-			log.Println("Stop POST called")
+			log.Println("List POST called")
 		}
 
 		var response struct {
