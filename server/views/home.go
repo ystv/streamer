@@ -40,9 +40,11 @@ func (v *Views) HomeFunc(c echo.Context) error {
 	}
 
 	data := struct {
-		Error string
+		ActivePage string
+		Error      string
 	}{
-		Error: err,
+		ActivePage: "home",
+		Error:      err,
 	}
 
 	return v.template.RenderTemplate(c.Response().Writer, data, templates.MainTemplate)

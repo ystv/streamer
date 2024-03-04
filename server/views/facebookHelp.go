@@ -25,5 +25,9 @@ func (v *Views) FacebookHelpFunc(c echo.Context) error {
 		log.Println("facebook called")
 	}
 
-	return v.template.RenderTemplate(c.Response().Writer, nil, templates.FacebookHelpTemplate)
+	data := struct {
+		ActivePage string
+	}{}
+
+	return v.template.RenderTemplate(c.Response().Writer, data, templates.FacebookHelpTemplate)
 }

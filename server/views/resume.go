@@ -17,7 +17,13 @@ func (v *Views) ResumeFunc(c echo.Context) error {
 			log.Println("Resume GET called")
 		}
 
-		return v.template.RenderTemplate(c.Response().Writer, nil, templates.ResumeTemplate)
+		data := struct {
+			ActivePage string
+		}{
+			ActivePage: "resume",
+		}
+
+		return v.template.RenderTemplate(c.Response().Writer, data, templates.ResumeTemplate)
 	} else if c.Request().Method == "POST" {
 		if v.conf.Verbose {
 			log.Println("Resume POST called")

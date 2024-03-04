@@ -18,7 +18,13 @@ func (v *Views) RecallFunc(c echo.Context) error {
 			log.Println("Recall GET called")
 		}
 
-		return v.template.RenderTemplate(c.Response().Writer, nil, templates.RecallTemplate)
+		data := struct {
+			ActivePage string
+		}{
+			ActivePage: "recall",
+		}
+
+		return v.template.RenderTemplate(c.Response().Writer, data, templates.RecallTemplate)
 	} else if c.Request().Method == "POST" {
 		if v.conf.Verbose {
 			log.Println("Recall POST called")

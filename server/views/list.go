@@ -28,7 +28,13 @@ func (v *Views) ListFunc(c echo.Context) error {
 			log.Println("List GET called")
 		}
 
-		return v.template.RenderTemplate(c.Response().Writer, nil, templates.ListTemplate)
+		data := struct {
+			ActivePage string
+		}{
+			ActivePage: "list",
+		}
+
+		return v.template.RenderTemplate(c.Response().Writer, data, templates.ListTemplate)
 	} else if c.Request().Method == "POST" {
 		if v.conf.Verbose {
 			log.Println("List POST called")

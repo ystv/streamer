@@ -25,5 +25,9 @@ func (v *Views) YoutubeHelpFunc(c echo.Context) error {
 		log.Println("YouTube called")
 	}
 
-	return v.template.RenderTemplate(c.Response().Writer, nil, templates.YouTubeHelpTemplate)
+	data := struct {
+		ActivePage string
+	}{}
+
+	return v.template.RenderTemplate(c.Response().Writer, data, templates.YouTubeHelpTemplate)
 }

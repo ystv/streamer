@@ -23,7 +23,8 @@
       <p style="margin-bottom: 10px;">Dark Mode</p>
     </div>
     <br><br>
-    {{block "content" .}}{{end}}
+    {{template "_navbar" .}}
+    {{template "content" .}}
     <br><br>
     {{ $year := thisYear }}
     <footer id="footer">Streamer (version: {{ getVersion }}) - created by Liam Burnand 2022{{if ne $year 2022}}-{{ $year }}{{end}}</footer>

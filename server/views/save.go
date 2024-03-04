@@ -18,7 +18,13 @@ func (v *Views) SaveFunc(c echo.Context) error {
 			log.Println("Save GET called")
 		}
 
-		return v.template.RenderTemplate(c.Response().Writer, nil, templates.SaveTemplate)
+		data := struct {
+			ActivePage string
+		}{
+			ActivePage: "save",
+		}
+
+		return v.template.RenderTemplate(c.Response().Writer, data, templates.SaveTemplate)
 	} else if c.Request().Method == "POST" {
 		if v.conf.Verbose {
 			log.Println("Save POST called")

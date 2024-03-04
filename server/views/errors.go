@@ -19,8 +19,9 @@ func (v *Views) CustomHTTPErrorHandler(err error, c echo.Context) {
 	}
 	c.Response().WriteHeader(status)
 	var data struct {
-		Code  int
-		Error any
+		ActivePage string
+		Code       int
+		Error      any
 	}
 	if he == nil {
 		data.Error = err
@@ -35,5 +36,9 @@ func (v *Views) CustomHTTPErrorHandler(err error, c echo.Context) {
 }
 
 func (v *Views) Error404(c echo.Context) error {
-	return v.template.RenderTemplate(c.Response().Writer, nil, templates.NotFound404Template)
+	data := struct {
+		ActivePage string
+	}{}
+
+	return v.template.RenderTemplate(c.Response().Writer, data, templates.NotFound404Template)
 }

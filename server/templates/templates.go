@@ -29,6 +29,7 @@ const (
 	ErrorTemplate            Template = "error.tmpl"
 	NotFound404Template      Template = "404NotFound.tmpl"
 	baseTemplate             Template = "_base.tmpl"
+	navbarTemplate           Template = "_navbar.tmpl"
 	statusComponentsTemplate Template = "_statusComponents.tmpl"
 	stopComponentsTemplate   Template = "_stopComponents.tmpl"
 )
@@ -50,7 +51,7 @@ func (t *Templater) RenderTemplate(w io.Writer, data interface{}, mainTmpl Templ
 
 	t1.Funcs(t.getFuncMaps())
 
-	t1, err = t1.ParseFS(tmpls, baseTemplate.String(), statusComponentsTemplate.String(), stopComponentsTemplate.String(), mainTmpl.String())
+	t1, err = t1.ParseFS(tmpls, baseTemplate.String(), navbarTemplate.String(), statusComponentsTemplate.String(), stopComponentsTemplate.String(), mainTmpl.String())
 
 	if err != nil {
 		log.Printf("failed to get templates for template(RenderTemplate): %+v", err)
@@ -74,15 +75,15 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 // This section is for go template linter
 var (
 	AllTemplates = [][]string{
-		{"facebookHelp.tmpl", "_base.tmpl", "_statusComponents.tmpl", "_stopComponents.tmpl"},
-		{"list.tmpl", "_base.tmpl", "_statusComponents.tmpl", "_stopComponents.tmpl"},
-		{"main.tmpl", "_base.tmpl", "_statusComponents.tmpl", "_stopComponents.tmpl"},
-		{"recall.tmpl", "_base.tmpl", "_statusComponents.tmpl", "_stopComponents.tmpl"},
-		{"resume.tmpl", "_base.tmpl", "_statusComponents.tmpl", "_stopComponents.tmpl"},
-		{"save.tmpl", "_base.tmpl", "_statusComponents.tmpl", "_stopComponents.tmpl"},
-		{"youtubeHelp.tmpl", "_base.tmpl", "_statusComponents.tmpl", "_stopComponents.tmpl"},
-		{"error.tmpl", "_base.tmpl", "_statusComponents.tmpl", "_stopComponents.tmpl"},
-		{"404NotFound.tmpl", "_base.tmpl", "_statusComponents.tmpl", "_stopComponents.tmpl"},
+		{"facebookHelp.tmpl", "_base.tmpl", "_navbar.tmpl", "_statusComponents.tmpl", "_stopComponents.tmpl"},
+		{"list.tmpl", "_base.tmpl", "_navbar.tmpl", "_statusComponents.tmpl", "_stopComponents.tmpl"},
+		{"main.tmpl", "_base.tmpl", "_navbar.tmpl", "_statusComponents.tmpl", "_stopComponents.tmpl"},
+		{"recall.tmpl", "_base.tmpl", "_navbar.tmpl", "_statusComponents.tmpl", "_stopComponents.tmpl"},
+		{"resume.tmpl", "_base.tmpl", "_navbar.tmpl", "_statusComponents.tmpl", "_stopComponents.tmpl"},
+		{"save.tmpl", "_base.tmpl", "_navbar.tmpl", "_statusComponents.tmpl", "_stopComponents.tmpl"},
+		{"youtubeHelp.tmpl", "_base.tmpl", "_navbar.tmpl", "_statusComponents.tmpl", "_stopComponents.tmpl"},
+		{"error.tmpl", "_base.tmpl", "_navbar.tmpl", "_statusComponents.tmpl", "_stopComponents.tmpl"},
+		{"404NotFound.tmpl", "_base.tmpl", "_navbar.tmpl", "_statusComponents.tmpl", "_stopComponents.tmpl"},
 	}
 
 	_ = AllTemplates

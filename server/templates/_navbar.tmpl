@@ -1,0 +1,32 @@
+{{define "_navbar"}}
+    {{ $page := .ActivePage }}
+    <div class="tabs is-toggle is-toggle-rounded">
+        <ul>
+            <li {{if eq $page "home"}}class="is-active"{{end}}>
+                <a href="/">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li {{if eq $page "resume"}}class="is-active"{{end}}>
+                <a href="/resume">
+                    <span>Resume</span>
+                </a>
+            </li>
+            <li {{if eq $page "list"}}class="is-active"{{end}}>
+                <a href="/list">
+                    <span>List</span>
+                </a>
+            </li>
+            <li {{if eq $page "save"}}class="is-active"{{end}}>
+                <a href="/save">
+                    <span>Save</span>
+                </a>
+            </li>
+            <li {{if eq $page "recall"}}class="is-active"{{end}}>
+                <a href="/recall">
+                    <span>Recall</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+{{end}}
