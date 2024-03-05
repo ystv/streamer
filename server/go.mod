@@ -1,8 +1,8 @@
 module github.com/ystv/streamer/server
 
-go 1.21
+go 1.22
 
-toolchain go1.21.7
+toolchain go1.22.1
 
 require (
 	github.com/google/uuid v1.6.0
@@ -13,7 +13,7 @@ require (
 	github.com/labstack/gommon v0.4.2
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
-	github.com/ystv/streamer/common v0.0.0-20240224110523-a1eadbeea663
+	github.com/ystv/streamer/common v0.0.0-20240304231557-758f738b0e1a
 	google.golang.org/protobuf v1.32.0
 )
 
@@ -23,9 +23,9 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
-	golang.org/x/crypto v0.19.0 // indirect
-	golang.org/x/net v0.21.0 // indirect
-	golang.org/x/sys v0.17.0 // indirect
+	golang.org/x/crypto v0.21.0 // indirect
+	golang.org/x/net v0.22.0 // indirect
+	golang.org/x/sys v0.18.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 )
