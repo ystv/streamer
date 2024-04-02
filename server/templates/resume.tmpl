@@ -10,8 +10,8 @@
             </form>
         </div>
     </div>
-    {{block "statusWindowHTML" .}}{{end}}
-    {{block "stopWindowHTML" .}}{{end}}
+    {{template "statusWindowHTML" .}}
+    {{template "stopWindowHTML" .}}
     <script>
         let unique;
         let resumeError = $("#resume_error");
@@ -65,12 +65,12 @@
                             tableStatus.append("<tr><td><p class='subtitle'>Stream " + i + " status</p><pre id='" + i + "_status'></pre><br></td></tr>");
                         }
 
-                        {{block "statusJSON" .}}{{end}}
+                        {{template "statusJSON" .}}
                     },
                 })
             });
 
-            {{block "stopJSON" .}}{{end}}
+            {{template "stopJSON" .}}
         });
     </script>
 {{end}}

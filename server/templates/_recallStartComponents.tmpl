@@ -1,0 +1,76 @@
+{{define "recallStartHTML"}}
+    <div class="card">
+        <div class="card-content">
+            <p class="title">Stream outputs</p>
+            <p class="subtitle">Recording</p>
+            <p>This is the file output of the stream, it will be saved as a .mkv file, and you can specify a
+                path<br>
+                It will be saved in the pending edits folder on the network drive (not to be confused with the
+                Google Drive)<br>
+                The format to follow is (folder/file) e.g. ERN/ERN.mkv, the folder will be created in pending
+                edits
+                if it doesn't already exist<br>
+                The extension (.mkv) will be added to the end of the file if it doesn't already contain it
+            </p>
+            <br>
+            <label for="record_checkbox">Record stream </label>
+            <input name="record_checkbox" id="record_checkbox" type="checkbox" checked><br>
+            <label for="save_path">MKV save location </label><br>
+            <input type="text" name="save_path" id="save_path" placeholder="ERN/ERN.mkv"
+                   class="input"><br><br>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-content">
+            <p class="subtitle">Website forwarding</p>
+            <p>If this is selected then it will default to stream1?pwd=gamer<br>
+                By default, the website works with streaming to the live endpoint so that is done by default<br>
+                Use the live endpoint followed by one of the keys in <a
+                        href="https://cobra.dev.ystv.co.uk/streamkeys">cobra</a>
+                [stream key and password]<br>
+                This is especially important for events like Roses</p><br>
+            <label for="website_stream">Stream to website </label>
+            <input name="website_stream" id="website_stream" type="checkbox" checked><br>
+            <label for="website_stream_endpoint">Website stream endpoint</label><br>
+            <input name="website_stream_endpoint"
+                   id="website_stream_endpoint"
+                   placeholder="stream1?pwd=gamer"
+                   class="input" required><br><br>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-content">
+            <p class="subtitle">Additional forwarding</p>
+            <p>This section is for adding all the stream servers and keys<br>
+                All stream servers should start with "rtmp://" or "rtmps://"<br>
+                If you are unsure how to get the stream servers and keys from YouTube and Facebook then click on
+                the links below<br>
+                <a target="_blank" href="/youtubehelp">YouTube</a><br>
+                <a target="_blank" href="/facebookhelp">Facebook</a></p><br>
+            <label for="input"></label><input type="text" id="input" hidden disabled/>
+            <table class="table table-bordered" id="streams_dynamic_field">
+                <tr>
+                    <td><label for="stream_server_0">Enter the stream server - 1 </label><br>
+                        <input type="text" name="stream_server_0" id="stream_server_0"
+                               placeholder="Enter stream server" class="input" required/><br><br>
+                        <label for="stream_key_0">Enter the stream key - 1 </label><br>
+                        <input type="text" name="stream_key_0" id="stream_key_0" placeholder="Enter stream key"
+                               class="input" required/><br><br>
+                    </td>
+                    <td>
+                        <button type="button" name="add_stream_button" id="add_stream_button"
+                                class="btn btn-success button">Add More
+                        </button>
+                    </td>
+                </tr>
+            </table>
+            <p id="start_error" style="color: red"></p><br>
+            <input id="start_button" type="button" class="button" value="Start"/>
+        </div>
+    </div>
+    {{block "buttonSectionHTML" .}}{{end}}
+{{end}}
+
+{{define "recallStartJSON"}}
+    {{block "deleteJSON" .}}{{end}}
+{{end}}
