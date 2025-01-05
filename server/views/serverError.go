@@ -39,7 +39,7 @@ func (v *Views) ServerErrorFunc(c echo.Context) error {
 				return c.JSON(http.StatusOK, response)
 			}
 
-			recorder = len(stream.Recording) > 0
+			recorder = len(stream.GetRecording()) > 0
 		}
 
 		_, rec := v.cache.Get(server.Recorder.String())
@@ -49,11 +49,12 @@ func (v *Views) ServerErrorFunc(c echo.Context) error {
 
 		errExtra := ", this may be temporary, if this persists for more than a minute then please contact <code>#computing</code> on Slack<br>"
 
-		if !rec && !fow && recorder {
+		switch {
+		case !rec && !fow && recorder:
 			errString = "No recorder or forwarder available" + errExtra
-		} else if !rec && recorder {
+		case !rec && recorder:
 			errString = "No recorder available" + errExtra
-		} else if !fow {
+		case !fow:
 			errString = "No forwarder available" + errExtra
 		}
 

@@ -33,12 +33,12 @@ func (v *Views) BeginWatchdog() {
 				go func() {
 					transporter := commonTransporter.Transporter{
 						Action: action.Status,
-						Unique: stream1.Stream,
+						Unique: stream1.GetStream(),
 					}
 
 					fStatus := commonTransporter.ForwarderStatus{
-						Website: len(stream1.Website) > 0,
-						Streams: len(stream1.Streams),
+						Website: len(stream1.GetWebsite()) > 0,
+						Streams: len(stream1.GetStreams()),
 					}
 
 					var forwarderError, recorderError bool
@@ -47,7 +47,7 @@ func (v *Views) BeginWatchdog() {
 					wg.Add(2)
 					go func() {
 						defer wg.Done()
-						if len(stream1.Recording) > 0 && rec {
+						if len(stream1.GetRecording()) > 0 && rec {
 							recorderTransporter := transporter
 
 							var response commonTransporter.ResponseTransporter
@@ -100,7 +100,7 @@ func (v *Views) BeginWatchdog() {
 					if recorderError && rec {
 						stopTransporter := commonTransporter.Transporter{
 							Action: action.Stop,
-							Unique: stream1.Stream,
+							Unique: stream1.GetStream(),
 						}
 						var wsResponse commonTransporter.ResponseTransporter
 						wsResponse, err = v.wsHelper(server.Recorder, stopTransporter)
@@ -116,10 +116,10 @@ func (v *Views) BeginWatchdog() {
 
 						startTransporter := commonTransporter.Transporter{
 							Action: action.Start,
-							Unique: stream1.Stream,
+							Unique: stream1.GetStream(),
 							Payload: commonTransporter.RecorderStart{
-								StreamIn: stream1.Input,
-								PathOut:  stream1.Recording,
+								StreamIn: stream1.GetInput(),
+								PathOut:  stream1.GetRecording(),
 							},
 						}
 						wsResponse, err = v.wsHelper(server.Recorder, startTransporter)
@@ -133,13 +133,13 @@ func (v *Views) BeginWatchdog() {
 							log.Printf("invalid response from Recorder for watchdog start: %#v", wsResponse)
 						}
 
-						log.Printf("watchdog successfully restarted Recorder: %s", stream1.Streams)
+						log.Printf("watchdog successfully restarted Recorder: %s", stream1.GetStreams())
 					}
 
 					if forwarderError && fow {
 						stopTransporter := commonTransporter.Transporter{
 							Action: action.Stop,
-							Unique: stream1.Stream,
+							Unique: stream1.GetStream(),
 						}
 						var wsResponse commonTransporter.ResponseTransporter
 						wsResponse, err = v.wsHelper(server.Forwarder, stopTransporter)
@@ -155,11 +155,11 @@ func (v *Views) BeginWatchdog() {
 
 						startTransporter := commonTransporter.Transporter{
 							Action: action.Start,
-							Unique: stream1.Stream,
+							Unique: stream1.GetStream(),
 							Payload: commonTransporter.ForwarderStart{
-								StreamIn:   stream1.Input,
-								WebsiteOut: stream1.Website,
-								Streams:    stream1.Streams,
+								StreamIn:   stream1.GetInput(),
+								WebsiteOut: stream1.GetWebsite(),
+								Streams:    stream1.GetStreams(),
 							},
 						}
 						wsResponse, err = v.wsHelper(server.Forwarder, startTransporter)
@@ -173,7 +173,7 @@ func (v *Views) BeginWatchdog() {
 							log.Printf("invalid response from Forwarder for watchdog start: %#v", wsResponse)
 						}
 
-						log.Printf("watchdog successfully restarted Forwarder: %s", stream1.Streams)
+						log.Printf("watchdog successfully restarted Forwarder: %s", stream1.GetStreams())
 					}
 				}()
 			}

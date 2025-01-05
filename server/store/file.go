@@ -2,12 +2,14 @@ package store
 
 import (
 	"fmt"
-	"github.com/ystv/streamer/server/storage"
-	"google.golang.org/protobuf/proto"
 	"log"
 	"os"
 	"sync"
 	"time"
+
+	"github.com/ystv/streamer/server/storage"
+
+	"google.golang.org/protobuf/proto"
 )
 
 // FileBackend Applications: apps, Prefix: prefix

@@ -50,9 +50,9 @@ func (v *Views) ResumeFunc(c echo.Context) error {
 		log.Printf("accepted resume: %s", unique)
 
 		response.Response = "ACCEPTED!"
-		response.Website = len(stream.Website) > 0
-		response.Recording = len(stream.Recording) > 0
-		response.Streams = uint64(len(stream.Streams))
+		response.Website = len(stream.GetWebsite()) > 0
+		response.Recording = len(stream.GetRecording()) > 0
+		response.Streams = uint64(len(stream.GetStreams()))
 		return c.JSON(http.StatusOK, response)
 	}
 	return echo.NewHTTPError(http.StatusMethodNotAllowed, "invalid method")

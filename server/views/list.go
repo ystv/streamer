@@ -58,8 +58,8 @@ func (v *Views) ListFunc(c echo.Context) error {
 
 		for _, s := range streams {
 			response.ActiveList = append(response.ActiveList, ListedStream{
-				Code:  s.Stream,
-				Input: s.Input,
+				Code:  s.GetStream(),
+				Input: s.GetInput(),
 			})
 		}
 
@@ -72,8 +72,8 @@ func (v *Views) ListFunc(c echo.Context) error {
 
 		for _, s := range stored {
 			response.SavedList = append(response.SavedList, ListedStream{
-				Code:  s.Stream,
-				Input: s.Input,
+				Code:  s.GetStream(),
+				Input: s.GetInput(),
 			})
 		}
 

@@ -2,6 +2,7 @@ package views
 
 import (
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"math"
 	"regexp"
@@ -32,7 +33,7 @@ func (v *Views) startSaveValidationHelper(c echo.Context, valType ValidationType
 
 		streamPageContent, err := helper.GetBody("http://" + v.conf.StreamServer + "stat")
 		if err != nil {
-			response.Error = fmt.Errorf("failed to get streams from stream server: %+v", err)
+			response.Error = fmt.Errorf("failed to get streams from stream server: %w", err)
 			return response
 		}
 
@@ -40,7 +41,7 @@ func (v *Views) startSaveValidationHelper(c echo.Context, valType ValidationType
 
 		err = xml.Unmarshal([]byte(streamPageContent), &rtmp)
 		if err != nil {
-			response.Error = fmt.Errorf("failed to unmarshal xml: %+v", err)
+			response.Error = fmt.Errorf("failed to unmarshal xml: %w", err)
 			return response
 		}
 
@@ -59,7 +60,7 @@ func (v *Views) startSaveValidationHelper(c echo.Context, valType ValidationType
 		}
 
 		if !found {
-			response.Error = fmt.Errorf("unable to find current stream input")
+			response.Error = errors.New("unable to find current stream input")
 			return response
 		}
 	case saveValidation:
@@ -75,7 +76,7 @@ func (v *Views) startSaveValidationHelper(c echo.Context, valType ValidationType
 		}
 		input = fmt.Sprintf("%s/%s", endpoint, streamInput)
 	default:
-		response.Error = fmt.Errorf("invalid validation type")
+		response.Error = errors.New("invalid validation type")
 		return response
 	}
 
@@ -89,18 +90,18 @@ func (v *Views) startSaveValidationHelper(c echo.Context, valType ValidationType
 
 	savePath := c.FormValue("save_path")
 	if len(savePath) == 0 && recordCheckbox {
-		response.Error = fmt.Errorf("invalid save path value")
+		response.Error = errors.New("invalid save path value")
 		return response
 	}
 
 	if recordCheckbox && !strings.HasSuffix(savePath, ".mkv") {
-		response.Error = fmt.Errorf("the save path must end in \".mkv\"")
+		response.Error = errors.New("the save path must end in \".mkv\"")
 		return response
 	}
 
 	websiteCheckboxRaw := c.FormValue("website_stream")
 	if websiteCheckboxRaw != "" && websiteCheckboxRaw != "on" {
-		response.Error = fmt.Errorf("invalid website stream checkbox value: %s", recordCheckboxRaw)
+		response.Error = errors.New("invalid website stream checkbox value: " + recordCheckboxRaw)
 		return response
 	}
 
@@ -108,7 +109,7 @@ func (v *Views) startSaveValidationHelper(c echo.Context, valType ValidationType
 
 	websiteStreamEndpoint := c.FormValue("website_stream_endpoint")
 	if websiteCheckbox && !strings.Contains(websiteStreamEndpoint, "?pwd=") {
-		response.Error = fmt.Errorf("the website stream endpoint must contain \"?pwd=\"")
+		response.Error = errors.New("the website stream endpoint must contain \"?pwd=\"")
 		return response
 	}
 
@@ -118,7 +119,7 @@ func (v *Views) startSaveValidationHelper(c echo.Context, valType ValidationType
 		if v.websiteCheck(websiteStreamEndpoint) {
 			websiteOut = websiteStreamEndpoint
 		} else {
-			response.Error = fmt.Errorf("website key check has failed")
+			response.Error = errors.New("website key check has failed")
 			return response
 		}
 	}
@@ -137,26 +138,22 @@ func (v *Views) startSaveValidationHelper(c echo.Context, valType ValidationType
 	}
 	sort.Ints(numbers)
 
-	streamServerRegex, err := regexp.Compile("^(rtmps?:\\/\\/)?" + // protocol
+	streamServerRegex := regexp.MustCompile("^(rtmps?:\\/\\/)?" + // protocol
 		"((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|" + // domain name
 		"((\\d{1,3}\\.){3}\\d{1,3}))" + // OR ip (v4) address
 		"(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*" + // port and path
 		"(\\?[;&a-z\\d%_.~+=-]*)?" + // query string
 		"(\\#[-a-z\\d_]*)?$") // fragment locator
-	if err != nil {
-		response.Error = fmt.Errorf("failed to compile regex: %+v", err)
-		return response
-	}
 
-	var streams []string
+	streams := make([]string, 0)
 	for _, index := range numbers {
 		streamServer := c.FormValue("stream_server_" + strconv.Itoa(index))
 		if len(streamServer) == 0 {
-			response.Error = fmt.Errorf("invalid length of stream_server_%d", index)
+			response.Error = errors.New("invalid length of stream_server_" + strconv.Itoa(index))
 			return response
 		}
 		if !streamServerRegex.Match([]byte(streamServer)) {
-			response.Error = fmt.Errorf("invalid value of stream_server_%d: %+v", index, err)
+			response.Error = errors.New("invalid value of stream_server_" + strconv.Itoa(index))
 			return response
 		}
 		if streamServer[len(streamServer)-1] != '/' {
@@ -167,7 +164,7 @@ func (v *Views) startSaveValidationHelper(c echo.Context, valType ValidationType
 		}
 		streamKey := c.FormValue("stream_key_" + strconv.Itoa(index))
 		if len(streamKey) == 0 {
-			response.Error = fmt.Errorf("invalid length of stream_key_%d", index)
+			response.Error = errors.New("invalid length of stream_key_" + strconv.Itoa(index))
 			return response
 		}
 		streamServer += streamKey
@@ -175,7 +172,7 @@ func (v *Views) startSaveValidationHelper(c echo.Context, valType ValidationType
 	}
 
 	if len(streams) == 0 {
-		response.Error = fmt.Errorf("invalid length of streams")
+		response.Error = errors.New("invalid length of streams")
 		return response
 	}
 

@@ -1,3 +1,4 @@
+//nolint:revive
 package wsMessages
 
 type SpecialWSMessage string

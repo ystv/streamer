@@ -2,6 +2,7 @@ package views
 
 import (
 	"encoding/xml"
+	//nolint:gosec
 	"math/rand"
 	"time"
 
@@ -143,6 +144,7 @@ const (
 )
 
 var (
+	//nolint:gosec
 	seededRand = rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	wsUpgrade = websocket.Upgrader{}

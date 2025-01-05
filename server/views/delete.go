@@ -2,9 +2,10 @@ package views
 
 import (
 	"fmt"
-	"github.com/labstack/echo/v4"
 	"log"
 	"net/http"
+
+	"github.com/labstack/echo/v4"
 )
 
 // DeleteFunc will delete the saved stream before it can start
@@ -22,7 +23,7 @@ func (v *Views) DeleteFunc(c echo.Context) error {
 		unique := c.FormValue("unique")
 		if len(unique) != 10 {
 			log.Printf("unique key invalid: %s", unique)
-			response.Error = fmt.Sprintf("unique key invalid: %s", unique)
+			response.Error = "unique key invalid: " + unique
 			return c.JSON(http.StatusOK, response)
 		}
 

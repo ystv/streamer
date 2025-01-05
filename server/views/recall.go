@@ -43,7 +43,7 @@ func (v *Views) RecallFunc(c echo.Context) error {
 		unique := c.FormValue("unique")
 		if len(unique) != 10 {
 			log.Printf("unique key invalid: %s", unique)
-			response.Error = fmt.Sprintf("unique key invalid: %s", unique)
+			response.Error = "unique key invalid: " + unique
 			return c.JSON(http.StatusOK, response)
 		}
 
@@ -60,17 +60,17 @@ func (v *Views) RecallFunc(c echo.Context) error {
 			return c.JSON(http.StatusOK, response)
 		}
 
-		response.Unique = stored.Stream
+		response.Unique = stored.GetStream()
 
-		if len(stored.Recording) > 0 {
-			response.RecordingPath = stored.Recording
+		if len(stored.GetRecording()) > 0 {
+			response.RecordingPath = stored.GetRecording()
 		}
 
-		if len(stored.Website) > 0 {
-			response.WebsiteStream = stored.Website
+		if len(stored.GetWebsite()) > 0 {
+			response.WebsiteStream = stored.GetWebsite()
 		}
 
-		inputPart := strings.Split(stored.Input, "/")
+		inputPart := strings.Split(stored.GetInput(), "/")
 		if len(inputPart) != 2 {
 			log.Printf("failed to get input stream string, invalid array size: %d, %+v", len(inputPart), inputPart)
 			response.Error = fmt.Sprintf("failed to get input stream string, invalid array size: %d, %+v", len(inputPart), inputPart)
@@ -80,7 +80,7 @@ func (v *Views) RecallFunc(c echo.Context) error {
 		response.InputStream = inputPart[1]
 
 		response.Streams = []RecallStream{}
-		for _, stream := range stored.Streams {
+		for _, stream := range stored.GetStreams() {
 			var recallStream RecallStream
 			splitStream := strings.Split(stream, "|")
 			if len(splitStream) != 2 {

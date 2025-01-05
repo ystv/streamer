@@ -1,6 +1,7 @@
 package views
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -32,7 +33,7 @@ func (v *Views) StopFunc(c echo.Context) error {
 		unique := c.FormValue("unique_code")
 		if len(unique) != 10 {
 			log.Printf("unique key invalid: %s", unique)
-			response.Error = fmt.Sprintf("unique key invalid: %s", unique)
+			response.Error = "unique key invalid: " + unique
 			return c.JSON(http.StatusOK, response)
 		}
 
@@ -57,12 +58,13 @@ func (v *Views) StopFunc(c echo.Context) error {
 		_, rec := v.cache.Get(server.Recorder.String())
 		_, fow := v.cache.Get(server.Forwarder.String())
 
-		if (!rec && len(stream.Recording) > 0) && !fow {
-			err = fmt.Errorf("no recorder or forwarder available")
-		} else if !rec && len(stream.Recording) > 0 {
-			err = fmt.Errorf("no recorder available")
-		} else if !fow {
-			err = fmt.Errorf("no forwarder available")
+		switch {
+		case (!rec && len(stream.GetRecording()) > 0) && !fow:
+			err = errors.New("no recorder or forwarder available")
+		case !rec && len(stream.GetRecording()) > 0:
+			err = errors.New("no recorder available")
+		case !fow:
+			err = errors.New("no forwarder available")
 		}
 
 		var wg sync.WaitGroup
@@ -70,7 +72,7 @@ func (v *Views) StopFunc(c echo.Context) error {
 		wg.Add(2)
 		go func() {
 			defer wg.Done()
-			if len(stream.Recording) > 0 {
+			if len(stream.GetRecording()) > 0 {
 				recorderTransporter := transporter
 				var wsResponse commonTransporter.ResponseTransporter
 				wsResponse, err = v.wsHelper(server.Recorder, recorderTransporter)

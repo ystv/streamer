@@ -17,7 +17,7 @@ func (v *Views) generateUnique() (string, error) {
 
 		streams1, err := v.store.GetStreams()
 		if err != nil {
-			return "", fmt.Errorf("failed to get streams: %+v", err)
+			return "", fmt.Errorf("failed to get streams: %w", err)
 		}
 
 		if len(streams1) == 0 {
@@ -25,7 +25,7 @@ func (v *Views) generateUnique() (string, error) {
 		}
 
 		for _, s := range streams1 {
-			if s.Stream == string(b) {
+			if s.GetStream() == string(b) {
 				loop = true
 				break
 			}
@@ -34,7 +34,7 @@ func (v *Views) generateUnique() (string, error) {
 
 		stored, err := v.store.GetStored()
 		if err != nil {
-			return "", fmt.Errorf("failed to get stored: %+v", err)
+			return "", fmt.Errorf("failed to get stored: %w", err)
 		}
 
 		if len(stored) == 0 {
@@ -42,7 +42,7 @@ func (v *Views) generateUnique() (string, error) {
 		}
 
 		for _, s := range stored {
-			if s.Stream == string(b) {
+			if s.GetStream() == string(b) {
 				loop = true
 				break
 			}

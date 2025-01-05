@@ -140,9 +140,9 @@ func (v *Views) Websocket(c echo.Context) error {
 			}
 
 			var receive []byte
-			switch transportUniqueReturning.Payload.(type) {
+			switch t := transportUniqueReturning.Payload.(type) {
 			case string:
-				receive = []byte(transportUniqueReturning.Payload.(string))
+				receive = []byte(t)
 			case map[string]interface{}, commonTransporter.ResponseTransporter:
 				receive, err = json.Marshal(transportUniqueReturning.Payload)
 				if err != nil {

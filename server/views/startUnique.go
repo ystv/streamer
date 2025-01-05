@@ -23,7 +23,7 @@ func (v *Views) StartUniqueFunc(c echo.Context) error {
 		unique := c.FormValue("unique_code")
 		if len(unique) != 10 {
 			log.Printf("unique key invalid: %s", unique)
-			response.Error = fmt.Sprintf("unique key invalid: %s", unique)
+			response.Error = "unique key invalid: " + unique
 			return c.JSON(http.StatusOK, response)
 		}
 

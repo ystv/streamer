@@ -55,7 +55,7 @@ func (t *Templater) RenderTemplate(w io.Writer, data interface{}, mainTmpl Templ
 
 	if err != nil {
 		log.Printf("failed to get templates for template(RenderTemplate): %+v", err)
-		return fmt.Errorf("failed to get templates for template(RenderTemplate): %+v", err)
+		return fmt.Errorf("failed to get templates for template(RenderTemplate): %w", err)
 	}
 
 	return t1.Execute(w, data)

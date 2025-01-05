@@ -1,6 +1,7 @@
 package views
 
 import (
+	"context"
 	"io"
 	"log"
 	"net/http"
@@ -24,8 +25,12 @@ func (v *Views) websiteCheck(endpoint string) bool {
 	data.Set("name", splitting[0])
 	data.Set("pwd", splitting[1])
 
-	client := &http.Client{}
-	r, err := http.NewRequest("POST", v.conf.KeyChecker, strings.NewReader(data.Encode()))
+	ctx, cancelFunc := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancelFunc()
+	client := &http.Client{
+		Timeout: 2 * time.Second,
+	}
+	r, err := http.NewRequestWithContext(ctx, http.MethodPost, v.conf.KeyChecker, strings.NewReader(data.Encode()))
 	if err != nil {
 		log.Printf("failed to create new request for website check: %+v", err)
 		return true // sending back true if the checker is down
@@ -40,9 +45,9 @@ func (v *Views) websiteCheck(endpoint string) bool {
 		log.Printf("failed to send request for website check: %+v", err)
 		return true // sending back true if the checker is down
 	}
-	defer func(Body io.ReadCloser) {
-		_ = Body.Close()
-	}(res.Body)
+
+	defer res.Body.Close()
+
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		log.Printf("failed to read body for website check: %+v", err)

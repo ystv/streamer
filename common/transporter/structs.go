@@ -7,6 +7,7 @@ import (
 
 type (
 	// TransporterUnique is sent with an ID in order to be returned and sorted
+	//nolint:revive
 	TransporterUnique struct {
 		// ID is the unique code used to identify a request
 		ID string `json:"id" mapstructure:"id"`

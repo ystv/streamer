@@ -2,10 +2,11 @@ package views
 
 import (
 	"errors"
-	"github.com/ystv/streamer/server/templates"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
+
+	"github.com/ystv/streamer/server/templates"
 )
 
 func (v *Views) CustomHTTPErrorHandler(err error, c echo.Context) {

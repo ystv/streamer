@@ -1,6 +1,7 @@
 package views
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -30,7 +31,7 @@ func (v *Views) startingWSHelper(c echo.Context, unique string, startingType Sta
 
 	formValues := v.startSaveValidationHelper(c, valType)
 	if formValues.Error != nil {
-		return fmt.Errorf("invalid form input: %+v", formValues.Error)
+		return fmt.Errorf("invalid form input: %w", formValues.Error)
 	}
 
 	transporter := commonTransporter.Transporter{
@@ -118,17 +119,17 @@ func (v *Views) startingWSHelper(c echo.Context, unique string, startingType Sta
 			Streams:   formValues.Streams,
 		})
 		if err != nil {
-			return fmt.Errorf("failed to add stream: %+v", err)
+			return fmt.Errorf("failed to add stream: %w", err)
 		}
 
 		if s == nil {
-			return fmt.Errorf("failed to add stream, data is empty")
+			return errors.New("failed to add stream, data is empty")
 		}
 
 		if startingType == storedStart {
 			err = v.store.DeleteStored(unique)
 			if err != nil {
-				return fmt.Errorf("failed to delete stored: %+v, unique: %s", err, unique)
+				return fmt.Errorf("failed to delete stored: %w, unique: %s", err, unique)
 			}
 		}
 

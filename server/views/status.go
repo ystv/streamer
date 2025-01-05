@@ -29,7 +29,7 @@ func (v *Views) StatusFunc(c echo.Context) error {
 		unique := c.FormValue("unique_code")
 		if len(unique) != 10 {
 			log.Printf("unique key invalid: %s", unique)
-			errResponse.Error = fmt.Sprintf("unique key invalid: %s", unique)
+			errResponse.Error = "unique key invalid: " + unique
 			return c.JSON(http.StatusOK, errResponse)
 		}
 
@@ -52,8 +52,8 @@ func (v *Views) StatusFunc(c echo.Context) error {
 		}
 
 		fStatus := commonTransporter.ForwarderStatus{
-			Website: len(stream.Website) > 0,
-			Streams: len(stream.Streams),
+			Website: len(stream.GetWebsite()) > 0,
+			Streams: len(stream.GetStreams()),
 		}
 
 		var statusResponse StatusResponse
@@ -61,7 +61,7 @@ func (v *Views) StatusFunc(c echo.Context) error {
 		wg.Add(2)
 		go func() {
 			defer wg.Done()
-			if len(stream.Recording) > 0 {
+			if len(stream.GetRecording()) > 0 {
 				recorderTransporter := transporter
 
 				individualResponse := StatusResponseIndividual{

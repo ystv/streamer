@@ -1,6 +1,7 @@
 package store
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/ystv/streamer/server/storage"
@@ -23,7 +24,7 @@ func (store *Store) GetStreams() ([]*storage.Stream, error) {
 	if err != nil {
 		return nil, err
 	}
-	return streamer.Stream, err
+	return streamer.GetStream(), err
 }
 
 func (store *Store) FindStream(unique string) (*storage.Stream, error) {
@@ -31,8 +32,8 @@ func (store *Store) FindStream(unique string) (*storage.Stream, error) {
 	if err != nil {
 		return nil, err
 	}
-	for _, c1 := range streamer.Stream {
-		if c1.Stream == unique {
+	for _, c1 := range streamer.GetStream() {
+		if c1.GetStream() == unique {
 			return c1, nil
 		}
 	}
@@ -45,9 +46,9 @@ func (store *Store) AddStream(stream *storage.Stream) (*storage.Stream, error) {
 		return nil, err
 	}
 
-	for _, c := range streamer.Stream {
-		if c.Stream == stream.Stream {
-			return nil, fmt.Errorf("unable to add stream duplicate id for AddStream")
+	for _, c := range streamer.GetStream() {
+		if c.GetStream() == stream.GetStream() {
+			return nil, errors.New("unable to add stream duplicate id for AddStream")
 		}
 	}
 
@@ -66,24 +67,24 @@ func (store *Store) DeleteStream(unique string) error {
 		return err
 	}
 
-	s := streamer.Stream
+	s := streamer.GetStream()
 	found := false
 	var index int
 	var v *storage.Stream
 	for index, v = range s {
-		if v.Stream == unique {
+		if v.GetStream() == unique {
 			found = true
 			break
 		}
 	}
 
-	if found {
-		copy(s[index:], s[index+1:])   // Shift a[i+1:] left one index
-		s[len(s)-1] = nil              // Erase last element (write zero value)
-		streamer.Stream = s[:len(s)-1] // Truncate slice
-	} else {
-		return fmt.Errorf("stream not found for DeleteStream")
+	if !found {
+		return errors.New("stream not found for DeleteStream")
 	}
+
+	copy(s[index:], s[index+1:])   // Shift a[i+1:] left one index
+	s[len(s)-1] = nil              // Erase last element (write zero value)
+	streamer.Stream = s[:len(s)-1] // Truncate slice
 
 	if err = store.backend.Write(streamer); err != nil {
 		return err
@@ -97,16 +98,16 @@ func (store *Store) GetStored() ([]*storage.Stored, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to get stored from GetStored: %w", err)
 	}
-	return streamer.Stored, nil
+	return streamer.GetStored(), nil
 }
 
 func (store *Store) FindStored(unique string) (*storage.Stored, error) {
 	streamer, err := store.Get()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get stored from ")
+		return nil, fmt.Errorf("failed to get stored from FindStored: %w", err)
 	}
-	for _, c1 := range streamer.Stored {
-		if c1.Stream == unique {
+	for _, c1 := range streamer.GetStored() {
+		if c1.GetStream() == unique {
 			return c1, nil
 		}
 	}
@@ -119,9 +120,9 @@ func (store *Store) AddStored(stored *storage.Stored) (*storage.Stored, error) {
 		return nil, err
 	}
 
-	for _, c := range streamer.Stored {
-		if c.Stream == stored.Stream {
-			return nil, fmt.Errorf("unable to add stored duplicate id for AddStored")
+	for _, c := range streamer.GetStored() {
+		if c.GetStream() == stored.GetStream() {
+			return nil, errors.New("unable to add stored duplicate id for AddStored")
 		}
 	}
 
@@ -140,12 +141,12 @@ func (store *Store) DeleteStored(unique string) error {
 		return err
 	}
 
-	s := streamer.Stored
+	s := streamer.GetStored()
 	found := false
 	var index int
 	var v *storage.Stored
 	for index, v = range s {
-		if v.Stream == unique {
+		if v.GetStream() == unique {
 			found = true
 			break
 		}
@@ -156,7 +157,7 @@ func (store *Store) DeleteStored(unique string) error {
 		s[len(s)-1] = nil              // Erase last element (write zero value)
 		streamer.Stored = s[:len(s)-1] // Truncate slice
 	} else {
-		return fmt.Errorf("stream not found for DeleteStored")
+		return errors.New("stream not found for DeleteStored")
 	}
 
 	if err = store.backend.Write(streamer); err != nil {

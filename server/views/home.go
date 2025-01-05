@@ -31,11 +31,12 @@ func (v *Views) HomeFunc(c echo.Context) error {
 
 	var err string
 
-	if !rec && !fow {
+	switch {
+	case !rec && !fow:
 		err = "No recorder or forwarder available"
-	} else if !rec {
+	case !rec:
 		err = "No recorder available"
-	} else if !fow {
+	case !fow:
 		err = "No forwarder available"
 	}
 

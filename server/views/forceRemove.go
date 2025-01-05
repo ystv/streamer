@@ -25,7 +25,7 @@ func (v *Views) ForceRemoveFunc(c echo.Context) error {
 		unique := c.Param("unique")
 		if len(unique) != 10 {
 			log.Printf("unique key invalid: %s", unique)
-			response.Error = fmt.Sprintf("unique key invalid: %s", unique)
+			response.Error = "unique key invalid: " + unique
 			return c.JSON(http.StatusOK, response)
 		}
 
@@ -73,7 +73,7 @@ func (v *Views) ForceRemoveFunc(c echo.Context) error {
 				Unique: unique,
 			}
 
-			if len(stream.Recording) > 0 && rec {
+			if len(stream.GetRecording()) > 0 && rec {
 				recorderTransporter := transporter
 				var wsResponse commonTransporter.ResponseTransporter
 				wsResponse, err = v.wsHelper(server.Recorder, recorderTransporter)
