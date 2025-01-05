@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/ystv/streamer/common/transporter/action"
 	"log"
 	"net/http"
 	"net/url"
@@ -20,6 +19,7 @@ import (
 	"github.com/patrickmn/go-cache"
 
 	commonTransporter "github.com/ystv/streamer/common/transporter"
+	"github.com/ystv/streamer/common/transporter/action"
 	"github.com/ystv/streamer/common/transporter/server"
 	specialTransporter "github.com/ystv/streamer/common/transporter/special"
 	"github.com/ystv/streamer/common/wsMessages"
