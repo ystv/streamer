@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/ystv/streamer/common/transporter/action"
 	"log"
 	"net/http"
 	"net/url"
@@ -273,7 +274,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 
 			var out commonTransporter.ForwarderStatusResponse
 			switch t.Action {
-			case "start":
+			case action.Start:
 				var t1 commonTransporter.ForwarderStart
 
 				err = mapstructure.Decode(t.Payload, &t1)
@@ -303,7 +304,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 					}
 					continue
 				}
-			case "status":
+			case action.Status:
 				_, ok := v.cache.Get(fmt.Sprintf("%s_1_%s", t.Unique, finishChannelNameAppend))
 				if !ok {
 					kill := v.errorResponse(fmt.Errorf("failed to get status, invalid unique: %s", t.Unique), c, m.ID)
@@ -341,7 +342,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 					}
 					continue
 				}
-			case "stop":
+			case action.Stop:
 				_, ok := v.cache.Get(fmt.Sprintf("%s_1_%s", t.Unique, finishChannelNameAppend))
 				if !ok {
 					kill := v.errorResponse(fmt.Errorf("failed to stop forward, invalid unique: %s", t.Unique), c, m.ID)
