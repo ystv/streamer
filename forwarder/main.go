@@ -152,6 +152,8 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 		panic(fmt.Sprintf("failed to dial url: %+v", err))
 	}
 
+	defer resp.Body.Close()
+
 	// When the program closes, close the connection
 	defer func(c *websocket.Conn) {
 		_ = c.Close()
@@ -172,20 +174,20 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 		var resBytes []byte
 		resBytes, err = json.Marshal(response)
 		if err != nil {
-			_ = v.errorResponse(fmt.Errorf("failed to marshal initial: %+v", err), c, "UNKNOWN ID")
+			_ = v.errorResponse(fmt.Errorf("failed to marshal initial: %w", err), c, "UNKNOWN ID")
 			return
 		}
 
 		err = c.WriteMessage(websocket.TextMessage, resBytes)
 		if err != nil {
-			_ = v.errorResponse(fmt.Errorf("failed to write name and version: %+v", err), c, "UNKNOWN ID")
+			_ = v.errorResponse(fmt.Errorf("failed to write name and version: %w", err), c, "UNKNOWN ID")
 			return
 		}
 
 		var msg []byte
 		_, msg, err = c.ReadMessage()
 		if err != nil {
-			_ = v.errorResponse(fmt.Errorf("failed to read acknowledgement: %+v", err), c, "UNKNOWN ID")
+			_ = v.errorResponse(fmt.Errorf("failed to read acknowledgement: %w", err), c, "UNKNOWN ID")
 			return
 		}
 
@@ -201,39 +203,39 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 			var message []byte
 			msgType, message, err = c.ReadMessage()
 			if err != nil {
-				_ = v.errorResponse(fmt.Errorf("failed to read message: %+v, message type: %d, message contents: %s", err, msgType, string(message)), c, "UNKNOWN ID")
+				_ = v.errorResponse(fmt.Errorf("failed to read message: %w, message type: %d, message contents: %s", err, msgType, string(message)), c, "UNKNOWN ID")
 				return
 			}
 
 			var receivedMessage commonTransporter.TransporterUnique
 			err = json.Unmarshal(message, &receivedMessage)
 			if err != nil {
-				_ = v.errorResponse(fmt.Errorf("failed to unmarshal recieved: %+v", err), c, receivedMessage.ID)
+				_ = v.errorResponse(fmt.Errorf("failed to unmarshal received: %w", err), c, receivedMessage.ID)
 				return
 			}
 
 		switchBreak:
-			switch receivedMessage.Payload.(type) {
+			switch t := receivedMessage.Payload.(type) {
 			case map[string]interface{}:
 				break switchBreak
 			case commonTransporter.Transporter:
 				break switchBreak
 			case string:
-				if msgType == websocket.TextMessage && receivedMessage.Payload.(string) == specialWSMessage.Ping.String() {
+				if msgType == websocket.TextMessage && t == specialWSMessage.Ping.String() {
 					receivedMessage.Payload = specialWSMessage.Pong
 					var responsePing []byte
 					responsePing, err = json.Marshal(receivedMessage)
 					err = c.WriteMessage(websocket.TextMessage, responsePing)
 					if err != nil {
-						_ = v.errorResponse(fmt.Errorf("failed to write pong: %+v", err), c, receivedMessage.ID)
+						_ = v.errorResponse(fmt.Errorf("failed to write pong: %w", err), c, receivedMessage.ID)
 						return
 					}
 					continue
 				}
-				_ = v.errorResponse(fmt.Errorf("invalid string recieved: %s", receivedMessage), c, receivedMessage.ID)
+				_ = v.errorResponse(fmt.Errorf("invalid string received: %s", receivedMessage), c, receivedMessage.ID)
 				return
 			default:
-				_ = v.errorResponse(fmt.Errorf("invalid recieved message: %#v", receivedMessage), c, receivedMessage.ID)
+				_ = v.errorResponse(fmt.Errorf("invalid received message: %#v", receivedMessage), c, receivedMessage.ID)
 				return
 			}
 			log.Printf("received message: %#v", receivedMessage)
@@ -254,7 +256,7 @@ func (v *Views) run(config Config, interrupt chan os.Signal) {
 
 			err = mapstructure.Decode(m.Payload, &t)
 			if err != nil {
-				kill := v.errorResponse(fmt.Errorf("failed to decode payload: %+v", err), c, m.ID)
+				kill := v.errorResponse(fmt.Errorf("failed to decode payload: %w", err), c, m.ID)
 				if kill {
 					return
 				}

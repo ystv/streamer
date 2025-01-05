@@ -2,8 +2,10 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os/exec"
+	"strconv"
 	"strings"
 
 	commonTransporter "github.com/ystv/streamer/common/transporter"
@@ -22,7 +24,9 @@ func (v *Views) status(transporter commonTransporter.Transporter) (commonTranspo
 	baseTrim := "size=       0kB time=00:00:00.00 bitrate=N/A speed="
 
 	for i := start; i <= transporter.Payload.(commonTransporter.ForwarderStatus).Streams; i++ {
-		cmd := exec.Command("tail", "-n", "26", fmt.Sprintf("/logs/%s_%d.txt", transporter.Unique, i))
+		logs := fmt.Sprintf("/logs/%s_%d.txt", transporter.Unique, i)
+
+		cmd := exec.Command("tail", "-n", "26", logs)
 
 		var stdout, stderr bytes.Buffer
 		cmd.Stdout = &stdout
@@ -38,7 +42,7 @@ func (v *Views) status(transporter commonTransporter.Transporter) (commonTranspo
 		errOut += stderr.String()
 
 		if len(errOut) != 0 {
-			return commonTransporter.ForwarderStatusResponse{}, fmt.Errorf(errOut)
+			return commonTransporter.ForwarderStatusResponse{}, errors.New(errOut)
 		}
 
 		var response string
@@ -55,7 +59,7 @@ func (v *Views) status(transporter commonTransporter.Transporter) (commonTranspo
 		if i == 0 {
 			fStatusResponse.Website = response
 		} else {
-			fStatusResponse.Streams[fmt.Sprintf("%d", i)] = response
+			fStatusResponse.Streams[strconv.Itoa(i)] = response
 		}
 	}
 

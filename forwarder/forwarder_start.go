@@ -25,7 +25,7 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 
 		go func() {
 			for {
-				v.cache.Delete(fmt.Sprintf("%s_0", transporter.Unique))
+				v.cache.Delete(transporter.Unique + "_0")
 				select {
 				case <-finish:
 					return
@@ -44,7 +44,7 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 			for {
 				select {
 				case <-finish:
-					cmd, ok := v.cache.Get(fmt.Sprintf("%s_0", transporter.Unique))
+					cmd, ok := v.cache.Get(transporter.Unique + "_0")
 					if !ok {
 						log.Println("unable to get cmd from cache")
 						return
@@ -54,7 +54,7 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 					if err != nil {
 						log.Printf("failed to kill forwarder: %+v", err)
 					}
-					v.cache.Delete(fmt.Sprintf("%s_0", transporter.Unique))
+					v.cache.Delete(transporter.Unique + "_0")
 					return
 				default:
 					time.Sleep(1 * time.Second) // This is so it doesn't spam constantly and take the entire CPU up

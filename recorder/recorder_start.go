@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -19,7 +20,7 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 	var path string
 
 	if len(array) == 0 || array == nil {
-		return fmt.Errorf("failed to get path out array")
+		return errors.New("failed to get path out array")
 	}
 
 	if len(array) == 1 {

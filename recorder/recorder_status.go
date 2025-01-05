@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os/exec"
 	"strings"
@@ -10,7 +11,9 @@ import (
 )
 
 func (v *Views) status(transporter commonTransporter.Transporter) (string, error) {
-	cmd := exec.Command("tail", "-n", "26", fmt.Sprintf("/logs/%s.txt", transporter.Unique))
+	logs := fmt.Sprintf("/logs/%s.txt", transporter.Unique)
+
+	cmd := exec.Command("tail", "-n", "26", logs)
 
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
@@ -26,7 +29,7 @@ func (v *Views) status(transporter commonTransporter.Transporter) (string, error
 	errOut += stderr.String()
 
 	if len(errOut) != 0 {
-		return "", fmt.Errorf(errOut)
+		return "", errors.New(errOut)
 	}
 
 	var response string
