@@ -1,5 +1,5 @@
 module github.com/ystv/streamer/common
 
-go 1.22
+go 1.23
 
-toolchain go1.22.1
+toolchain go1.23.4
