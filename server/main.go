@@ -111,6 +111,14 @@ func (r *Router) middleware() {
 	r.router.Use(middleware.GzipWithConfig(middleware.GzipConfig{
 		Level: 5,
 	}))
+	config := middleware.CORSConfig{
+		AllowCredentials: true,
+		Skipper:          middleware.DefaultSkipper,
+		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept,
+			echo.HeaderAccessControlAllowCredentials, echo.HeaderAccessControlAllowOrigin, echo.HeaderAuthorization},
+		AllowMethods: []string{http.MethodGet, http.MethodPost},
+	}
+	r.router.Use(middleware.CORSWithConfig(config))
 }
 
 func (r *Router) loadRoutes() {
