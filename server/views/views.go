@@ -288,9 +288,13 @@ func (v *Views) Authenticated(next echo.HandlerFunc) echo.HandlerFunc {
 			goto login
 		}
 
+		fmt.Println(t)
+
 		if t.Token == "" {
 			goto login
 		}
+
+		fmt.Println(resp.StatusCode)
 
 		if resp.StatusCode != 201 {
 			goto login
