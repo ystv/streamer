@@ -14,17 +14,6 @@ import (
 
 // StreamsFunc collects the data from the rtmp stat page of nginx and produces a list of active streaming endpoints from given endpoints
 func (v *Views) StreamsFunc(c echo.Context) error {
-	/*if !authenticate(w, r) {
-		err := godotenv.Load()
-		if err != nil {
-			fmt.Printf("error loading .env file: %s", err)
-		}
-
-		jwtAuthentication := os.Getenv("JWT_AUTHENTICATION")
-
-		http.Redirect(w, r, jwtAuthentication, http.StatusTemporaryRedirect)
-		return
-	}*/
 	if c.Request().Method == "POST" {
 		if v.conf.Verbose {
 			log.Println("Streams POST called")

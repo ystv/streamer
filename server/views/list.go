@@ -12,17 +12,6 @@ import (
 
 // ListFunc lists all current streams that are registered in the database
 func (v *Views) ListFunc(c echo.Context) error {
-	/*if !authenticate(w, r) {
-		err := godotenv.Load()
-		if err != nil {
-			fmt.Printf("error loading .env file: %s", err)
-		}
-
-		jwtAuthentication := os.Getenv("JWT_AUTHENTICATION")
-
-		http.Redirect(w, r, jwtAuthentication+"list", http.StatusTemporaryRedirect)
-		return
-	}*/
 	if c.Request().Method == "GET" {
 		if v.conf.Verbose {
 			log.Println("List GET called")
