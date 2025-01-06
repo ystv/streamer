@@ -55,7 +55,7 @@ func (v *Views) websiteCheck(endpoint string) bool {
 	}
 
 	if (res.StatusCode >= 500 && res.StatusCode < 600) || res.StatusCode == http.StatusNotFound {
-		log.Printf("failed to get correct status from cobra: %d", res.StatusCode)
+		log.Printf("failed to get correct status from key checker: %d", res.StatusCode)
 		return true // sending back true if the checker is down
 	} else if res.StatusCode == http.StatusUnauthorized {
 		log.Println(res)
