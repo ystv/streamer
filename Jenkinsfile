@@ -24,7 +24,7 @@ pipeline {
           steps {
             script {
               dir("server") {
-                GIT_COMMIT_HASH = sh (script: "git log -n 1 --pretty=format:'%H'", returnStdout: true)
+                GIT_COMMIT_HASH = sh (script: "git log -n 1 --pretty=format:'%H' | head -c 7", returnStdout: true)
                 docker.withRegistry('https://' + registryEndpoint, 'docker-registry') {
                   serverImage = docker.build(serverImageName, "--build-arg STREAMER_VERSION_ARG=${env.BRANCH_NAME}-${env.BUILD_ID} --build-arg STREAMER_COMMIT_ARG=${GIT_COMMIT_HASH} --no-cache .")
                 }

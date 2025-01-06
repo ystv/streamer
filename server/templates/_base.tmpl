@@ -31,8 +31,8 @@
     {{template "content" .}}
     <br><br>
     {{ $year := thisYear }}
-    <footer id="footer">Streamer (version: {{ getVersion }}, <a href="https://github.com/ystv/streamer/commit/{{ getCommit }}"
-                                                                target="_blank">GitHub (commit: {{ getCommit }})</a>) - created by Liam Burnand 2022{{if ne $year 2022}}-{{ $year }}{{end}}</footer>
+    <footer id="footer">Streamer (<a href="https://github.com/ystv/streamer" target="_blank">version: {{ getVersion }}</a>, <a href="https://github.com/ystv/streamer/commit/{{ getCommit }}"
+                                                                target="_blank">commit: {{ getCommit }}</a>) - created by Liam Burnand 2022{{if ne $year 2022}}-{{ $year }}{{end}}</footer>
     <script>
         const toggleSwitch = document.getElementById("theme_checkbox");
 
