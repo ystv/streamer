@@ -217,6 +217,7 @@ func (v *Views) Authenticated(next echo.HandlerFunc) echo.HandlerFunc {
 
 		token, ok := session.Values["token"].(string)
 		if ok {
+			fmt.Println(1)
 			req, err = http.NewRequestWithContext(c.Request().Context(), "GET",
 				v.conf.AuthEndpoint+"/api/test", nil)
 			if err != nil {
@@ -256,6 +257,7 @@ func (v *Views) Authenticated(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 
 	getToken:
+		fmt.Println(2)
 		req, err = http.NewRequestWithContext(c.Request().Context(), "GET",
 			v.conf.AuthEndpoint+"/api/set_token", nil)
 		if err != nil {
@@ -304,6 +306,7 @@ func (v *Views) Authenticated(next echo.HandlerFunc) echo.HandlerFunc {
 		return next(c)
 
 	login:
+		fmt.Println(3)
 		return c.Redirect(http.StatusTemporaryRedirect, fmt.Sprintf("%s/login?callback=https://%s%s",
 			v.conf.AuthEndpoint,
 			v.conf.StreamerWebAddress,
