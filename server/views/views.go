@@ -27,6 +27,7 @@ type (
 	Config struct {
 		Verbose               bool
 		Version               string
+		Commit                string
 		StreamServer          string `envconfig:"STREAM_SERVER"`
 		TransmissionLight     string `envconfig:"TRANSMISSION_LIGHT"`
 		KeyChecker            string `envconfig:"KEY_CHECKER"`
@@ -188,7 +189,7 @@ func New(conf Config, store *store.Store) *Views {
 		conf:     conf,
 		cookie:   cookie,
 		store:    store,
-		template: templates.NewTemplate(conf.Version),
+		template: templates.NewTemplate(conf.Version, conf.Commit),
 	}
 }
 

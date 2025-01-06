@@ -14,6 +14,7 @@ var tmpls embed.FS
 
 type Templater struct {
 	Version string
+	Commit  string
 }
 
 type Template string
@@ -39,9 +40,10 @@ func (t Template) String() string {
 	return string(t)
 }
 
-func NewTemplate(version string) *Templater {
+func NewTemplate(version, commit string) *Templater {
 	return &Templater{
 		Version: version,
+		Commit:  commit,
 	}
 }
 
@@ -69,6 +71,9 @@ func (t *Templater) getFuncMaps() template.FuncMap {
 		},
 		"getVersion": func() string {
 			return t.Version
+		},
+		"getCommit": func() string {
+			return t.Commit
 		},
 	}
 }

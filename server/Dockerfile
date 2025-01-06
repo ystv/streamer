@@ -1,8 +1,10 @@
 FROM golang:1.23.4-alpine3.21 AS build
 
 LABEL stage="builder"
+LABEL author="Liam Burnand"
 
 ARG STREAMER_VERSION_ARG
+ARG STREAMER_COMMIT_ARG
 
 VOLUME /db
 
@@ -16,6 +18,8 @@ RUN apk update && apk add git make protoc && apk add protoc-gen-go --repository 
 
 # Set build variables
 RUN echo -n "-X 'main.Version=$STREAMER_VERSION_ARG" > ./ldflags && \
+    tr -d \\n < ./ldflags > ./temp && mv ./temp ./ldflags && \
+    echo -n "' -X 'main.Commit=$STREAMER_COMMIT_ARG" >> ./ldflags && \
     tr -d \\n < ./ldflags > ./temp && mv ./temp ./ldflags && \
     echo -n "'" >> ./ldflags
 

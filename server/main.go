@@ -28,6 +28,7 @@ type (
 var (
 	verbose bool
 	Version = "unknown"
+	Commit  = "unknown"
 )
 
 //go:embed public/*
@@ -82,6 +83,7 @@ func main() {
 	}
 
 	config.Version = Version
+	config.Commit = Commit
 
 	r := &Router{
 		config: config,
@@ -98,7 +100,7 @@ func main() {
 
 	r.views.BeginWatchdog()
 
-	log.Printf("streamer server version: %s", Version)
+	log.Printf("streamer server version: %s, commit: %s", Version, Commit)
 
 	r.router.Logger.Error(r.router.Start(r.config.ServerAddress))
 	log.Fatalf("failed to start router on address %s", r.config.ServerAddress)
