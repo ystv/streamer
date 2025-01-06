@@ -293,7 +293,7 @@ func (v *Views) Authenticated(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 		fmt.Println(2.5)
 
-		fmt.Println(t)
+		fmt.Printf("%#v\n", t)
 		fmt.Println(string(b))
 
 		if t.Token == "" {
