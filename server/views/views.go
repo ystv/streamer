@@ -2,14 +2,19 @@ package views
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"encoding/xml"
-	//nolint:gosec
+	"fmt"
+	"io"
+	"log" //nolint:gosec
 	"math/rand"
+	"net/http"
 	"time"
 
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 	"github.com/gorilla/websocket"
+	"github.com/labstack/echo/v4"
 	"github.com/patrickmn/go-cache"
 
 	"github.com/ystv/streamer/common/transporter"
@@ -184,5 +189,124 @@ func New(conf Config, store *store.Store) *Views {
 		cookie:   cookie,
 		store:    store,
 		template: templates.NewTemplate(conf.Version),
+	}
+}
+
+func (v *Views) Authenticated(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		data := struct {
+			Error error `json:"error"`
+		}{}
+		session, err := v.cookie.Get(c.Request(), v.conf.SessionCookieName)
+		if err != nil {
+			log.Printf("failed to get session for authenticated: %+v", err)
+
+			data.Error = fmt.Errorf("failed to get session for authenticated: %w", err)
+
+			return c.JSON(http.StatusInternalServerError, data)
+		}
+
+		client := http.Client{Timeout: 2 * time.Second}
+
+		var t struct {
+			Token string `json:"token"`
+		}
+		var req *http.Request
+		var resp *http.Response
+		var b []byte
+
+		token, ok := session.Values["token"].(string)
+		if ok {
+			req, err = http.NewRequestWithContext(c.Request().Context(), "GET",
+				v.conf.AuthEndpoint+"/api/test", nil)
+			if err != nil {
+				log.Printf("failed to create new test token request: %+v", err)
+				goto getToken
+			}
+			req.Header.Add("Authorization", "Bearer "+token)
+
+			resp, err = client.Do(req)
+			if err != nil {
+				log.Printf("failed to do client for test token: %+v", err)
+				goto getToken
+			}
+			defer resp.Body.Close()
+
+			b, err = io.ReadAll(resp.Body)
+			if err != nil {
+				log.Printf("failed to read test token body: %+v", err)
+				goto getToken
+			}
+
+			var response struct {
+				StatusCode int    `json:"status_code"`
+				Message    string `json:"message"`
+			}
+			err = json.Unmarshal(b, &response)
+			if err != nil {
+				log.Printf("failed to unmarshal JSON for test token: %+v", err)
+				goto getToken
+			}
+
+			if response.StatusCode != 200 || resp.StatusCode != 200 || response.Message != "valid token" {
+				goto getToken
+			}
+
+			return next(c)
+		}
+
+	getToken:
+		req, err = http.NewRequestWithContext(c.Request().Context(), "GET",
+			v.conf.AuthEndpoint+"/api/set_token", nil)
+		if err != nil {
+			log.Printf("failed to create new get token request: %+v", err)
+			goto login
+		}
+
+		for _, cookie := range c.Request().Cookies() {
+			req.AddCookie(cookie)
+		}
+
+		resp, err = client.Do(req)
+		if err != nil {
+			log.Printf("failed to do client for get token: %+v", err)
+			goto login
+		}
+		defer resp.Body.Close()
+
+		b, err = io.ReadAll(resp.Body)
+		if err != nil {
+			log.Printf("failed to read get token body: %+v", err)
+			goto login
+		}
+
+		err = json.Unmarshal(b, &t)
+		if err != nil {
+			log.Printf("failed to unmarshal JSON for get token: %+v", err)
+			goto login
+		}
+
+		if t.Token == "" {
+			goto login
+		}
+
+		if resp.StatusCode != 201 {
+			goto login
+		}
+
+		session.Values["token"] = t.Token
+
+		err = session.Save(c.Request(), c.Response())
+		if err != nil {
+			log.Printf("failed to save token session for authentication: %+v", err)
+			goto login
+		}
+		return next(c)
+
+	login:
+		return c.Redirect(http.StatusTemporaryRedirect, fmt.Sprintf("%s/login?callback=https://%s%s",
+			v.conf.AuthEndpoint,
+			v.conf.StreamerWebAddress,
+			c.Request().URL.String()))
 	}
 }

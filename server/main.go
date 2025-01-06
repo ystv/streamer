@@ -111,6 +111,7 @@ func (r *Router) middleware() {
 	r.router.Use(middleware.GzipWithConfig(middleware.GzipConfig{
 		Level: 5,
 	}))
+	r.router.Use(r.views.Authenticated)
 }
 
 func (r *Router) loadRoutes() {
