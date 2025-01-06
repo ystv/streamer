@@ -6,6 +6,8 @@ toolchain go1.23.4
 
 require (
 	github.com/google/uuid v1.6.0
+	github.com/gorilla/securecookie v1.1.2
+	github.com/gorilla/sessions v1.4.0
 	github.com/gorilla/websocket v1.5.3
 	github.com/joho/godotenv v1.5.1
 	github.com/kelseyhightower/envconfig v1.4.0
@@ -13,7 +15,7 @@ require (
 	github.com/labstack/gommon v0.4.2
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
-	github.com/ystv/streamer/common v0.0.0-20241223065114-98c8e2b1c9f4
+	github.com/ystv/streamer/common v0.0.0-20250105182534-5963b0989185
 	google.golang.org/protobuf v1.36.1
 )
 

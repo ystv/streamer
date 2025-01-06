@@ -65,6 +65,10 @@ func main() {
 		log.Fatalf("failed to process env vars: %s", err)
 	}
 
+	if config.SessionCookieName == "" {
+		config.SessionCookieName = "session"
+	}
+
 	root := false
 
 	_, err = os.ReadFile("/bin/streamer")

@@ -1,11 +1,14 @@
 package views
 
 import (
+	"encoding/hex"
 	"encoding/xml"
 	//nolint:gosec
 	"math/rand"
 	"time"
 
+	"github.com/gorilla/securecookie"
+	"github.com/gorilla/sessions"
 	"github.com/gorilla/websocket"
 	"github.com/patrickmn/go-cache"
 
@@ -19,25 +22,23 @@ type (
 	Config struct {
 		Verbose               bool
 		Version               string
-		Forwarder             string `envconfig:"FORWARDER"`
-		Recorder              string `envconfig:"RECORDER"`
-		ForwarderUsername     string `envconfig:"FORWARDER_USERNAME"`
-		RecorderUsername      string `envconfig:"RECORDER_USERNAME"`
-		ForwarderPassword     string `envconfig:"FORWARDER_PASSWORD"`
-		RecorderPassword      string `envconfig:"RECORDER_PASSWORD"`
 		StreamServer          string `envconfig:"STREAM_SERVER"`
 		TransmissionLight     string `envconfig:"TRANSMISSION_LIGHT"`
 		KeyChecker            string `envconfig:"KEY_CHECKER"`
-		ServerPort            int    `envconfig:"SERVER_PORT"`
+		AuthEndpoint          string `envconfig:"AUTH_ENDPOINT"`
 		ServerAddress         string `envconfig:"SERVER_ADDRESS"`
-		RecordingLocation     string `envconfig:"RECORDING_LOCATION"`
 		StreamerWebsocketPath string `envconfig:"STREAMER_WEBSOCKET_PATH"`
+		StreamerWebAddress    string `envconfig:"STREAMER_WEB_ADDRESS"`
 		StreamerAdminPath     string `envconfig:"STREAMER_ADMIN_PATH"`
+		AuthenticationKey     string `envconfig:"AUTHENTICATION_KEY"`
+		EncryptionKey         string `envconfig:"ENCRYPTION_KEY"`
+		SessionCookieName     string `envconfig:"SESSION_COOKIE_NAME"`
 	}
 
 	// Views encapsulates our view dependencies
 	Views struct {
 		cache    *cache.Cache
+		cookie   *sessions.CookieStore
 		conf     Config
 		store    *store.Store
 		template *templates.Templater
@@ -152,9 +153,35 @@ var (
 
 // New initialises connections, templates, and cookies
 func New(conf Config, store *store.Store) *Views {
+	// Initialising session cookie
+	authKey, _ := hex.DecodeString(conf.AuthenticationKey)
+	if len(authKey) == 0 {
+		authKey = securecookie.GenerateRandomKey(64)
+	}
+
+	encryptionKey, _ := hex.DecodeString(conf.EncryptionKey)
+	if len(encryptionKey) == 0 {
+		encryptionKey = securecookie.GenerateRandomKey(32)
+	}
+
+	cookie := sessions.NewCookieStore(
+		authKey,
+		encryptionKey,
+	)
+
+	sixty := 60
+	twentyFour := 24
+
+	cookie.Options = &sessions.Options{
+		MaxAge:   sixty * sixty * twentyFour,
+		HttpOnly: true,
+		Path:     "/",
+	}
+
 	return &Views{
 		cache:    cache.New(cache.NoExpiration, 1*time.Hour),
 		conf:     conf,
+		cookie:   cookie,
 		store:    store,
 		template: templates.NewTemplate(conf.Version),
 	}
