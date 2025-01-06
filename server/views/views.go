@@ -217,7 +217,6 @@ func (v *Views) Authenticated(next echo.HandlerFunc) echo.HandlerFunc {
 
 		token, ok := session.Values["token"].(string)
 		if ok {
-			fmt.Println(1)
 			req, err = http.NewRequestWithContext(c.Request().Context(), "GET",
 				v.conf.AuthEndpoint+"/api/test", nil)
 			if err != nil {
@@ -257,27 +256,22 @@ func (v *Views) Authenticated(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 
 	getToken:
-		fmt.Println(2)
 		req, err = http.NewRequestWithContext(c.Request().Context(), "GET",
 			v.conf.AuthEndpoint+"/api/set_token", nil)
 		if err != nil {
 			log.Printf("failed to create new get token request: %+v", err)
 			goto login
 		}
-		fmt.Println(2.1)
 
 		for _, cookie := range c.Request().Cookies() {
-			fmt.Println("cookie " + cookie.Name)
 			req.AddCookie(cookie)
 		}
-		fmt.Println(2.2)
 
 		resp, err = client.Do(req)
 		if err != nil {
 			log.Printf("failed to do client for get token: %+v", err)
 			goto login
 		}
-		fmt.Println(2.3)
 		defer resp.Body.Close()
 
 		b, err = io.ReadAll(resp.Body)
@@ -285,29 +279,20 @@ func (v *Views) Authenticated(next echo.HandlerFunc) echo.HandlerFunc {
 			log.Printf("failed to read get token body: %+v", err)
 			goto login
 		}
-		fmt.Println(2.4)
 
 		err = json.Unmarshal(b, &t)
 		if err != nil {
 			log.Printf("failed to unmarshal JSON for get token: %+v", err)
 			goto login
 		}
-		fmt.Println(2.5)
-
-		fmt.Printf("%#v\n", t)
-		fmt.Println(string(b))
 
 		if t.Token == "" {
 			goto login
 		}
-		fmt.Println(2.6)
-
-		fmt.Println(resp.StatusCode)
 
 		if resp.StatusCode != 201 {
 			goto login
 		}
-		fmt.Println(2.7)
 
 		session.Values["token"] = t.Token
 
@@ -316,11 +301,9 @@ func (v *Views) Authenticated(next echo.HandlerFunc) echo.HandlerFunc {
 			log.Printf("failed to save token session for authentication: %+v", err)
 			goto login
 		}
-		fmt.Println(2.8)
 		return next(c)
 
 	login:
-		fmt.Println(3)
 		return c.Redirect(http.StatusTemporaryRedirect, fmt.Sprintf("%s/login?callback=https://%s%s",
 			v.conf.AuthEndpoint,
 			v.conf.StreamerWebAddress,
