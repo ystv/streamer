@@ -267,6 +267,7 @@ func (v *Views) Authenticated(next echo.HandlerFunc) echo.HandlerFunc {
 		fmt.Println(2.1)
 
 		for _, cookie := range c.Request().Cookies() {
+			fmt.Println("cookie " + cookie.Name)
 			req.AddCookie(cookie)
 		}
 		fmt.Println(2.2)
