@@ -111,7 +111,6 @@ func (r *Router) middleware() {
 	r.router.Use(middleware.GzipWithConfig(middleware.GzipConfig{
 		Level: 5,
 	}))
-	r.router.Use(r.views.Authenticated)
 }
 
 func (r *Router) loadRoutes() {
@@ -124,23 +123,26 @@ func (r *Router) loadRoutes() {
 	r.router.GET("/public/*", echo.WrapHandler(http.StripPrefix("/public/", assetHandler)))
 
 	validMethods := []string{http.MethodGet, http.MethodPost}
-	r.router.Match(validMethods, "/", r.views.HomeFunc)
-	r.router.Match(validMethods, "/endpoints", r.views.EndpointsFunc)
-	r.router.Match(validMethods, "/streams", r.views.StreamsFunc)                       // Call made by home to view all active streams for the endpoints
-	r.router.Match(validMethods, "/start", r.views.StartFunc)                           // Call made by home to start forwarding
-	r.router.Match(validMethods, "/resume", r.views.ResumeFunc)                         // To return to the page that controls a stream
-	r.router.Match(validMethods, "/status", r.views.StatusFunc)                         // Call made by home to view status
-	r.router.Match(validMethods, "/stop", r.views.StopFunc)                             // Call made by home to stop forwarding
-	r.router.Match(validMethods, "/list", r.views.ListFunc)                             // List view of current forwards
-	r.router.Match(validMethods, "/save", r.views.SaveFunc)                             // Where you can save a stream for later
-	r.router.Match(validMethods, "/recall", r.views.RecallFunc)                         // Where you can recall a saved stream to modify it if needed and start it
-	r.router.Match(validMethods, "/delete", r.views.DeleteFunc)                         // Deletes the saved stream if it is no longer needed
-	r.router.Match(validMethods, "/startUnique", r.views.StartUniqueFunc)               // Call made by home to start forwarding from a recalled stream
+
+	authed := r.router.Group("/")
+	authed.Use(r.views.Authenticated)
+	authed.Match(validMethods, "/", r.views.HomeFunc)
+	authed.Match(validMethods, "/endpoints", r.views.EndpointsFunc)
+	authed.Match(validMethods, "/streams", r.views.StreamsFunc)                         // Call made by home to view all active streams for the endpoints
+	authed.Match(validMethods, "/start", r.views.StartFunc)                             // Call made by home to start forwarding
+	authed.Match(validMethods, "/resume", r.views.ResumeFunc)                           // To return to the page that controls a stream
+	authed.Match(validMethods, "/status", r.views.StatusFunc)                           // Call made by home to view status
+	authed.Match(validMethods, "/stop", r.views.StopFunc)                               // Call made by home to stop forwarding
+	authed.Match(validMethods, "/list", r.views.ListFunc)                               // List view of current forwards
+	authed.Match(validMethods, "/save", r.views.SaveFunc)                               // Where you can save a stream for later
+	authed.Match(validMethods, "/recall", r.views.RecallFunc)                           // Where you can recall a saved stream to modify it if needed and start it
+	authed.Match(validMethods, "/delete", r.views.DeleteFunc)                           // Deletes the saved stream if it is no longer needed
+	authed.Match(validMethods, "/startUnique", r.views.StartUniqueFunc)                 // Call made by home to start forwarding from a recalled stream
 	r.router.Match(validMethods, "/youtubehelp", r.views.YoutubeHelpFunc)               // YouTube help page
 	r.router.Match(validMethods, "/facebookhelp", r.views.FacebookHelpFunc)             // Facebook help page
 	r.router.Match(validMethods, "/"+r.config.StreamerWebsocketPath, r.views.Websocket) // Websocket for the recorder and forwarder to communicate on
 	r.router.Match(validMethods, "/activeStreams", r.views.ActiveStreamsFunc)
-	r.router.Match(validMethods, "/"+r.config.StreamerAdminPath+"/forceRemove/:unique", r.views.ForceRemoveFunc)
+	authed.Match(validMethods, "/"+r.config.StreamerAdminPath+"/forceRemove/:unique", r.views.ForceRemoveFunc)
 	r.router.Match(validMethods, "/serverError", r.views.ServerErrorFunc)
 	r.router.GET("/api/health", func(c echo.Context) error {
 		marshal, err := json.Marshal(struct {
