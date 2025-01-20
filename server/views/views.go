@@ -295,6 +295,10 @@ func (v *Views) Authenticated(next echo.HandlerFunc) echo.HandlerFunc {
 			goto login
 		}
 
+		if !hasCobra(t.Token) {
+			return echo.NewHTTPError(http.StatusForbidden, errors.New("you are not authorised for accessing this site"))
+		}
+
 		session.Values["token"] = t.Token
 
 		err = session.Save(c.Request(), c.Response())
@@ -310,4 +314,36 @@ func (v *Views) Authenticated(next echo.HandlerFunc) echo.HandlerFunc {
 			v.conf.StreamerWebAddress,
 			c.Request().URL.String()))
 	}
+}
+
+func hasCobra(token string) bool {
+	split := strings.Split(token, ".")
+	if len(split) != 3 {
+		log.Printf("invalid token format: %s", token)
+		return false
+	}
+
+	bytes, err := base64.RawURLEncoding.DecodeString(split[1])
+	if err != nil {
+		log.Printf("invalid token format: %s, %+v", token, err)
+		return false
+	}
+
+	var perms struct {
+		Permissions []string `json:"perms"`
+	}
+
+	err = json.Unmarshal(bytes, &perms)
+	if err != nil {
+		log.Printf("invalid token format: %s, %+v", token, err)
+		return false
+	}
+
+	for _, perm := range perms.Permissions {
+		if perm == "COBRA" || perm == "SuperUser" {
+			log.Printf("found Cobra or SuperUser permission: %s", perm)
+			return true
+		}
+	}
+	return false
 }
