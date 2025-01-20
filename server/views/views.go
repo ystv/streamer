@@ -33,7 +33,7 @@ type (
 		Commit                string
 		StreamServer          string `envconfig:"STREAM_SERVER"`
 		TransmissionLight     string `envconfig:"TRANSMISSION_LIGHT"`
-		KeyChecker            string `envconfig:"KEY_CHECKER"`
+		APIEndpoint           string `envconfig:"API_ENDPOINT"`
 		AuthEndpoint          string `envconfig:"AUTH_ENDPOINT"`
 		ServerAddress         string `envconfig:"SERVER_ADDRESS"`
 		StreamerWebsocketPath string `envconfig:"STREAMER_WEBSOCKET_PATH"`

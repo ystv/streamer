@@ -116,7 +116,7 @@ func (v *Views) startSaveValidationHelper(c echo.Context, valType ValidationType
 	var websiteOut string
 
 	if websiteCheckbox {
-		if v.websiteCheck(websiteStreamEndpoint) {
+		if v.websiteCheck(c, websiteStreamEndpoint) {
 			websiteOut = websiteStreamEndpoint
 		} else {
 			response.Error = errors.New("website key check has failed")
