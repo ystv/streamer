@@ -8,7 +8,7 @@ At least one server that can store video files and one server that can accept RT
 A user that can ssh to the forwarder and the recorder and execute the start and stop for each, and the user needs to be able to save files in the recording directory.
 The forwarder and recorder will need a home directory that the files will be stored in.
 ## How to build
-Coming soon - `wget https://raw.githubusercontent.com/ystv/streamer/master/build/build.sh`
+Coming soon - `wget https://raw.githubusercontent.com/ystv/streamer/main/build/build.sh`
 
 You need to build a total of 5 files in the correct locations, these include the `main.go` file in the server folder, the forwarder start and stop in the forwarder folder and the recorder start and stop in the recorder folder.
 ### Building
