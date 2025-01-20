@@ -1,14 +1,17 @@
 package views
 
 import (
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"io"
 	"log" //nolint:gosec
 	"math/rand"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gorilla/securecookie"
