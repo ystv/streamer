@@ -333,6 +333,7 @@ func hasCobra(token string) bool {
 	}
 
 	var perms struct {
+		UserID      int      `json:"id"`
 		Permissions []string `json:"perms"`
 	}
 
@@ -344,7 +345,7 @@ func hasCobra(token string) bool {
 
 	for _, perm := range perms.Permissions {
 		if perm == "COBRA" || perm == "SuperUser" {
-			log.Printf("found Cobra or SuperUser permission: %s", perm)
+			log.Printf("found Cobra or SuperUser permission for %d: %s", perms.UserID, perm)
 			return true
 		}
 	}
