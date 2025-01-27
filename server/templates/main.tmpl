@@ -142,6 +142,15 @@
         });
 
         $(document).ready(function () {
+            $("#stream_selector").change(function () {
+                if ($(this).val() === "please_select") {
+                    $("#stream_further_1").hide();
+                } else {
+                    $("#stream_further_1").show();
+                    $("#input").val($(this).val());
+                }
+            });
+
             let unique;
             // statusInterval is used in the templates
             let statusInterval;
