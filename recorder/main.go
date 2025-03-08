@@ -83,7 +83,7 @@ func main() {
 	})
 
 	go func() {
-		if err = e.Start(":1323"); err != nil {
+		if err = e.Start(":1324"); err != nil {
 			e.Logger.Fatal("shutting down the server")
 		}
 	}()
