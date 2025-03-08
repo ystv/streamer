@@ -6,12 +6,13 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/labstack/echo/v4"
-	//apiStream "github.com/ystv/web-api/services/stream"
+	// apiStream "github.com/ystv/web-api/services/stream"
 )
 
 // websiteCheck checks if the website stream key is valid using software called COBRA
@@ -80,15 +81,17 @@ func (v *Views) websiteCheck(c echo.Context, endpoint string) bool {
 		return true // sending back true if the checker is down
 	}
 
-	if resp.StatusCode >= 500 && resp.StatusCode < 600 {
+	switch sc := resp.StatusCode; {
+	case sc >= http.StatusInternalServerError && sc <= http.StatusNetworkAuthenticationRequired:
 		log.Printf("failed to get correct status from key checker: %d", resp.StatusCode)
 		return true // sending back true if the checker is down
-	} else if resp.StatusCode == http.StatusBadRequest || resp.StatusCode == http.StatusNotFound {
+	case sc == http.StatusBadRequest, sc == http.StatusNotFound:
 		log.Printf("website check request failed with status code: %d", resp.StatusCode)
 		return false
-	} else if resp.StatusCode == http.StatusUnauthorized {
+	case sc == http.StatusUnauthorized:
 		log.Println(resp)
-		url1, err := resp.Location()
+		var url1 *url.URL
+		url1, err = resp.Location()
 		log.Println(url1, err)
 		log.Println(req)
 		return true // sending back true if the checker is down
