@@ -1,4 +1,4 @@
-FROM golang:1.23.4-alpine3.21 AS build
+FROM golang:1.24.1-alpine3.21 AS build
 
 LABEL site="ystv-streamer-recorder"
 
@@ -54,7 +54,7 @@ RUN echo -n "-X 'main.Version=$STREAMER_VERSION_ARG" > ./ldflags && \
 
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="$(cat ./ldflags)" -o /bin/recorder
 
-EXPOSE 1323
+EXPOSE 1324
 
 # Use an unprivileged user.
 USER recorder:recorder
