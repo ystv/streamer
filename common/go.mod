@@ -1,3 +1,3 @@
 module github.com/ystv/streamer/common
 
-go 1.25.5
+go 1.26
