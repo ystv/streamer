@@ -18,7 +18,7 @@ import (
 func (v *Views) start(transporter commonTransporter.Transporter) error {
 	array := strings.Split(transporter.Payload.(commonTransporter.RecorderStart).PathOut, "/")
 	valid := false
-	var path string
+	var pathBuilder strings.Builder
 
 	if len(array) == 0 || array == nil {
 		return errors.New("failed to get path out array")
@@ -28,13 +28,15 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 		valid = true
 	} else {
 		for i := 0; i < len(array)-1; i++ {
-			path += array[i] + "/"
+			pathBuilder.WriteString(array[i])
+			pathBuilder.WriteByte('/')
 		}
-		err := os.MkdirAll(v.Config.RecordingLocation+path, os.FileMode(0777))
+		pathString := pathBuilder.String()
+		err := os.MkdirAll(v.Config.RecordingLocation+pathString, os.FileMode(0777))
 		if err != nil {
-			return fmt.Errorf("error creating %s: %w", v.Config.RecordingLocation+path, err)
+			return fmt.Errorf("error creating %s: %w", v.Config.RecordingLocation+pathString, err)
 		}
-		_, err1 := os.Stat(v.Config.RecordingLocation + path)
+		_, err1 := os.Stat(v.Config.RecordingLocation + pathString)
 		if os.IsNotExist(err1) {
 			return fmt.Errorf("unable to get path: %w", err1)
 		}
@@ -51,13 +53,13 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 	}
 
 	baseFileNameArray := tempBaseFileName[0 : len(tempBaseFileName)-1]
-	var baseFileName string
+	var baseFileNameBuilder strings.Builder
 	for _, s := range baseFileNameArray {
-		baseFileName += s
+		baseFileNameBuilder.WriteString(s)
 	}
 
 	streamIn := fmt.Sprintf("%s://%s%s", v.Config.StreamServerScheme, v.Config.StreamServer, transporter.Payload.(commonTransporter.RecorderStart).StreamIn)
-	path = v.Config.RecordingLocation + path
+	path := v.Config.RecordingLocation + pathBuilder.String()
 
 	finish := make(chan bool)
 
@@ -75,7 +77,7 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 			case <-finish:
 				return
 			default:
-				file := fmt.Sprintf("%s%s_%d.mkv", path, baseFileName, i)
+				file := fmt.Sprintf("%s%s_%d.mkv", path, baseFileNameBuilder.String(), i)
 				// Checking if file exists
 				_, err = os.Stat(file)
 				if err == nil {
