@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"os/exec"
@@ -13,7 +14,7 @@ import (
 func (v *Views) status(transporter commonTransporter.Transporter) (string, error) {
 	logs := fmt.Sprintf("/logs/%s.txt", transporter.Unique)
 
-	cmd := exec.Command("tail", "-n", "26", logs)
+	cmd := exec.CommandContext(context.Background(), "tail", "-n", "26", logs)
 
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout

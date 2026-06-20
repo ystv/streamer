@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -119,7 +120,7 @@ func (v *Views) start(transporter commonTransporter.Transporter) error {
 }
 
 func (v *Views) helperStart(transporter commonTransporter.Transporter, streamIn, file string) error {
-	c := exec.Command("ffmpeg", "-i", streamIn, "-f", "matroska", "-c", "copy", file)
+	c := exec.CommandContext(context.Background(), "ffmpeg", "-i", streamIn, "-f", "matroska", "-c", "copy", file)
 	err := v.cache.Add(transporter.Unique, c, cache.NoExpiration)
 	if err != nil {
 		return fmt.Errorf("failed to add command to cache: %w", err)
